@@ -1,14 +1,37 @@
 // src/screens/HomeScreen.tsx
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Image } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  useWindowDimensions,
+  Image,
+  Platform,
+  Alert,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+
+// Define the navigation param list type
+type RootTabParamList = {
+  Home: undefined;
+  Discover: undefined;
+  Planner: undefined;
+  Pantry: undefined;
+  Groceries: undefined;
+  History: undefined;
+};
+
+type HomeScreenNavigationProp = BottomTabNavigationProp<RootTabParamList>;
 import screenStyles from '../styles/screenStyle';
 
 export default function HomeScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<HomeScreenNavigationProp>();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
+  const isWideScreen = width >= 1200;
 
   return (
     <View style={styles.container}>
@@ -19,8 +42,17 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      <View style={[styles.tilesContainer, isTablet && styles.tabletTiles]}>
-        <TouchableOpacity style={styles.tile} onPress={() => navigation.navigate('Discover')}>
+      <View
+        style={[
+          styles.tilesContainer,
+          isTablet && !isWideScreen && styles.tabletTiles,
+          isWideScreen && styles.wideTiles,
+        ]}
+      >
+        <TouchableOpacity
+          style={[styles.tile, isWideScreen && styles.wideTile]}
+          onPress={() => navigation.navigate('Discover')}
+        >
           <Image
             source={require('../../assets/images/discover-icon.png')}
             style={styles.tileIcon}
@@ -30,7 +62,10 @@ export default function HomeScreen() {
           <Text style={styles.tileDescription}>Find new and trending recipes</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.tile} onPress={() => alert('Coming soon!')}>
+        <TouchableOpacity
+          style={[styles.tile, isWideScreen && styles.wideTile]}
+          onPress={() => Alert.alert('Coming Soon', 'This feature is coming soon!')}
+        >
           <Image
             source={require('../../assets/images/add-icon.png')}
             style={styles.tileIcon}
@@ -40,7 +75,10 @@ export default function HomeScreen() {
           <Text style={styles.tileDescription}>Create and save your recipes</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.tile} onPress={() => navigation.navigate('Planner')}>
+        <TouchableOpacity
+          style={[styles.tile, isWideScreen && styles.wideTile]}
+          onPress={() => navigation.navigate('Planner')}
+        >
           <Image
             source={require('../../assets/images/plan-icon.png')}
             style={styles.tileIcon}
@@ -50,7 +88,10 @@ export default function HomeScreen() {
           <Text style={styles.tileDescription}>Schedule your meals for the week</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.tile} onPress={() => navigation.navigate('Pantry')}>
+        <TouchableOpacity
+          style={[styles.tile, isWideScreen && styles.wideTile]}
+          onPress={() => navigation.navigate('Pantry')}
+        >
           <Image
             source={require('../../assets/images/pantry-icon.png')}
             style={styles.tileIcon}
@@ -99,6 +140,12 @@ const styles = StyleSheet.create({
   tabletTiles: {
     paddingHorizontal: 50,
   },
+  wideTiles: {
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: '10%',
+  },
   tile: {
     backgroundColor: '#fff',
     padding: 20,
@@ -113,6 +160,10 @@ const styles = StyleSheet.create({
     elevation: 3,
     minHeight: 160,
     justifyContent: 'center',
+  },
+  wideTile: {
+    width: '23%',
+    marginHorizontal: 10,
   },
   tileIcon: {
     width: 60,
