@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, Image, ActivityIndicator, StyleSheet, Button } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  ActivityIndicator,
+  StyleSheet,
+  Button,
+  TouchableOpacity,
+} from 'react-native';
+import { useResponsive } from '../hooks/useResponsive';
 import ConfirmDialog from './ConfirmDialog';
 
 type PlannerCardProps = {
@@ -21,6 +30,9 @@ export default function PlannerCard({
   recipes,
   onDelete,
 }: PlannerCardProps) {
+  const { width, isMobile, isTablet, isDesktop, isLargeDesktop, isWeb } = useResponsive();
+
+  const isLargeScreen = isDesktop || isLargeDesktop;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const getImageSource = (img?: string) => {
@@ -30,36 +42,78 @@ export default function PlannerCard({
     return { uri: FALLBACK_IMAGE_URL };
   };
 
+  // Format date to be more readable
+  const formatDate = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    };
+    return date.toLocaleDateString(undefined, options);
+  };
+
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>
-        📅 {startDate.toDateString()} – {endDate.toDateString()}
-      </Text>
+    <View
+      style={[
+        styles.card,
+        isMobile && styles.cardSmall,
+        isTablet && styles.cardMedium,
+        (isDesktop || isLargeDesktop) && styles.cardLarge,
+      ]}
+    >
+      <View style={styles.headerContainer}>
+        <Text style={styles.title}>
+          📅 {formatDate(startDate)} – {formatDate(endDate)}
+        </Text>
+        <Text style={styles.duration}>
+          {Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days
+        </Text>
+      </View>
 
-      {recipes.map((r) => {
-        const isRemote = r.image && r.image.startsWith('http') && r.image !== FALLBACK_IMAGE_URL;
-        const [loading, setLoading] = useState(isRemote);
+      <View
+        style={[
+          styles.recipesContainer,
+          (isTablet || isDesktop || isLargeDesktop) && {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+          },
+        ]}
+      >
+        {recipes.map((r) => {
+          const isRemote = r.image && r.image.startsWith('http') && r.image !== FALLBACK_IMAGE_URL;
+          const [loading, setLoading] = useState(isRemote);
 
-        return (
-          <View key={r.id} style={styles.recipeRow}>
-            <View style={styles.imageBox}>
-              {isRemote && loading && (
-                <ActivityIndicator size="small" color="#999" style={styles.spinner} />
-              )}
-              <Image
-                source={getImageSource(r.image)}
-                style={styles.image}
-                resizeMode="cover"
-                onLoadEnd={() => setLoading(false)}
-              />
+          return (
+            <View
+              key={r.id}
+              style={[
+                styles.recipeRow,
+                isLargeDesktop && { width: '33.33%', paddingRight: 8 },
+                isDesktop && { width: '50%', paddingRight: 8 },
+                isTablet && { width: '50%', paddingRight: 8 },
+              ]}
+            >
+              <View style={styles.imageBox}>
+                {isRemote && loading && (
+                  <ActivityIndicator size="small" color="#999" style={styles.spinner} />
+                )}
+                <Image
+                  source={getImageSource(r.image)}
+                  style={styles.image}
+                  resizeMode="cover"
+                  onLoadEnd={() => setLoading(false)}
+                />
+              </View>
+              <Text style={styles.recipeText}>🍽 {r.title}</Text>
             </View>
-            <Text style={styles.recipeText}>🍽 {r.title}</Text>
-          </View>
-        );
-      })}
+          );
+        })}
+      </View>
 
-      <View style={{ marginTop: 10 }}>
-        <Button title="🗑️ Delete Plan" onPress={() => setShowDeleteConfirm(true)} color="#C62828" />
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => setShowDeleteConfirm(true)}>
+          <Text style={styles.deleteButtonText}>🗑️ Delete Plan</Text>
+        </TouchableOpacity>
       </View>
 
       <ConfirmDialog
@@ -77,39 +131,93 @@ export default function PlannerCard({
 
 const styles = StyleSheet.create({
   card: {
-    padding: 10,
-    marginVertical: 10,
+    padding: 16,
+    marginVertical: 12,
     borderColor: '#ddd',
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  cardSmall: {
+    padding: 12,
+  },
+  cardMedium: {
+    padding: 16,
+  },
+  cardLarge: {
+    padding: 20,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  duration: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
+  },
+  recipesContainer: {
+    marginBottom: 12,
   },
   title: {
     fontWeight: 'bold',
-    marginBottom: 6,
+    fontSize: 16,
+    color: '#333',
   },
   recipeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 8,
+    marginBottom: 4,
+    paddingVertical: 4,
   },
   recipeText: {
     fontSize: 14,
     flexShrink: 1,
+    color: '#333',
   },
   imageBox: {
-    width: 40,
-    height: 40,
-    marginRight: 10,
+    width: 50,
+    height: 50,
+    marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 6,
+    overflow: 'hidden',
+    backgroundColor: '#f5f5f5',
   },
   spinner: {
     position: 'absolute',
     zIndex: 1,
   },
   image: {
-    width: 40,
-    height: 40,
-    borderRadius: 4,
+    width: 50,
+    height: 50,
+  },
+  buttonContainer: {
+    marginTop: 12,
+    alignItems: 'flex-end',
+  },
+  deleteButton: {
+    backgroundColor: '#ffebee',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#ffcdd2',
+  },
+  deleteButtonText: {
+    color: '#C62828',
+    fontWeight: '600',
   },
 });
