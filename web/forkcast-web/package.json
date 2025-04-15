@@ -1,5 +1,5 @@
 {
-  "name": "forkcast-mobile",
+  "name": "forkcast-web",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
@@ -9,7 +9,7 @@
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write ."
   },
-  "description": "Forkcast mobile app - Expo + React Native + TypeScript",
+  "description": "Forkcast web app - Expo + React Native + TypeScript",
   "author": "",
   "license": "MIT",
   "dependencies": {
