@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
+import { useResponsive } from '../hooks/useResponsive';
 import { Recipe } from '../types';
 
 interface Props {
@@ -20,6 +29,7 @@ export default function RecipeCard({
   expanded,
   onExpand,
 }: Props) {
+  const { isMobile, isTablet, isDesktop, isLargeDesktop, isWeb } = useResponsive();
   const getImageSource = (img: string | any) => {
     if (
       typeof img === 'string' &&
@@ -46,8 +56,19 @@ export default function RecipeCard({
   }, [imageSource.uri]);
 
   return (
-    <TouchableOpacity onPress={onExpand} style={[styles.card, isSelected && styles.selectedCard]}>
-      <View style={{ position: 'relative', width: '100%', height: 150, backgroundColor: '#eee' }}>
+    <TouchableOpacity
+      onPress={onExpand}
+      style={[styles.card, isSelected && styles.selectedCard]}
+      // Web-specific styles would need to be applied via CSS or a web-specific styling solution
+    >
+      <View
+        style={[
+          styles.imageContainer,
+          isMobile && styles.imageContainerSmall,
+          isTablet && styles.imageContainerMedium,
+          (isDesktop || isLargeDesktop) && styles.imageContainerLarge,
+        ]}
+      >
         {isRemote && loading && (
           <ActivityIndicator size="small" color="#999" style={styles.spinner} />
         )}
@@ -59,7 +80,14 @@ export default function RecipeCard({
         />
       </View>
 
-      <View style={styles.content}>
+      <View
+        style={[
+          styles.content,
+          isMobile && styles.contentSmall,
+          isTablet && styles.contentMedium,
+          (isDesktop || isLargeDesktop) && styles.contentLarge,
+        ]}
+      >
         <View style={styles.headerRow}>
           <Text style={styles.title}>{recipe.title}</Text>
           <Text style={styles.selectText}>{isSelected ? '✅' : '⬜'}</Text>
@@ -68,13 +96,33 @@ export default function RecipeCard({
 
         {expanded && (
           <View style={styles.detailsBox}>
-            <Text style={styles.metaText}>
-              Prep: {recipe.prepTime} | Cook: {recipe.cookTime}
-            </Text>
+            <View style={styles.metaContainer}>
+              <View style={styles.metaItem}>
+                <Text style={styles.metaLabel}>Prep Time</Text>
+                <Text style={styles.metaValue}>{recipe.prepTime}</Text>
+              </View>
+              <View style={styles.metaItem}>
+                <Text style={styles.metaLabel}>Cook Time</Text>
+                <Text style={styles.metaValue}>{recipe.cookTime}</Text>
+              </View>
+              <View style={styles.metaItem}>
+                <Text style={styles.metaLabel}>Cuisine</Text>
+                <Text style={styles.metaValue}>{recipe.cuisine}</Text>
+              </View>
+            </View>
+
             <Text style={styles.sectionHeader}>Ingredients:</Text>
-            <Text>{recipe.ingredients.join(', ')}</Text>
+            <View style={styles.ingredientsList}>
+              {recipe.ingredients.map((ingredient, index) => (
+                <View key={index} style={styles.ingredientItem}>
+                  <Text style={styles.bulletPoint}>•</Text>
+                  <Text style={styles.ingredientText}>{ingredient}</Text>
+                </View>
+              ))}
+            </View>
+
             <Text style={styles.sectionHeader}>Instructions:</Text>
-            <Text>{recipe.instructions}</Text>
+            <Text style={styles.instructionsText}>{recipe.instructions}</Text>
           </View>
         )}
 
@@ -87,6 +135,21 @@ export default function RecipeCard({
 }
 
 const styles = StyleSheet.create({
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    backgroundColor: '#eee',
+    overflow: 'hidden',
+  },
+  imageContainerSmall: {
+    height: 150,
+  },
+  imageContainerMedium: {
+    height: 180,
+  },
+  imageContainerLarge: {
+    height: 200,
+  },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -116,6 +179,15 @@ const styles = StyleSheet.create({
   content: {
     padding: 12,
   },
+  contentSmall: {
+    padding: 10,
+  },
+  contentMedium: {
+    padding: 14,
+  },
+  contentLarge: {
+    padding: 16,
+  },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -138,16 +210,58 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   detailsBox: {
-    marginTop: 10,
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    paddingTop: 12,
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    padding: 10,
+  },
+  metaItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  metaLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  metaValue: {
+    fontWeight: 'bold',
+    color: '#333',
   },
   sectionHeader: {
     fontWeight: 'bold',
-    marginTop: 6,
+    marginTop: 12,
+    marginBottom: 8,
+    fontSize: 16,
+    color: '#333',
   },
-  metaText: {
-    fontStyle: 'italic',
-    color: '#555',
-    marginBottom: 6,
+  ingredientsList: {
+    marginBottom: 12,
+  },
+  ingredientItem: {
+    flexDirection: 'row',
+    marginBottom: 4,
+    paddingLeft: 4,
+  },
+  bulletPoint: {
+    marginRight: 8,
+    color: '#007AFF',
+  },
+  ingredientText: {
+    flex: 1,
+    lineHeight: 20,
+  },
+  instructionsText: {
+    lineHeight: 20,
+    color: '#333',
   },
   headerRow: {
     flexDirection: 'row',

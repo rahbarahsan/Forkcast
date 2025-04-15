@@ -1,16 +1,8 @@
 // src/screens/HomeScreen.tsx
 
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  useWindowDimensions,
-  Image,
-  Platform,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, Alert } from 'react-native';
+import { useResponsive } from '../hooks/useResponsive';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
@@ -29,9 +21,9 @@ import screenStyles from '../styles/screenStyle';
 
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { width } = useWindowDimensions();
-  const isTablet = width >= 768;
-  const isWideScreen = width >= 1200;
+  const { width, isMobile, isTablet, isDesktop, isLargeDesktop } = useResponsive();
+
+  const isWideScreen = isDesktop || isLargeDesktop;
 
   return (
     <View style={styles.container}>
@@ -46,11 +38,17 @@ export default function HomeScreen() {
         style={[
           styles.tilesContainer,
           isTablet && !isWideScreen && styles.tabletTiles,
-          isWideScreen && styles.wideTiles,
+          isDesktop && styles.wideTiles,
+          isLargeDesktop && styles.extraWideTiles,
         ]}
       >
         <TouchableOpacity
-          style={[styles.tile, isWideScreen && styles.wideTile]}
+          style={[
+            styles.tile,
+            isDesktop && styles.wideTile,
+            isLargeDesktop && styles.extraWideTile,
+            isMobile && styles.mobileTile,
+          ]}
           onPress={() => navigation.navigate('Discover')}
         >
           <Image
@@ -63,7 +61,12 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tile, isWideScreen && styles.wideTile]}
+          style={[
+            styles.tile,
+            isDesktop && styles.wideTile,
+            isLargeDesktop && styles.extraWideTile,
+            isMobile && styles.mobileTile,
+          ]}
           onPress={() => Alert.alert('Coming Soon', 'This feature is coming soon!')}
         >
           <Image
@@ -76,7 +79,12 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tile, isWideScreen && styles.wideTile]}
+          style={[
+            styles.tile,
+            isDesktop && styles.wideTile,
+            isLargeDesktop && styles.extraWideTile,
+            isMobile && styles.mobileTile,
+          ]}
           onPress={() => navigation.navigate('Planner')}
         >
           <Image
@@ -89,7 +97,12 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tile, isWideScreen && styles.wideTile]}
+          style={[
+            styles.tile,
+            isDesktop && styles.wideTile,
+            isLargeDesktop && styles.extraWideTile,
+            isMobile && styles.mobileTile,
+          ]}
           onPress={() => navigation.navigate('Pantry')}
         >
           <Image
@@ -110,6 +123,10 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  mobileTile: {
+    width: '100%',
+    marginBottom: 16,
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -144,6 +161,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'nowrap',
     justifyContent: 'space-between',
+    paddingHorizontal: '5%',
+  },
+  extraWideTiles: {
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
+    justifyContent: 'space-between',
     paddingHorizontal: '10%',
   },
   tile: {
@@ -163,7 +186,11 @@ const styles = StyleSheet.create({
   },
   wideTile: {
     width: '23%',
-    marginHorizontal: 10,
+    marginHorizontal: 8,
+  },
+  extraWideTile: {
+    width: '22%',
+    marginHorizontal: 12,
   },
   tileIcon: {
     width: 60,

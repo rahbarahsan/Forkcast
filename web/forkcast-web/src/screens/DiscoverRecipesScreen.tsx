@@ -1,6 +1,6 @@
 // src/screens/DiscoverRecipesScreen.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,11 @@ import {
   TouchableOpacity,
   Modal,
   StyleSheet,
-  useWindowDimensions,
   TextInput,
   Platform,
   SafeAreaView,
 } from 'react-native';
+import { useResponsive } from '../hooks/useResponsive';
 import fallbackRecipes from '../data/fallbackRecipes';
 import RecipeCard from '../components/RecipeCard';
 import { useContext } from 'react';
@@ -43,22 +43,37 @@ export default function DiscoverRecipesScreen() {
   const [showSort, setShowSort] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
   const { selectedIds, toggleSelection } = useContext(RecipesContext);
   const navigation = useNavigation<DiscoverScreenNavigationProp>();
-  const { width } = useWindowDimensions();
+  const { width, isMobile, isTablet, isDesktop, isLargeDesktop, isWeb } = useResponsive();
 
-  const isTablet = width >= 768;
-  const isLargeScreen = width >= 1200;
-  const isWeb = Platform.OS === 'web';
+  const isLargeScreen = isDesktop || isLargeDesktop;
 
-  // Determine number of columns based on screen width
+  // Adjust items per page based on screen size
+  useEffect(() => {
+    if (isLargeDesktop) {
+      setItemsPerPage(20);
+    } else if (isDesktop) {
+      setItemsPerPage(16);
+    } else if (isTablet) {
+      setItemsPerPage(12);
+    } else {
+      setItemsPerPage(8);
+    }
+  }, [isLargeDesktop, isDesktop, isTablet, isMobile]);
+
+  // Determine number of columns based on screen size
   const getNumColumns = () => {
-    if (isLargeScreen) return 4;
+    if (isLargeDesktop) return 5;
+    if (isDesktop) return 4;
     if (isTablet) return 3;
+    if (isMobile && width > 480) return 2;
     return 1;
   };
 
-  // Filter recipes based on search query and category
+  // Filter and sort recipes
   const { recipes } = useRecipes();
   const filteredRecipes = recipes.filter((recipe) => {
     const matchesCategory = selectedCategory === 'All' || recipe.cuisine === selectedCategory;
@@ -69,6 +84,37 @@ export default function DiscoverRecipesScreen() {
 
     return matchesCategory && matchesSearch;
   });
+
+  // Sort recipes based on selected sort option
+  const sortedRecipes = [...filteredRecipes].sort((a, b) => {
+    switch (sortBy) {
+      case 'Recently Added':
+        // Assuming newer recipes have higher IDs or you could add a timestamp field
+        return b.id.localeCompare(a.id);
+      case 'Most Popular':
+        // This would ideally use a popularity metric
+        return b.ingredients.length - a.ingredients.length;
+      case 'Favorites':
+        // Show selected recipes first
+        return (selectedIds.has(b.id) ? 1 : 0) - (selectedIds.has(a.id) ? 1 : 0);
+      case 'Trending':
+      default:
+        // Default sorting logic
+        return a.title.localeCompare(b.title);
+    }
+  });
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedRecipes.length / itemsPerPage);
+  const paginatedRecipes = sortedRecipes.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery, sortBy]);
 
   const handleCardExpand = (id: string) => {
     setExpandedCardId(expandedCardId === id ? null : id);
@@ -125,13 +171,23 @@ export default function DiscoverRecipesScreen() {
         </View>
 
         <FlatList
-          data={filteredRecipes}
+          data={paginatedRecipes}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View
               style={[
                 styles.cardContainer,
-                { width: isLargeScreen ? width / 4 - 32 : isTablet ? width / 3 - 32 : width - 32 },
+                {
+                  width: isLargeDesktop
+                    ? width / 5 - 32
+                    : isDesktop
+                      ? width / 4 - 32
+                      : isTablet
+                        ? width / 3 - 32
+                        : isMobile && width > 480
+                          ? width / 2 - 32
+                          : width - 32,
+                },
               ]}
             >
               <RecipeCard
@@ -153,6 +209,39 @@ export default function DiscoverRecipesScreen() {
           ]}
           numColumns={Platform.OS === 'web' ? getNumColumns() : 1}
           key={`${getNumColumns()}-column-layout`}
+          ListFooterComponent={() => (
+            <View style={styles.paginationContainer}>
+              {totalPages > 1 && (
+                <View style={styles.pagination}>
+                  <TouchableOpacity
+                    style={[styles.pageButton, currentPage === 1 && styles.disabledPageButton]}
+                    onPress={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <Text style={styles.pageButtonText}>Previous</Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.pageInfo}>
+                    <Text style={styles.pageInfoText}>
+                      Page {currentPage} of {totalPages}
+                    </Text>
+                    <Text style={styles.resultsCount}>{sortedRecipes.length} recipes found</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === totalPages && styles.disabledPageButton,
+                    ]}
+                    onPress={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <Text style={styles.pageButtonText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
         />
 
         <Modal visible={showSort} transparent animationType="slide">
@@ -191,6 +280,41 @@ export default function DiscoverRecipesScreen() {
 }
 
 const styles = StyleSheet.create({
+  paginationContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  pagination: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    marginHorizontal: 8,
+  },
+  disabledPageButton: {
+    backgroundColor: '#ccc',
+  },
+  pageButtonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  pageInfo: {
+    alignItems: 'center',
+  },
+  pageInfoText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  resultsCount: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
   container: {
     flex: 1,
     backgroundColor: '#F9F9F9',
