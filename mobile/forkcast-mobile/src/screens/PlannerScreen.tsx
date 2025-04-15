@@ -9,10 +9,12 @@ import screenStyles from '../styles/screenStyle';
 import PlannerCard from '../components/PlannerCard';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AlertDialog from '../components/AlertDialog';
+import { useRecipes } from '../hooks/useRecipes';
 
 export default function PlannerScreen() {
   const { selectedIds } = useContext(RecipesContext);
-  const selected = fallbackRecipes.filter((r) => selectedIds.has(r.id));
+  const { recipes } = useRecipes();
+  const selected = recipes.filter((r) => selectedIds.has(r.id));
 
   const today = new Date();
   const [startDate, setStartDate] = useState<Date>(today);
