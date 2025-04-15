@@ -20,6 +20,7 @@ import { RecipesContext } from '../context/RecipesContext';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useRecipes } from '../hooks/useRecipes';
 
 // Define the navigation param list type
 type RootTabParamList = {
@@ -58,7 +59,8 @@ export default function DiscoverRecipesScreen() {
   };
 
   // Filter recipes based on search query and category
-  const filteredRecipes = fallbackRecipes.filter((recipe) => {
+  const { recipes } = useRecipes();
+  const filteredRecipes = recipes.filter((recipe) => {
     const matchesCategory = selectedCategory === 'All' || recipe.cuisine === selectedCategory;
     const matchesSearch =
       searchQuery === '' ||

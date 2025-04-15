@@ -6,7 +6,7 @@ import coqauvinImg from '../../assets/images/classic_french_coq_au_vin.jpg';
 const fallbackRecipes: Recipe[] = [
   {
     id: '1',
-    title: 'Butter Chicken (Murgh Makhani)',
+    title: 'Butter Chicken (Murgh Makhani) (Fb)',
     cuisine: 'Indian',
     image:
       'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?q=80&w=1770&auto=format&fit=crop',
@@ -34,7 +34,7 @@ const fallbackRecipes: Recipe[] = [
   },
   {
     id: '2',
-    title: 'Authentic Italian Risotto ai Funghi',
+    title: 'Authentic Italian Risotto ai Funghi (Fb)',
     cuisine: 'Italian',
     image:
       'https://images.unsplash.com/photo-1476124369491-e7addf5db371?q=80&w=1770&auto=format&fit=crop',
@@ -58,7 +58,7 @@ const fallbackRecipes: Recipe[] = [
   },
   {
     id: '3',
-    title: 'Traditional Japanese Tonkotsu Ramen',
+    title: 'Traditional Japanese Tonkotsu Ramen (Fb)',
     cuisine: 'Japanese',
     image:
       'https://images.unsplash.com/photo-1557872943-16a5ac26437e?q=80&w=1770&auto=format&fit=crop',
@@ -86,7 +86,7 @@ const fallbackRecipes: Recipe[] = [
   },
   {
     id: '4',
-    title: 'Authentic Mexican Chicken Enchiladas',
+    title: 'Authentic Mexican Chicken Enchiladas (Fb)',
     cuisine: 'Mexican',
     image: enchiladaImg,
     ingredients: [
@@ -111,7 +111,7 @@ const fallbackRecipes: Recipe[] = [
   },
   {
     id: '5',
-    title: 'Classic French Coq au Vin',
+    title: 'Classic French Coq au Vin (Fb)',
     cuisine: 'French',
     image: coqauvinImg,
     ingredients: [
@@ -137,7 +137,7 @@ const fallbackRecipes: Recipe[] = [
   },
   {
     id: '6',
-    title: 'Thai Green Curry with Chicken',
+    title: 'Thai Green Curry with Chicken (Fb)',
     cuisine: 'Thai',
     image:
       'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?q=80&w=1770&auto=format&fit=crop',
