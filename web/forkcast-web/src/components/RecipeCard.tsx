@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   StyleSheet,
   ActivityIndicator,
   Platform,
+  Modal,
+  ScrollView,
+  BackHandler,
 } from 'react-native';
 import { useResponsive } from '../hooks/useResponsive';
 import { Recipe } from '../types';
@@ -22,6 +25,9 @@ interface Props {
 const FALLBACK_IMAGE_URL =
   'https://pmhjdiniwseslpczkokw.supabase.co/storage/v1/object/sign/recipes/placeholder.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5XzdkMTYwZTY4LWZhNTktNDc5Zi05MjE3LTA4NmM2YTA4YTcyNSJ9.eyJ1cmwiOiJyZWNpcGVzL3BsYWNlaG9sZGVyLmpwZyIsImlhdCI6MTc0NDY5MDAzNywiZXhwIjoxNzc2MjI2MDM3fQ.49V_5VD7hyH_0QKDcFiTnEaxv4bMdEJk7Ipw-tO_1dA';
 
+// Maximum length for instructions before showing "More" button
+const MAX_INSTRUCTIONS_LENGTH = 300;
+
 export default function RecipeCard({
   recipe,
   isSelected,
@@ -30,6 +36,24 @@ export default function RecipeCard({
   onExpand,
 }: Props) {
   const { isMobile, isTablet, isDesktop, isLargeDesktop, isWeb } = useResponsive();
+  const [loading, setLoading] = useState(false);
+  const [showFullInstructions, setShowFullInstructions] = useState(false);
+
+  // Handle back button press for the modal
+  useEffect(() => {
+    const backAction = () => {
+      if (showFullInstructions) {
+        setShowFullInstructions(false);
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+    return () => backHandler.remove();
+  }, [showFullInstructions]);
+
   const getImageSource = (img: string | any) => {
     if (
       typeof img === 'string' &&
@@ -45,15 +69,30 @@ export default function RecipeCard({
   const imageSource = getImageSource(recipe.image);
   const isRemote = imageSource.uri !== FALLBACK_IMAGE_URL;
 
-  const [loading, setLoading] = useState(isRemote);
-
   useEffect(() => {
     if (isRemote) {
       setLoading(true);
     } else {
       setLoading(false);
     }
-  }, [imageSource.uri]);
+  }, [imageSource.uri, isRemote]);
+
+  // Check if instructions are long enough to need truncation
+  const instructionsAreLong = recipe.instructions.length > MAX_INSTRUCTIONS_LENGTH;
+
+  // Get truncated instructions with ellipsis
+  const getTruncatedInstructions = () => {
+    if (instructionsAreLong) {
+      return recipe.instructions.substring(0, MAX_INSTRUCTIONS_LENGTH) + '...';
+    }
+    return recipe.instructions;
+  };
+
+  // Toggle selection when clicking on the checkbox
+  const handleCheckboxClick = (e: any) => {
+    e.stopPropagation(); // Prevent card expansion
+    onToggleSelect();
+  };
 
   return (
     <TouchableOpacity
@@ -90,7 +129,9 @@ export default function RecipeCard({
       >
         <View style={styles.headerRow}>
           <Text style={styles.title}>{recipe.title}</Text>
-          <Text style={styles.selectText}>{isSelected ? '✅' : '⬜'}</Text>
+          <TouchableOpacity onPress={handleCheckboxClick}>
+            <Text style={styles.selectText}>{isSelected ? '✅' : '⬜'}</Text>
+          </TouchableOpacity>
         </View>
         <Text style={styles.ingredientCount}>{recipe.ingredients.length} ingredients</Text>
 
@@ -122,7 +163,18 @@ export default function RecipeCard({
             </View>
 
             <Text style={styles.sectionHeader}>Instructions:</Text>
-            <Text style={styles.instructionsText}>{recipe.instructions}</Text>
+            <Text style={styles.instructionsText}>
+              {instructionsAreLong ? getTruncatedInstructions() : recipe.instructions}
+            </Text>
+
+            {instructionsAreLong && (
+              <TouchableOpacity
+                style={styles.moreButton}
+                onPress={() => setShowFullInstructions(true)}
+              >
+                <Text style={styles.moreButtonText}>Read More</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -130,11 +182,117 @@ export default function RecipeCard({
           <Text style={styles.toggleButton}>{isSelected ? 'Unselect' : 'Select'}</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Full Instructions Modal */}
+      <Modal
+        visible={showFullInstructions}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowFullInstructions(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalContainer,
+              isMobile && styles.modalContainerMobile,
+              isTablet && styles.modalContainerTablet,
+              (isDesktop || isLargeDesktop) && styles.modalContainerDesktop,
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{recipe.title} - Instructions</Text>
+              <TouchableOpacity
+                onPress={() => setShowFullInstructions(false)}
+                style={styles.closeButton}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalScrollView}>
+              <Text style={styles.modalInstructions}>{recipe.instructions}</Text>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalContainerMobile: {
+    width: '95%',
+    maxHeight: '80%',
+  },
+  modalContainerTablet: {
+    width: '80%',
+    maxHeight: '80%',
+  },
+  modalContainerDesktop: {
+    width: '60%',
+    maxWidth: 800,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  modalScrollView: {
+    padding: 16,
+    maxHeight: '100%',
+  },
+  modalInstructions: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#333',
+  },
+  moreButton: {
+    marginTop: 8,
+    alignSelf: 'flex-end',
+  },
+  moreButtonText: {
+    color: '#007AFF',
+    fontWeight: '600',
+  },
   imageContainer: {
     position: 'relative',
     width: '100%',
