@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "forkcast-mobile",
-    "slug": "forkcast-mobile",
+    "name": "forkcast-web",
+    "slug": "forkcast-web",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
