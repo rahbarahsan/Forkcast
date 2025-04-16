@@ -1,16 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, createRef } from 'react';
 import {
   View,
   TextInput,
   Text,
   FlatList,
-  StyleSheet,
   TouchableOpacity,
   Animated,
   Keyboard,
   Platform,
   Modal,
 } from 'react-native';
+import { pantryScreenStyles as styles } from '../styles/pantryScreenStyle';
 import AlertDialog from '../components/AlertDialog';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Picker } from '@react-native-picker/picker';
@@ -38,9 +38,10 @@ export default function PantryScreen() {
   const [showAlertDialog, setShowAlertDialog] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
-  // Animation values
+  // Refs
   const formOpacity = useRef(new Animated.Value(0)).current;
   const formHeight = useRef(new Animated.Value(0)).current;
+  const quantityInputRef = useRef<TextInput>(null);
 
   // Get responsive info
   const { screenSize, isMobile, isTablet, isDesktop, isWeb } = useResponsive();
@@ -220,6 +221,13 @@ export default function PantryScreen() {
               placeholder="e.g. Tomatoes"
               value={name}
               onChangeText={setName}
+              returnKeyType="next"
+              onSubmitEditing={() => {
+                // Focus the quantity input when pressing return/next
+                if (quantityInputRef.current) {
+                  quantityInputRef.current.focus();
+                }
+              }}
               style={styles.input}
               accessibilityLabel="Ingredient name input"
             />
@@ -229,10 +237,13 @@ export default function PantryScreen() {
             <View style={styles.quantityContainer}>
               <Text style={styles.label}>Quantity</Text>
               <TextInput
+                ref={quantityInputRef}
                 placeholder="e.g. 0.5, 1"
                 value={quantity}
                 onChangeText={setQuantity}
                 keyboardType="numeric"
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
                 style={styles.input}
                 accessibilityLabel="Quantity input"
               />
@@ -296,21 +307,26 @@ export default function PantryScreen() {
         </View>
       ) : (
         <>
-          <FlatList
-            data={filteredItems}
-            keyExtractor={(item, index) => item.id || `item-${index}`}
-            renderItem={({ item }) => (
-              <PantryCard
-                item={item}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                isMobile={isMobile}
-              />
-            )}
-            contentContainerStyle={[styles.listContainer, getItemLayout()]}
-            numColumns={isMobile ? 1 : isTablet ? 2 : 3}
-            key={isMobile ? '1' : isTablet ? '2' : '3'} // Force re-render when columns change
-          />
+          <View style={styles.listWrapper}>
+            <FlatList
+              data={filteredItems}
+              keyExtractor={(item, index) => item.id || `item-${index}`}
+              renderItem={({ item }) => (
+                <View style={styles.itemContainer}>
+                  <PantryCard
+                    item={item}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    isMobile={isMobile}
+                  />
+                </View>
+              )}
+              contentContainerStyle={styles.listContainer}
+              numColumns={1}
+              showsVerticalScrollIndicator={false}
+              ListFooterComponent={<View style={{ height: 80 }} />}
+            />
+          </View>
 
           {filteredItems.length > 0 && (
             <TouchableOpacity
@@ -361,8 +377,16 @@ export default function PantryScreen() {
       {/* iOS Unit Picker Modal */}
       {Platform.OS === 'ios' && (
         <Modal visible={showUnitPicker} transparent animationType="slide">
-          <View style={styles.pickerModalOverlay}>
-            <View style={styles.pickerModalContent}>
+          <TouchableOpacity
+            style={styles.pickerModalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowUnitPicker(false)}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.pickerModalContent}
+              onPress={(e) => e.stopPropagation()}
+            >
               <View style={styles.pickerModalHeader}>
                 <TouchableOpacity onPress={() => setShowUnitPicker(false)}>
                   <Text style={styles.pickerModalCancel}>Cancel</Text>
@@ -375,239 +399,16 @@ export default function PantryScreen() {
                 selectedValue={unit}
                 onValueChange={(val) => setUnit(val)}
                 style={styles.iosPicker}
+                itemStyle={styles.iosPickerItem}
               >
                 {unitOptions.map((u) => (
                   <Picker.Item label={u} value={u} key={u} />
                 ))}
               </Picker>
-            </View>
-          </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
         </Modal>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  // iOS Picker Modal styles
-  pickerModalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  pickerModalContent: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 0, // Extra padding for iOS home indicator
-  },
-  pickerModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-  },
-  pickerModalCancel: {
-    color: '#777777',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  pickerModalDone: {
-    color: '#4285F4',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  iosPicker: {
-    height: 200,
-    width: '100%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    paddingVertical: 16,
-    paddingHorizontal: 4,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginBottom: 16,
-    width: '100%',
-    height: 48,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: '100%',
-    fontSize: 16,
-  },
-  clearButton: {
-    padding: 4,
-  },
-  formContainer: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    marginBottom: 16,
-    width: '100%',
-    overflow: 'hidden',
-  },
-  formHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  formGroup: {
-    marginBottom: 16,
-    width: '100%',
-  },
-  formRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 16,
-  },
-  quantityContainer: {
-    flex: 1,
-    marginRight: 8,
-  },
-  unitContainer: {
-    width: '40%',
-    marginLeft: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 8,
-    color: '#555',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    backgroundColor: '#FAFAFA',
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    backgroundColor: '#FAFAFA',
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 45,
-    width: '100%',
-  },
-  pickerButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: '#FAFAFA',
-  },
-  formActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 8,
-  },
-  button: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  addButton: {
-    backgroundColor: '#4285F4',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  cancelButton: {
-    backgroundColor: '#F5F5F5',
-    marginRight: 8,
-  },
-  cancelButtonText: {
-    color: '#555',
-    fontWeight: '600',
-  },
-  submitButton: {
-    backgroundColor: '#4285F4',
-  },
-  submitButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  listContainer: {
-    width: '100%',
-    paddingBottom: 80,
-  },
-  resetButton: {
-    backgroundColor: '#EA4335',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    bottom: 20,
-    alignSelf: 'center',
-  },
-  resetButtonText: {
-    color: 'white',
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyStateText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 16,
-  },
-});
