@@ -1,5 +1,5 @@
 // src/screens/RecipesScreen.tsx
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useEffect, useContext, useState, useCallback } from 'react';
 import { View, FlatList, Text, ActivityIndicator } from 'react-native';
 import screenStyles from '../styles/screenStyle';
 import fallbackRecipes from '../data/fallbackRecipes';
@@ -10,7 +10,12 @@ import { Recipe } from '../types';
 export default function RecipesScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const { selectedIds, toggleSelection } = useContext(RecipesContext);
+
+  const handleExpand = useCallback((id: string) => {
+    setExpandedId((prevId) => (prevId === id ? null : id));
+  }, []);
 
   const fetchRecipes = async () => {
     try {
@@ -48,6 +53,8 @@ export default function RecipesScreen() {
             recipe={item}
             isSelected={selectedIds.has(item.id)}
             onToggleSelect={() => toggleSelection(item.id)}
+            expanded={expandedId === item.id}
+            onExpand={() => handleExpand(item.id)}
           />
         )}
         ListFooterComponent={
