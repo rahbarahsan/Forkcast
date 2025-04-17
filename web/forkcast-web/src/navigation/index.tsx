@@ -13,6 +13,7 @@ import PantryScreen from '../screens/PantryScreen';
 import GroceryListScreen from '../screens/GroceryListScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import DiscoverRecipesScreen from '../screens/DiscoverRecipesScreen';
+import SignInScreen from '../screens/SignInScreen.web';
 
 // Define the root tab param list
 export type RootTabParamList = {
@@ -22,6 +23,7 @@ export type RootTabParamList = {
   Pantry: undefined;
   Groceries: undefined;
   History: undefined;
+  SignIn: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -62,7 +64,7 @@ function TabNavigator() {
               height: 48,
               borderBottomWidth: 1,
               borderBottomColor: '#f0f0f0',
-              backgroundColor: '#fff',
+              backgroundColor: '#f0f0f0',
               elevation: 0,
               shadowOpacity: 0,
             }
@@ -102,6 +104,15 @@ function TabNavigator() {
       <Tab.Screen
         name="History"
         component={isWeb ? WebScreenWrapper(HistoryScreen) : HistoryScreen}
+      />
+      <Tab.Screen
+        name="SignIn"
+        component={isWeb ? WebScreenWrapper(SignInScreen) : SignInScreen}
+        options={{
+          tabBarLabel: 'Sign In',
+          tabBarIcon: ({ color, size }) =>
+            isWeb ? null : <Ionicons name="person-outline" size={size} color={color} />,
+        }}
       />
     </Tab.Navigator>
   );
