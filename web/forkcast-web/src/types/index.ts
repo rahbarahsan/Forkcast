@@ -10,6 +10,7 @@ export interface Recipe {
 }
 
 export interface PantryItem {
+  id: string;
   name: string;
   quantity: string; // You can update to include unit (e.g., '2 pcs', '50g')
 }
