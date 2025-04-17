@@ -1,13 +1,12 @@
-// src/screens/HomeScreen.tsx
-
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, Alert } from 'react-native';
-import { useResponsive } from '../hooks/useResponsive';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import AlertDialog from '../components/AlertDialog';
+import FeatureCard from '../components/FeatureCard';
 
-// Define the navigation param list type
-type RootTabParamList = {
+// Define navigation param list type
+export type RootTabParamList = {
   Home: undefined;
   Discover: undefined;
   Planner: undefined;
@@ -16,204 +15,156 @@ type RootTabParamList = {
   History: undefined;
 };
 
-type HomeScreenNavigationProp = BottomTabNavigationProp<RootTabParamList>;
-import screenStyles from '../styles/screenStyle';
+const features = [
+  {
+    title: 'Discover Recipes',
+    description: 'Find trending and diverse recipes',
+    emoji: '🔍',
+    screen: 'Discover',
+  },
+  {
+    title: 'Add Recipe',
+    description: 'Create your own meals easily',
+    emoji: '➕',
+    screen: 'AddRecipe',
+    comingSoon: true,
+  },
+  {
+    title: 'Weekly Planner',
+    description: 'Schedule meals for the week',
+    emoji: '🕰️',
+    screen: 'Planner',
+  },
+  {
+    title: 'Pantry Tracker',
+    description: 'Track ingredients you already have',
+    emoji: '📦',
+    screen: 'Pantry',
+  },
+  {
+    title: 'Smart Grocery Aggregation',
+    description: 'Combine all recipe ingredients into one list',
+    emoji: '🛒',
+    screen: 'Groceries',
+  },
+  {
+    title: 'Recipe Scout',
+    description: 'Extract recipes from YouTube using AI',
+    emoji: '📺',
+    screen: 'RecipeScout',
+    isPremium: true,
+    comingSoon: true,
+  },
+];
 
 export default function HomeScreen() {
-  const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { width, isMobile, isTablet, isDesktop, isLargeDesktop } = useResponsive();
+  const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
+  const [showAlert, setShowAlert] = useState(false);
 
-  const isWideScreen = isDesktop || isLargeDesktop;
+  const handlePress = (feature: any) => {
+    if (feature.comingSoon) {
+      setShowAlert(true);
+    } else {
+      navigation.navigate(feature.screen as any);
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Welcome to ForkCast</Text>
-        <Text style={styles.tagline}>
-          Your personal kitchen assistant for perfect meals every time
-        </Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.logo}>🍴 Forkcast</Text>
+      <Text style={styles.tagline}>Your AI-powered kitchen assistant</Text>
+
+      <View style={styles.featuresContainer}>
+        {features.map((feature, idx) => (
+          <FeatureCard
+            key={idx}
+            title={feature.title}
+            description={feature.description}
+            emoji={feature.emoji}
+            isPremium={feature.isPremium}
+            comingSoon={feature.comingSoon}
+            onPress={() => handlePress(feature)}
+            style={{ width: '48%' }}
+          />
+        ))}
       </View>
 
-      <View
-        style={[
-          styles.tilesContainer,
-          isTablet && !isWideScreen && styles.tabletTiles,
-          isDesktop && styles.wideTiles,
-          isLargeDesktop && styles.extraWideTiles,
-        ]}
-      >
-        <TouchableOpacity
-          style={[
-            styles.tile,
-            isDesktop && styles.wideTile,
-            isLargeDesktop && styles.extraWideTile,
-            isMobile && styles.mobileTile,
-          ]}
-          onPress={() => navigation.navigate('Discover')}
-        >
-          <Image
-            source={require('../../assets/images/discover-icon.png')}
-            style={styles.tileIcon}
-            defaultSource={require('../../assets/images/placeholder.jpg')}
-          />
-          <Text style={styles.tileText}>🔍 Discover</Text>
-          <Text style={styles.tileDescription}>Find new and trending recipes</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.tile,
-            isDesktop && styles.wideTile,
-            isLargeDesktop && styles.extraWideTile,
-            isMobile && styles.mobileTile,
-          ]}
-          onPress={() => Alert.alert('Coming Soon', 'This feature is coming soon!')}
-        >
-          <Image
-            source={require('../../assets/images/add-icon.png')}
-            style={styles.tileIcon}
-            defaultSource={require('../../assets/images/placeholder.jpg')}
-          />
-          <Text style={styles.tileText}>➕ Add Recipe</Text>
-          <Text style={styles.tileDescription}>Create and save your recipes</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.tile,
-            isDesktop && styles.wideTile,
-            isLargeDesktop && styles.extraWideTile,
-            isMobile && styles.mobileTile,
-          ]}
-          onPress={() => navigation.navigate('Planner')}
-        >
-          <Image
-            source={require('../../assets/images/plan-icon.png')}
-            style={styles.tileIcon}
-            defaultSource={require('../../assets/images/placeholder.jpg')}
-          />
-          <Text style={styles.tileText}>🕰️ Plan</Text>
-          <Text style={styles.tileDescription}>Schedule your meals for the week</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.tile,
-            isDesktop && styles.wideTile,
-            isLargeDesktop && styles.extraWideTile,
-            isMobile && styles.mobileTile,
-          ]}
-          onPress={() => navigation.navigate('Pantry')}
-        >
-          <Image
-            source={require('../../assets/images/pantry-icon.png')}
-            style={styles.tileIcon}
-            defaultSource={require('../../assets/images/placeholder.jpg')}
-          />
-          <Text style={styles.tileText}>📦 Pantry</Text>
-          <Text style={styles.tileDescription}>Manage your ingredients</Text>
-        </TouchableOpacity>
+      <View style={styles.comingSoonSection}>
+        <Text style={styles.comingSoonTitle}>💎 Premium Features (Coming Soon)</Text>
+        <Text style={styles.comingSoonItem}>• Flyer-Based Grocery Optimization</Text>
+        <Text style={styles.comingSoonItem}>• Pantry-Aware Suggestions</Text>
+        <Text style={styles.comingSoonItem}>• Pantry Scan</Text>
+        <Text style={styles.comingSoonItem}>• Ingredient Insights</Text>
+        <Text style={styles.comingSoonItem}>• Categorized Grocery List</Text>
+        <Text style={styles.comingSoonItem}>• Export Grocery List</Text>
+        <Text style={styles.comingSoonItem}>• Share Cooking Plan</Text>
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>ForkCast - Making cooking easier</Text>
+        <Text style={styles.footerText}>Forkcast - Simplify your cooking life</Text>
       </View>
-    </View>
+
+      <AlertDialog
+        visible={showAlert}
+        title="Coming Soon"
+        message="This feature is not yet available. Stay tuned for our premium launch!"
+        onClose={() => setShowAlert(false)}
+      />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  mobileTile: {
-    width: '100%',
-    marginBottom: 16,
-  },
   container: {
-    flex: 1,
     padding: 20,
-    backgroundColor: '#F9F9F9',
-  },
-  header: {
+    backgroundColor: '#FFF8F0',
+    flexGrow: 1,
     alignItems: 'center',
-    marginVertical: 30,
   },
-  title: {
-    fontSize: 28,
+  logo: {
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
+    marginTop: 40,
     marginBottom: 10,
+    color: '#333',
   },
   tagline: {
     fontSize: 16,
-    color: '#666',
+    color: '#777',
+    marginBottom: 30,
     textAlign: 'center',
-    paddingHorizontal: 20,
   },
-  tilesContainer: {
+  featuresContainer: {
+    width: '100%',
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    marginBottom: 40,
+  },
+  comingSoonSection: {
     marginTop: 20,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+    padding: 16,
+    width: '100%',
   },
-  tabletTiles: {
-    paddingHorizontal: 50,
+  comingSoonTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 10,
   },
-  wideTiles: {
-    flexDirection: 'row',
-    flexWrap: 'nowrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: '5%',
-  },
-  extraWideTiles: {
-    flexDirection: 'row',
-    flexWrap: 'nowrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: '10%',
-  },
-  tile: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 20,
-    width: '47%',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    minHeight: 160,
-    justifyContent: 'center',
-  },
-  wideTile: {
-    width: '23%',
-    marginHorizontal: 8,
-  },
-  extraWideTile: {
-    width: '22%',
-    marginHorizontal: 12,
-  },
-  tileIcon: {
-    width: 60,
-    height: 60,
-    marginBottom: 12,
-  },
-  tileText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  tileDescription: {
+  comingSoonItem: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: '#555',
+    marginBottom: 4,
   },
   footer: {
-    marginTop: 'auto',
-    paddingVertical: 20,
-    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 20,
   },
   footerText: {
-    color: '#888',
     fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
   },
 });
