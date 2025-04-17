@@ -1,4 +1,3 @@
-// src/components/AlertDialog.tsx
 import React from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
@@ -55,20 +54,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 12,
+    textAlign: 'center',
   },
   message: {
     fontSize: 15,
     marginBottom: 20,
     color: '#333',
+    textAlign: 'center',
   },
   okButton: {
     backgroundColor: '#1E88E5',
     borderRadius: 6,
     paddingVertical: 10,
+    paddingHorizontal: 20,
     alignItems: 'center',
   },
   okText: {
     color: 'white',
     fontWeight: '600',
+    fontSize: 16,
   },
 });
