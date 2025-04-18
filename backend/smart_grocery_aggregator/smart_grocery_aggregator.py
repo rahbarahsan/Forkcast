@@ -1,9 +1,19 @@
 from typing import List, Dict, Set, Tuple
-from backend.grocery_rules.unit_threshold_rules import estimate_weight
-from backend.grocery_rules.synonym_resolver import get_canonical_name
-from backend.grocery_rules.category_resolver import get_category
-from backend.grocery_rules.plural_resolver import normalize_plural
 import re
+
+# Handle imports for both direct execution and module import
+try:
+    # Try relative imports (for when the file is imported as part of a package)
+    from ..grocery_rules.unit_threshold_rules import estimate_weight
+    from ..grocery_rules.synonym_resolver import get_canonical_name
+    from ..grocery_rules.category_resolver import get_category
+    from ..grocery_rules.plural_resolver import normalize_plural
+except ImportError:
+    # Fall back to absolute imports (for when the file is run directly)
+    from grocery_rules.unit_threshold_rules import estimate_weight
+    from grocery_rules.synonym_resolver import get_canonical_name
+    from grocery_rules.category_resolver import get_category
+    from grocery_rules.plural_resolver import normalize_plural
 
 class SmartGroceryAggregator:
     def __init__(self, recipes, pantry_items):
