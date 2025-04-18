@@ -1,22 +1,63 @@
+# main.py
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from supabase_client import supabase
-from models import Recipe
+from backend.models import GroceryRequest, GroceryResponse, Recipe, PantryItem
+from backend.supabase_client import supabase
+from backend.smart_grocery_aggregator.smart_grocery_aggregator import SmartGroceryAggregator
 
 app = FastAPI()
 
-# Allow all CORS for dev
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # In production, replace with specific frontend URL
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.get("/api/recipes", response_model=list[Recipe])
-def get_recipes():
+@app.post("/api/grocery-list", response_model=GroceryResponse)
+async def generate_grocery_list(req: GroceryRequest):
     try:
-        result = supabase.table("recipes").select("*").execute()
-        return result.data
+        recipes = []
+        pantry_items = req.pantry_items or []
+
+        if not req.is_guest:
+            if not req.user_id:
+                raise HTTPException(status_code=400, detail="User ID is required for signed-in users")
+            
+            # Fetch user plans
+            plan_response = supabase.table("plans").select("*").eq("user_id", req.user_id).execute()
+            plan_data = plan_response.data or []
+            plan_recipe_ids = set()
+            for plan in plan_data:
+                plan_recipe_ids.update(plan.get("recipe_ids", []))
+
+            # Fetch pantry
+            pantry_response = supabase.table("pantry").select("*").eq("user_id", req.user_id).execute()
+            pantry_data = pantry_response.data or []
+            pantry_items = [PantryItem(**item) for item in pantry_data]
+
+            # Fetch recipes
+            recipe_response = supabase.table("recipes").select("*").execute()
+            all_recipes = recipe_response.data or []
+            recipes = [Recipe(**r) for r in all_recipes if r["id"] in plan_recipe_ids]
+
+        else:
+            recipe_ids = set(req.selected_ids or [])
+            plan_ids = set(req.plan_ids or [])
+            if not recipe_ids and not plan_ids:
+                return GroceryResponse(categorized={}, raw=[])
+            
+            recipe_response = supabase.table("recipes").select("*").execute()
+            all_recipes = recipe_response.data or []
+            recipes = [Recipe(**r) for r in all_recipes if r["id"] in recipe_ids or r["id"] in plan_ids]
+
+        # Run smart aggregation
+        aggregator = SmartGroceryAggregator(recipes, pantry_items)
+        categorized, raw = aggregator.generate()
+
+        return GroceryResponse(categorized=categorized, raw=raw)
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
