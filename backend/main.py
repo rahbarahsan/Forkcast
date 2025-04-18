@@ -2,9 +2,18 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from backend.models import GroceryRequest, GroceryResponse, Recipe, PantryItem
-from backend.supabase_client import supabase
-from backend.smart_grocery_aggregator.smart_grocery_aggregator import SmartGroceryAggregator
+
+# Handle imports for both direct execution and module import
+try:
+    # Try relative imports (for when the file is imported as part of a package)
+    from .models import GroceryRequest, GroceryResponse, Recipe, PantryItem
+    from .supabase_client import supabase
+    from .smart_grocery_aggregator.smart_grocery_aggregator import SmartGroceryAggregator
+except ImportError:
+    # Fall back to absolute imports (for when the file is run directly)
+    from models import GroceryRequest, GroceryResponse, Recipe, PantryItem
+    from supabase_client import supabase
+    from smart_grocery_aggregator.smart_grocery_aggregator import SmartGroceryAggregator
 
 app = FastAPI()
 
