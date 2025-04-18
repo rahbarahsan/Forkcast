@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Import screens
 import HomeScreen from '../screens/HomeScreen';
-import PlannerScreen from '../screens/PlannerScreen';
+import { PlannerScreen } from '../screens/PlannerScreen';
 import PantryScreen from '../screens/PantryScreen';
 import GroceryListScreen from '../screens/GroceryListScreen';
 import HistoryScreen from '../screens/HistoryScreen';
