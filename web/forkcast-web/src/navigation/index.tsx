@@ -134,6 +134,35 @@ const styles = StyleSheet.create({
   },
 });
 
+// Define interfaces for data models
+export interface Recipe {
+  id: string;
+  title: string;
+  cuisine: string;
+  image: string | number; // allow both URL and local require
+  ingredients: string[]; // Still basic for now. Can enhance later with parsed amounts.
+  instructions: string;
+  prepTime: string;
+  cookTime: string;
+}
+
+export interface PantryItem {
+  id: string;
+  name: string;
+  quantity: string; // E.g., "2 pcs", "500g"
+  unit?: string; // Optional: E.g., "g", "pcs", "ml"
+  category?: string; // Optional: For filtering or grouping (e.g., "Dairy", "Spices")
+}
+
+export interface Plan {
+  id: string;
+  recipeIds: string[];
+  name?: string; // Optional: User-defined label like "Week 1 Plan"
+  startDate?: string; // Optional: ISO date string
+  endDate?: string; // Optional: ISO date string
+  isActive?: boolean; // Optional: For toggling plan
+}
+
 export default function AppNavigator() {
   return (
     <NavigationContainer>

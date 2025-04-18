@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useWindowDimensions, Platform } from 'react-native';
 
 // Define standard breakpoints for consistent responsive design
@@ -32,22 +32,22 @@ export function useResponsive(): ResponsiveInfo {
   const { width, height } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
 
-  // Determine screen size based on width
-  const getScreenSize = (width: number): ScreenSize => {
+  // Memoize the getScreenSize function to avoid recreating it on each render
+  const getScreenSize = useCallback((width: number): ScreenSize => {
     if (width >= BREAKPOINTS.xxl) return 'xxl';
     if (width >= BREAKPOINTS.xl) return 'xl';
     if (width >= BREAKPOINTS.lg) return 'lg';
     if (width >= BREAKPOINTS.md) return 'md';
     if (width >= BREAKPOINTS.sm) return 'sm';
     return 'xs';
-  };
+  }, []);
 
   const [screenSize, setScreenSize] = useState<ScreenSize>(getScreenSize(width));
 
   // Update screen size when dimensions change
   useEffect(() => {
     setScreenSize(getScreenSize(width));
-  }, [width]);
+  }, [width, getScreenSize]);
 
   // Add event listener for window resize on web
   useEffect(() => {
@@ -69,9 +69,10 @@ export function useResponsive(): ResponsiveInfo {
         window.removeEventListener('resize', handleResize);
       };
     }
-  }, [isWeb]);
+  }, [isWeb, getScreenSize]);
 
-  return {
+  // Compute derived values once
+  const derivedInfo = {
     width,
     height,
     screenSize,
@@ -81,4 +82,6 @@ export function useResponsive(): ResponsiveInfo {
     isLargeDesktop: screenSize === 'xxl',
     isWeb,
   };
+
+  return derivedInfo;
 }
