@@ -14,3 +14,9 @@ export interface PantryItem {
   name: string;
   quantity: string; // You can update to include unit (e.g., '2 pcs', '50g')
 }
+
+export interface Plan {
+  id: string;
+  recipeIds: string[];
+  // Add other properties of Plan if they become apparent later
+}
