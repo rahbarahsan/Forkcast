@@ -45,6 +45,20 @@ coverage/
 .env
 .env.*
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+*.egg-info/
+.installed.cfg
+*.egg
+
 # Build artifacts
 dist/
 build/

@@ -1,6 +1,13 @@
 from typing import Optional
-from backend.supabase_client import supabase
 from functools import lru_cache
+
+# Handle imports for both direct execution and module import
+try:
+    # Try relative imports (for when the file is imported as part of a package)
+    from ..supabase_client import supabase
+except ImportError:
+    # Fall back to absolute imports (for when the file is run directly)
+    from supabase_client import supabase
 
 @lru_cache
 def fetch_lookup_data():

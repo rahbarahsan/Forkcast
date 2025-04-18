@@ -2,10 +2,10 @@ import sys
 import os
 import pytest
 
-# Add /backend to the path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+# Add the parent directory to the path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from backend.smart_grocery_aggregator.smart_grocery_aggregator import smart_grocery_aggregation
+from smart_grocery_aggregator.smart_grocery_aggregator import smart_grocery_aggregation
 
 def test_simple_exclusion_from_pantry():
     recipes = [
