@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import fallbackRecipes from '../data/fallbackRecipes';
 
+import { API_ENDPOINTS } from '../config/api';
+
 export function useRecipes() {
   const [recipes, setRecipes] = useState(fallbackRecipes);
   const [isFallback, setIsFallback] = useState(true);
 
-  const BACKEND_URL = 'https://forkcast-backend.onrender.com/api/recipes';
+  const BACKEND_URL = API_ENDPOINTS.recipes;
 
   useEffect(() => {
     try {
