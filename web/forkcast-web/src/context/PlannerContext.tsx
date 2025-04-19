@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { storage } from '../utils/storage';
 
 export interface Plan {
   id: string;
@@ -41,25 +42,49 @@ export const PlannerProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const load = () => {
-      const stored = localStorage.getItem('mealPlanner_plans');
-      const active = localStorage.getItem('mealPlanner_activePlan');
-      if (stored) setPlans(JSON.parse(stored));
-      if (active) setActivePlanId(active);
-      setIsLoading(false);
+    const load = async () => {
+      try {
+        const stored = await storage.getItem('mealPlanner_plans');
+        const active = await storage.getItem('mealPlanner_activePlan');
+        if (stored) setPlans(JSON.parse(stored));
+        if (active) setActivePlanId(active);
+      } catch (error) {
+        console.error('Error loading data from storage:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     load();
   }, []);
 
   useEffect(() => {
-    if (!isLoading) localStorage.setItem('mealPlanner_plans', JSON.stringify(plans));
+    const saveData = async () => {
+      if (!isLoading) {
+        try {
+          await storage.setItem('mealPlanner_plans', JSON.stringify(plans));
+        } catch (error) {
+          console.error('Error saving plans to storage:', error);
+        }
+      }
+    };
+    saveData();
   }, [plans, isLoading]);
 
   useEffect(() => {
-    if (!isLoading) {
-      if (activePlanId) localStorage.setItem('mealPlanner_activePlan', activePlanId);
-      else localStorage.removeItem('mealPlanner_activePlan');
-    }
+    const saveActivePlan = async () => {
+      if (!isLoading) {
+        try {
+          if (activePlanId) {
+            await storage.setItem('mealPlanner_activePlan', activePlanId);
+          } else {
+            await storage.removeItem('mealPlanner_activePlan');
+          }
+        } catch (error) {
+          console.error('Error saving active plan to storage:', error);
+        }
+      }
+    };
+    saveActivePlan();
   }, [activePlanId, isLoading]);
 
   const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
