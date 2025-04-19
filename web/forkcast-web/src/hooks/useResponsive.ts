@@ -22,6 +22,7 @@ export interface ResponsiveInfo {
   isDesktop: boolean;
   isLargeDesktop: boolean;
   isWeb: boolean;
+  isSmallWeb: boolean;
 }
 
 /**
@@ -81,6 +82,7 @@ export function useResponsive(): ResponsiveInfo {
     isDesktop: screenSize === 'xl',
     isLargeDesktop: screenSize === 'xxl',
     isWeb,
+    isSmallWeb: isWeb && (screenSize === 'xs' || screenSize === 'sm'),
   };
 
   return derivedInfo;
