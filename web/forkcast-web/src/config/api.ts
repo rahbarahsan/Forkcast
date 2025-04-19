@@ -1,7 +1,7 @@
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export const API_ENDPOINTS = {
-  recipes: `${BASE_URL}/api/recipes`,
-  groceryList: `${BASE_URL}/api/grocery-list`,
+  recipes: `${BASE_URL}/recipes`,
+  groceryList: `${BASE_URL}/grocery-list`,
   // Add more endpoints here as needed
 };
