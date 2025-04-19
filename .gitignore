@@ -47,6 +47,8 @@ coverage/
 
 # Python
 __pycache__/
+ backend/grocery_rules/__pycache__/
+ backend/smart_grocery_aggregator/__pycache__/
 *.py[cod]
 *$py.class
 *.so
