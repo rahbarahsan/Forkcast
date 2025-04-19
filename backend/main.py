@@ -70,3 +70,13 @@ async def generate_grocery_list(req: GroceryRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ✅ New Route Added
+@app.get("/api/recipes", response_model=list[Recipe])
+async def get_recipes():
+    try:
+        recipe_response = supabase.table("recipes").select("*").execute()
+        return recipe_response.data or []
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
