@@ -1,12 +1,16 @@
 // src/hooks/useGroceryList.ts
-import { useEffect, useState } from 'react';
-import { PantryItem, Recipe } from '../types';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { PantryItem } from '../types';
 import { API_ENDPOINTS } from '../config/api';
+import { PANTRY_UPDATED_EVENT } from '../context/PantryContext';
+import { PLAN_UPDATED_EVENT } from '../context/PlannerContext';
+
 interface UseGroceryListProps {
   isGuest: boolean;
   userId?: string;
   selectedIds?: string[];
   planIds?: string[];
+  recipeIds?: string[];
   pantryItems?: PantryItem[];
 }
 
@@ -20,47 +24,113 @@ export const useGroceryList = ({
   userId,
   selectedIds,
   planIds,
+  recipeIds,
   pantryItems,
 }: UseGroceryListProps) => {
   const [data, setData] = useState<GroceryListResult | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const fetchInProgress = useRef(false);
+  const lastFetchTime = useRef(0);
+
+  const fetchGroceryList = useCallback(async () => {
+    const now = Date.now();
+    if (fetchInProgress.current || now - lastFetchTime.current < 500) return;
+    if (!isGuest && !userId) return;
+
+    fetchInProgress.current = true;
+    setLoading(true);
+
+    const selectedIdsArray = Array.isArray(selectedIds)
+      ? selectedIds
+      : selectedIds instanceof Set
+        ? Array.from(selectedIds)
+        : [];
+
+    const planIdsArray = Array.isArray(planIds)
+      ? planIds
+      : planIds instanceof Set
+        ? Array.from(planIds)
+        : [];
+
+    const recipeIdsArray = Array.isArray(recipeIds)
+      ? recipeIds
+      : recipeIds instanceof Set
+        ? Array.from(recipeIds)
+        : [];
+
+    const requestBody = {
+      is_guest: isGuest,
+      user_id: userId,
+      selected_ids: selectedIdsArray,
+      plan_ids: planIdsArray,
+      recipe_ids: recipeIdsArray,
+      pantry_items: pantryItems || [],
+    };
+
+    try {
+      const response = await fetch(API_ENDPOINTS.groceryList, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result) {
+        throw new Error('Result is null or undefined');
+      }
+
+      if (!result.categorized) result.categorized = {};
+      if (!result.raw) result.raw = {};
+
+      setData(result);
+      lastFetchTime.current = Date.now();
+    } catch (err: any) {
+      setError(err.message || 'Unknown error');
+    } finally {
+      setLoading(false);
+      fetchInProgress.current = false;
+    }
+  }, [isGuest, userId, selectedIds, planIds, recipeIds, pantryItems]);
 
   useEffect(() => {
-    const fetchGroceryList = async () => {
-      // 🚫 Skip if there's nothing to request
-      if ((isGuest && !selectedIds?.length && !planIds?.length) || (!isGuest && !userId)) {
-        return;
-      }
-      setLoading(true);
-      try {
-        const response = await fetch(API_ENDPOINTS.groceryList, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            is_guest: isGuest,
-            user_id: isGuest ? undefined : userId,
-            selected_ids: isGuest ? selectedIds : undefined,
-            plan_ids: isGuest ? planIds : undefined,
-            pantry_items: pantryItems || [],
-          }),
-        });
-
-        if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
-
-        const result = await response.json();
-        setData(result);
-      } catch (err: any) {
-        setError(err.message || 'Unknown error');
-      } finally {
-        setLoading(false);
+    const handlePantryUpdate = () => {
+      if (!fetchInProgress.current) {
+        setRefreshTrigger((prev) => prev + 1);
       }
     };
 
+    const handlePlanUpdate = () => {
+      if (!fetchInProgress.current) {
+        setRefreshTrigger((prev) => prev + 1);
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener(PANTRY_UPDATED_EVENT, handlePantryUpdate);
+      document.addEventListener(PLAN_UPDATED_EVENT, handlePlanUpdate);
+    }
+
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener(PANTRY_UPDATED_EVENT, handlePantryUpdate);
+        document.removeEventListener(PLAN_UPDATED_EVENT, handlePlanUpdate);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     fetchGroceryList();
-  }, [isGuest, userId, selectedIds, planIds, pantryItems]);
+  }, [fetchGroceryList, refreshTrigger]);
 
   return { groceryList: data, loading, error };
 };
