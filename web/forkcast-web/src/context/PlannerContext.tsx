@@ -1,5 +1,18 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { storage } from '../utils/storage';
+
+// Custom event for plan changes that works on both web and mobile
+export const PLAN_UPDATED_EVENT = 'plan_updated';
+
+// Helper function to dispatch plan updated event that works on both web and mobile
+const dispatchPlanUpdatedEvent = () => {
+  console.log('Dispatching plan_updated event');
+  // Use custom event for web
+  if (typeof document !== 'undefined') {
+    const event = new CustomEvent(PLAN_UPDATED_EVENT);
+    document.dispatchEvent(event);
+  }
+  // For React Native, we'll rely on the useEffect in useGroceryList
+};
 
 export interface Plan {
   id: string;
@@ -41,55 +54,22 @@ export const PlannerProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Trigger plan updated event whenever plans or activePlanId change
   useEffect(() => {
-    const load = async () => {
-      try {
-        const stored = await storage.getItem('mealPlanner_plans');
-        const active = await storage.getItem('mealPlanner_activePlan');
-        if (stored) setPlans(JSON.parse(stored));
-        if (active) setActivePlanId(active);
-      } catch (error) {
-        console.error('Error loading data from storage:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
+    if (!isLoading) {
+      dispatchPlanUpdatedEvent();
+    }
+  }, [plans, activePlanId, isLoading]);
+
+  // Initialize with empty state and no loading from storage
+  useEffect(() => {
+    setIsLoading(false);
   }, []);
-
-  useEffect(() => {
-    const saveData = async () => {
-      if (!isLoading) {
-        try {
-          await storage.setItem('mealPlanner_plans', JSON.stringify(plans));
-        } catch (error) {
-          console.error('Error saving plans to storage:', error);
-        }
-      }
-    };
-    saveData();
-  }, [plans, isLoading]);
-
-  useEffect(() => {
-    const saveActivePlan = async () => {
-      if (!isLoading) {
-        try {
-          if (activePlanId) {
-            await storage.setItem('mealPlanner_activePlan', activePlanId);
-          } else {
-            await storage.removeItem('mealPlanner_activePlan');
-          }
-        } catch (error) {
-          console.error('Error saving active plan to storage:', error);
-        }
-      }
-    };
-    saveActivePlan();
-  }, [activePlanId, isLoading]);
 
   const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
 
   const addPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan> => {
+    console.log('Adding plan:', plan);
     const newPlan = { ...plan, id: generateId() };
     setPlans((prev) => [...prev, newPlan]);
     if (plans.length === 0) setActivePlanId(newPlan.id);
@@ -97,6 +77,7 @@ export const PlannerProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const updatePlan = async (id: string, updates: Partial<Plan>): Promise<Plan | null> => {
+    console.log('Updating plan:', id, updates);
     let updatedPlan: Plan | null = null;
     setPlans((prev) => {
       const index = prev.findIndex((p) => p.id === id);
@@ -111,6 +92,7 @@ export const PlannerProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const deletePlan = async (id: string): Promise<boolean> => {
+    console.log('Deleting plan:', id);
     let found = false;
     setPlans((prev) => {
       const index = prev.findIndex((p) => p.id === id);
@@ -125,11 +107,13 @@ export const PlannerProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const setActivePlan = async (id: string | null) => {
+    console.log('Setting active plan:', id);
     if (id !== null && !plans.find((p) => p.id === id)) throw new Error('Plan not found');
     setActivePlanId(id);
   };
 
   const addRecipeToPlan = async (planId: string, recipeId: string) => {
+    console.log('Adding recipe to plan:', planId, recipeId);
     let success = false;
     setPlans((prev) => {
       const i = prev.findIndex((p) => p.id === planId);
@@ -143,6 +127,7 @@ export const PlannerProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const removeRecipeFromPlan = async (planId: string, recipeId: string) => {
+    console.log('Removing recipe from plan:', planId, recipeId);
     let success = false;
     setPlans((prev) => {
       const i = prev.findIndex((p) => p.id === planId);
