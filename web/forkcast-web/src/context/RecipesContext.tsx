@@ -3,11 +3,13 @@ import React, { createContext, useState } from 'react';
 interface RecipeContextType {
   selectedIds: Set<string>;
   toggleSelection: (id: string) => void;
+  setSelectedIds: (ids: Set<string>) => void;
 }
 
 export const RecipesContext = createContext<RecipeContextType>({
   selectedIds: new Set(),
   toggleSelection: () => {},
+  setSelectedIds: () => {},
 });
 
 export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -27,7 +29,7 @@ export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <RecipesContext.Provider value={{ selectedIds, toggleSelection }}>
+    <RecipesContext.Provider value={{ selectedIds, toggleSelection, setSelectedIds }}>
       {children}
     </RecipesContext.Provider>
   );

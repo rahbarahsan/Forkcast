@@ -42,23 +42,11 @@ export const useGroceryList = ({
     fetchInProgress.current = true;
     setLoading(true);
 
-    const selectedIdsArray = Array.isArray(selectedIds)
-      ? selectedIds
-      : selectedIds instanceof Set
-        ? Array.from(selectedIds)
-        : [];
+    const selectedIdsArray = Array.isArray(selectedIds) ? selectedIds : [];
 
-    const planIdsArray = Array.isArray(planIds)
-      ? planIds
-      : planIds instanceof Set
-        ? Array.from(planIds)
-        : [];
+    const planIdsArray = Array.isArray(planIds) ? planIds : [];
 
-    const recipeIdsArray = Array.isArray(recipeIds)
-      ? recipeIds
-      : recipeIds instanceof Set
-        ? Array.from(recipeIds)
-        : [];
+    const recipeIdsArray = Array.isArray(recipeIds) ? recipeIds : [];
 
     const requestBody = {
       is_guest: isGuest,
@@ -129,8 +117,15 @@ export const useGroceryList = ({
   }, []);
 
   useEffect(() => {
+    console.log('🍳 Triggering Grocery Fetch with:', { recipeIds, planIds, pantryItems });
     fetchGroceryList();
-  }, [fetchGroceryList, refreshTrigger]);
+  }, [
+    fetchGroceryList,
+    refreshTrigger,
+    JSON.stringify(recipeIds),
+    JSON.stringify(planIds),
+    JSON.stringify(pantryItems),
+  ]);
 
   return { groceryList: data, loading, error };
 };
