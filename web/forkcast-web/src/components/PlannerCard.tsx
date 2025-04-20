@@ -1,27 +1,19 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  ActivityIndicator,
-  StyleSheet,
-  Button,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, Image, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { useResponsive } from '../hooks/useResponsive';
 import ConfirmDialog from './ConfirmDialog';
-
-type PlannerCardProps = {
-  id: string;
-  startDate: Date;
-  endDate: Date;
-  recipes: { id: string; title: string; image?: string }[]; // include image field
-  onDelete: (id: string) => void;
-};
 
 // Hosted fallback image from Supabase
 const FALLBACK_IMAGE_URL =
   'https://pmhjdiniwseslpczkokw.supabase.co/storage/v1/object/sign/recipes/placeholder.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5XzdkMTYwZTY4LWZhNTktNDc5Zi05MjE3LTA4NmM2YTA4YTcyNSJ9.eyJ1cmwiOiJyZWNpcGVzL3BsYWNlaG9sZGVyLmpwZyIsImlhdCI6MTc0NDY5MDAzNywiZXhwIjoxNzc2MjI2MDM3fQ.49V_5VD7hyH_0QKDcFiTnEaxv4bMdEJk7Ipw-tO_1dA';
+
+interface PlannerCardProps {
+  id: string;
+  startDate: string | Date;
+  endDate: string | Date;
+  recipes: { id: string; title: string; image?: string }[];
+  onDelete: (id: string) => void;
+}
 
 export default function PlannerCard({
   id,
@@ -30,10 +22,10 @@ export default function PlannerCard({
   recipes,
   onDelete,
 }: PlannerCardProps) {
-  const { width, isMobile, isTablet, isDesktop, isLargeDesktop, isWeb } = useResponsive();
-
+  const { isMobile, isTablet, isDesktop, isLargeDesktop } = useResponsive();
   const isLargeScreen = isDesktop || isLargeDesktop;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [loadingMap, setLoadingMap] = useState<{ [id: string]: boolean }>({});
 
   const getImageSource = (img?: string) => {
     if (img && img.startsWith('http') && img !== FALLBACK_IMAGE_URL) {
@@ -42,14 +34,16 @@ export default function PlannerCard({
     return { uri: FALLBACK_IMAGE_URL };
   };
 
-  // Format date to be more readable
-  const formatDate = (date: Date) => {
+  const parseDate = (date: string | Date): Date =>
+    typeof date === 'string' ? new Date(date) : date;
+
+  const formatDate = (date: string | Date) => {
     const options: Intl.DateTimeFormatOptions = {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
     };
-    return date.toLocaleDateString(undefined, options);
+    return parseDate(date).toLocaleDateString(undefined, options);
   };
 
   return (
@@ -66,7 +60,10 @@ export default function PlannerCard({
           📅 {formatDate(startDate)} – {formatDate(endDate)}
         </Text>
         <Text style={styles.duration}>
-          {Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days
+          {Math.ceil(
+            (parseDate(endDate).getTime() - parseDate(startDate).getTime()) / (1000 * 60 * 60 * 24),
+          )}{' '}
+          days
         </Text>
       </View>
 
@@ -81,7 +78,11 @@ export default function PlannerCard({
       >
         {recipes.map((r) => {
           const isRemote = r.image && r.image.startsWith('http') && r.image !== FALLBACK_IMAGE_URL;
-          const [loading, setLoading] = useState(isRemote);
+          const loading = loadingMap[r.id] ?? isRemote;
+
+          const handleImageLoadEnd = () => {
+            setLoadingMap((prev) => ({ ...prev, [r.id]: false }));
+          };
 
           return (
             <View
@@ -101,7 +102,7 @@ export default function PlannerCard({
                   source={getImageSource(r.image)}
                   style={styles.image}
                   resizeMode="cover"
-                  onLoadEnd={() => setLoading(false)}
+                  onLoadEnd={handleImageLoadEnd}
                 />
               </View>
               <Text style={styles.recipeText}>🍽 {r.title}</Text>
@@ -118,7 +119,7 @@ export default function PlannerCard({
 
       <ConfirmDialog
         visible={showDeleteConfirm}
-        message={`Delete plan from ${startDate.toDateString()} to ${endDate.toDateString()}?`}
+        message={`Delete plan from ${parseDate(startDate).toDateString()} to ${parseDate(endDate).toDateString()}?`}
         onCancel={() => setShowDeleteConfirm(false)}
         onConfirm={() => {
           onDelete(id);
