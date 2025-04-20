@@ -45,3 +45,19 @@ def test_grocery_list_endpoint_empty():
     # Empty request should return empty results
     assert len(response.json()["raw"]) == 0
     assert len(response.json()["categorized"]) == 0
+
+def test_grocery_list_endpoint_with_recipe_ids():
+    """Test the /api/grocery-list endpoint with recipe_ids parameter."""
+    test_data = {
+        "is_guest": True,
+        "recipe_ids": ["1"],  # Assuming recipe ID 1 exists
+        "pantry_items": []
+    }
+    
+    response = client.post("/api/grocery-list", json=test_data)
+    print(f"Status code: {response.status_code}")
+    print(f"Response: {json.dumps(response.json(), indent=2)}")
+    
+    assert response.status_code == 200
+    assert "categorized" in response.json()
+    assert "raw" in response.json()

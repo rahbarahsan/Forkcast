@@ -63,3 +63,51 @@ def test_uncategorized():
 
     assert "mystery mix" in needed_ingredients
     assert categorized_ingredients["Unknown"] == ["mystery mix"]
+
+def test_vegetable_oil_deduction():
+    """Test that vegetable oil in pantry is correctly deducted from grocery list."""
+    recipes = [
+        {"id": "1", "ingredients": ["1 tbsp vegetable oil", "2 tbsp vegetable oil"]}
+    ]
+    pantry = [
+        {"name": "vegetable oil", "quantity": "1 litre"}
+    ]
+    needed_ingredients, categorized_ingredients = smart_grocery_aggregation(recipes, pantry)
+
+    # Vegetable oil should be completely deducted from the grocery list
+    assert "vegetable oil" not in needed_ingredients
+    
+    # Check that the vegetable oil is not in any category
+    for category, ingredients in categorized_ingredients.items():
+        assert "vegetable oil" not in ingredients
+
+def test_vegetable_oil_deduction_with_quantity_name():
+    """Test that vegetable oil in pantry is correctly deducted when the name is in the quantity field."""
+    recipes = [
+        {"id": "1", "ingredients": ["1 tbsp vegetable oil", "2 tbsp vegetable oil"]}
+    ]
+    pantry = [
+        {"name": "oil", "quantity": "1 litre vegetable"}
+    ]
+    needed_ingredients, categorized_ingredients = smart_grocery_aggregation(recipes, pantry)
+
+    # Vegetable oil should be completely deducted from the grocery list
+    assert "vegetable oil" not in needed_ingredients
+    
+    # Check that the vegetable oil is not in any category
+    for category, ingredients in categorized_ingredients.items():
+        assert "vegetable oil" not in ingredients
+
+def test_unit_conversion_and_merging():
+    """Test that ingredients with different units are properly converted and merged."""
+    recipes = [
+        {"id": "1", "ingredients": ["1 tbsp oil", "2 tbsp oil", "1 cup oil"]}
+    ]
+    pantry = []
+    needed_ingredients, categorized_ingredients = smart_grocery_aggregation(recipes, pantry)
+
+    # All oil entries should be merged into a single entry
+    assert "oil" in needed_ingredients
+    
+    # The oil should be in the Condiments & Spices category
+    assert "oil" in categorized_ingredients.get("Condiments & Spices", [])

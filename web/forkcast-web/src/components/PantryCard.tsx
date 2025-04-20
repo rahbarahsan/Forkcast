@@ -1,5 +1,5 @@
 // src/components/PantryCard.tsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,11 @@ interface PantryCardProps {
 const PantryCard: React.FC<PantryCardProps> = ({ item, onEdit, onDelete, isMobile = false }) => {
   const [expanded, setExpanded] = useState(false);
   const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  // Log the item for debugging
+  useEffect(() => {
+    console.log('PantryCard rendering item:', item);
+  }, [item]);
 
   const toggleExpand = () => {
     // Configure animation

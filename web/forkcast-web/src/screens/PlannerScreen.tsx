@@ -15,6 +15,7 @@ import { useResponsive } from '../hooks/useResponsive';
 import { createElement } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { RecipesContext } from '../context/RecipesContext';
+import { PlannerContext } from '../context/PlannerContext';
 import PlannerCard from '../components/PlannerCard';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AlertDialog from '../components/AlertDialog';
@@ -22,6 +23,7 @@ import { useRecipes } from '../hooks/useRecipes';
 
 export function PlannerScreen() {
   const { selectedIds, toggleSelection } = useContext(RecipesContext);
+  const { plans, addPlan, deletePlan, activePlanId, setActivePlan } = useContext(PlannerContext);
   const { recipes } = useRecipes();
   const selected = recipes.filter((r) => selectedIds.has(r.id));
   const { isTablet, isDesktop, isLargeDesktop } = useResponsive();
@@ -39,7 +41,6 @@ export function PlannerScreen() {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
-  const [plans, setPlans] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -484,10 +485,16 @@ export function PlannerScreen() {
                 >
                   <PlannerCard
                     id={item.id}
-                    startDate={item.startDate}
-                    endDate={item.endDate}
-                    recipes={item.recipes}
-                    onDelete={(id) => setPlans(plans.filter((plan) => plan.id !== id))}
+                    startDate={item.startDate || new Date().toISOString()}
+                    endDate={item.endDate || new Date().toISOString()}
+                    recipes={recipes
+                      .filter((r) => item.recipeIds.includes(r.id))
+                      .map((r) => ({
+                        id: r.id,
+                        title: r.title,
+                        image: typeof r.image === 'string' ? r.image : undefined,
+                      }))}
+                    onDelete={(id) => deletePlan(id)}
                   />
                 </View>
               ))}
@@ -519,23 +526,27 @@ export function PlannerScreen() {
         message={`Add ${selected.length} recipes from ${startDate.toDateString()} to ${endDate.toDateString()}?`}
         onCancel={() => setShowConfirm(false)}
         onConfirm={() => {
+          // Create a new plan with the PlannerContext
           const newPlan = {
-            id: Date.now().toString(),
-            recipes: selected,
-            startDate,
-            endDate,
+            recipeIds: selected.map((r) => r.id),
+            name: `Plan ${plans.length + 1}`,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
           };
 
-          setPlans([...plans, newPlan]);
-          setShowConfirm(false);
-          runAddAnimation();
+          console.log('Adding new plan:', newPlan);
+          addPlan(newPlan).then((plan) => {
+            console.log('Plan added successfully:', plan);
+            setShowConfirm(false);
+            runAddAnimation();
 
-          // If adding a new plan would create a new page and we're not on the last page,
-          // navigate to the new last page
-          const newTotalPages = Math.ceil((plans.length + 1) / itemsPerPage);
-          if (newTotalPages > totalPages) {
-            setCurrentPage(newTotalPages);
-          }
+            // If adding a new plan would create a new page and we're not on the last page,
+            // navigate to the new last page
+            const newTotalPages = Math.ceil((plans.length + 1) / itemsPerPage);
+            if (newTotalPages > totalPages) {
+              setCurrentPage(newTotalPages);
+            }
+          });
         }}
       />
     </ImageBackground>

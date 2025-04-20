@@ -13,9 +13,9 @@ import { Feather } from '@expo/vector-icons';
 import { RecipesContext } from '../context/RecipesContext';
 import { PantryContext } from '../context/PantryContext';
 import { PlannerContext } from '../context/PlannerContext';
-import fallbackRecipes from '../data/fallbackRecipes';
 import { PantryItem, Recipe, Plan } from '../types';
 import { useResponsive } from '../hooks/useResponsive';
+import { useGroceryList } from '../hooks/useGroceryList';
 import styles from '../styles/GroceryListScreenStyle';
 
 function normalize(str: string): string {
@@ -31,14 +31,70 @@ export default function GroceryListScreen() {
   // Get responsive styles based on current screen size
   const responsiveStyles = styles.getResponsiveStyles(responsive.screenSize);
 
-  const [neededIngredients, setNeededIngredients] = useState<string[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'all' | 'byPlan'>('byPlan');
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(activePlanId);
-  const [ingredientsByCategory, setIngredientsByCategory] = useState<{ [key: string]: string[] }>(
-    {},
-  );
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
+
+  // Get all recipe IDs from the selected plan
+  const getRecipeIdsFromPlan = (planId: string | null): string[] => {
+    if (!planId) return [];
+    console.log('GroceryListScreen - Looking for plan with ID:', planId);
+    console.log('GroceryListScreen - Available plans:', plans);
+    const plan = plans.find((p) => p.id === planId);
+    console.log('GroceryListScreen - Found plan:', plan);
+    return plan ? plan.recipeIds : [];
+  };
+
+  // Get recipe IDs based on the current view mode
+  const getRecipeIdsForCurrentView = (): string[] => {
+    if (viewMode === 'all') {
+      return Array.from(selectedIds);
+    } else if (viewMode === 'byPlan' && selectedPlanId) {
+      const recipeIds = getRecipeIdsFromPlan(selectedPlanId);
+      console.log('GroceryListScreen - Recipe IDs for plan:', recipeIds);
+      return recipeIds;
+    }
+    return [];
+  };
+
+  // Use the useGroceryList hook to fetch the grocery list
+  const { groceryList, loading, error } = useGroceryList({
+    isGuest: true, // Use guest mode for now until sign-in is implemented
+    selectedIds: [], // We'll handle this through recipeIds
+    planIds: viewMode === 'byPlan' && selectedPlanId ? [selectedPlanId] : [],
+    // Include recipe IDs based on the current view
+    recipeIds: getRecipeIdsForCurrentView(),
+    pantryItems: pantryItems,
+  });
+
+  // Log pantry items for debugging
+  useEffect(() => {
+    console.log('GroceryListScreen - pantryItems detail:', pantryItems);
+  }, [pantryItems]);
+
+  // Log grocery list data for debugging
+  useEffect(() => {
+    console.log('GroceryListScreen - groceryList:', groceryList);
+    console.log('GroceryListScreen - loading:', loading);
+    console.log('GroceryListScreen - error:', error);
+    console.log('GroceryListScreen - selectedIds:', selectedIds);
+    console.log('GroceryListScreen - planIds:', selectedPlanId);
+    console.log('GroceryListScreen - pantryItems:', pantryItems);
+
+    // Check if we have recipe IDs from the selected plan
+    const recipeIds = getRecipeIdsFromPlan(selectedPlanId);
+    console.log('GroceryListScreen - recipeIds from plan:', recipeIds);
+
+    // Check if we have a valid plan
+    if (selectedPlanId) {
+      const plan = plans.find((p) => p.id === selectedPlanId);
+      console.log('GroceryListScreen - selected plan:', plan);
+    }
+  }, [groceryList, loading, error, selectedIds, selectedPlanId, pantryItems, plans]);
+
+  // Extract needed ingredients and categories from the grocery list
+  const neededIngredients = groceryList?.raw ? Object.keys(groceryList.raw) : [];
+  const ingredientsByCategory = groceryList?.categorized || {};
 
   // Helper function to categorize ingredients
   const categorizeIngredient = (ingredient: string): string => {
@@ -90,62 +146,19 @@ export default function GroceryListScreen() {
     }
   };
 
+  // Log any errors
   useEffect(() => {
-    const fetchGroceryList = async () => {
-      setLoading(true);
-      try {
-        // In the future, this would be an API call to your FastAPI backend
-        // const response = await fetch('api/grocery-list', {
-        //   method: 'POST',
-        //   body: JSON.stringify({ planId: selectedPlanId })
-        // });
-        // const data = await response.json();
-        // setNeededIngredients(data.ingredients);
+    if (error) {
+      console.error('Error fetching grocery list:', error);
+    }
+  }, [error]);
 
-        // For now, we'll use the fallback logic
-        let recipesToUse: Recipe[] = [];
-
-        if (viewMode === 'byPlan' && selectedPlanId) {
-          const selectedPlan = plans.find((p) => p.id === selectedPlanId);
-          if (selectedPlan) {
-            recipesToUse = fallbackRecipes.filter((r) => selectedPlan.recipeIds.includes(r.id));
-          }
-        } else {
-          recipesToUse = fallbackRecipes.filter((r) => selectedIds.has(r.id));
-        }
-
-        // Flatten and normalize recipe ingredients
-        const allIngredients = recipesToUse.flatMap((r) => r.ingredients.map((i) => normalize(i)));
-
-        // Normalize pantry names
-        const pantrySet = new Set(pantryItems.map((p) => normalize(p.name)));
-
-        const needed = allIngredients.filter((ing) => !pantrySet.has(ing));
-
-        // Remove duplicates and sort alphabetically
-        const uniqueNeeded = [...new Set(needed)].sort();
-        setNeededIngredients(uniqueNeeded);
-
-        // Categorize ingredients
-        const categorized: { [key: string]: string[] } = {};
-        uniqueNeeded.forEach((ingredient) => {
-          const category = categorizeIngredient(ingredient);
-          if (!categorized[category]) {
-            categorized[category] = [];
-          }
-          categorized[category].push(ingredient);
-        });
-
-        setIngredientsByCategory(categorized);
-      } catch (error) {
-        console.error('Error fetching grocery list:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGroceryList();
-  }, [selectedIds, pantryItems, selectedPlanId, viewMode, plans, activePlanId]);
+  // Update the active plan when it changes
+  useEffect(() => {
+    if (activePlanId !== selectedPlanId) {
+      setSelectedPlanId(activePlanId);
+    }
+  }, [activePlanId]);
 
   const toggleItemCompletion = (item: string) => {
     setCompletedItems((prev) => {
@@ -179,7 +192,7 @@ export default function GroceryListScreen() {
                 viewMode === 'all' && responsiveStyles.activePlanButtonText,
               ]}
             >
-              All Recipes
+              All
             </Text>
           </TouchableOpacity>
 
@@ -255,6 +268,23 @@ export default function GroceryListScreen() {
   const renderSectionList = () => {
     const categories = Object.keys(ingredientsByCategory).sort();
 
+    console.log('Rendering section list with categories:', categories);
+    console.log('ingredientsByCategory:', ingredientsByCategory);
+
+    // Check if we have plans
+    const hasPlans = plans && plans.length > 0;
+    console.log('Has plans:', hasPlans);
+
+    // Check if we have a selected plan
+    const hasSelectedPlan = selectedPlanId && plans.some((p) => p.id === selectedPlanId);
+    console.log('Has selected plan:', hasSelectedPlan);
+
+    // Check if the selected plan has recipes
+    const selectedPlan = plans.find((p) => p.id === selectedPlanId);
+    const planHasRecipes =
+      selectedPlan && selectedPlan.recipeIds && selectedPlan.recipeIds.length > 0;
+    console.log('Plan has recipes:', planHasRecipes);
+
     return (
       <FlatList
         data={categories}
@@ -272,7 +302,13 @@ export default function GroceryListScreen() {
             <Feather name="shopping-bag" size={64} color="#BDBDBD" />
             <Text style={responsiveStyles.emptyTitle}>Your shopping list is empty</Text>
             <Text style={responsiveStyles.emptySubtitle}>
-              Add recipes to your meal plan to generate a shopping list
+              {!hasPlans
+                ? "You haven't made any plans yet"
+                : viewMode === 'byPlan' && !hasSelectedPlan
+                  ? 'Select a meal plan to see your grocery list'
+                  : viewMode === 'byPlan' && !planHasRecipes
+                    ? 'Add recipes to your selected meal plan to generate a shopping list'
+                    : 'Select recipes to generate a shopping list'}
             </Text>
           </View>
         }

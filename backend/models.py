@@ -21,8 +21,9 @@ class GroceryRequest(BaseModel):
     user_id: Optional[str] = None
     plan_ids: Optional[List[str]] = []
     selected_ids: Optional[List[str]] = []
+    recipe_ids: Optional[List[str]] = []  # Add recipe_ids field
     pantry_items: Optional[List[PantryItem]] = []
 
 class GroceryResponse(BaseModel):
     categorized: Dict[str, List[str]]
-    raw: List[str]
+    raw: Dict[str, Dict[str, float]]
