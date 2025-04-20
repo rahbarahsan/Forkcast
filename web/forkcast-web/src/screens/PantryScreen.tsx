@@ -104,10 +104,14 @@ export default function PantryScreen() {
         if (editingItem.id) {
           removeItem(editingItem.id);
         }
-        addItem({ id, name: name.trim(), quantity: finalQuantity });
+        const newItem = { id, name: name.trim(), quantity: finalQuantity };
+        console.log('Adding edited pantry item:', newItem);
+        addItem(newItem);
       } else {
         // Add new item
-        addItem({ id, name: name.trim(), quantity: finalQuantity });
+        const newItem = { id, name: name.trim(), quantity: finalQuantity };
+        console.log('Adding new pantry item:', newItem);
+        addItem(newItem);
       }
 
       clearForm();
