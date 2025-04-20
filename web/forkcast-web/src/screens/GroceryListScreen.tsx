@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,139 +13,55 @@ import { Feather } from '@expo/vector-icons';
 import { RecipesContext } from '../context/RecipesContext';
 import { PantryContext } from '../context/PantryContext';
 import { PlannerContext } from '../context/PlannerContext';
-import fallbackRecipes from '../data/fallbackRecipes';
-import { PantryItem, Recipe, Plan } from '../types';
+import { PantryItem } from '../types';
 import { useResponsive } from '../hooks/useResponsive';
+import { useGroceryList } from '../hooks/useGroceryList';
 import styles from '../styles/GroceryListScreenStyle';
 
-function normalize(str: string): string {
-  return str.trim().toLowerCase().replace(/s$/, '');
-}
-
 export default function GroceryListScreen() {
-  const { selectedIds } = useContext(RecipesContext);
+  const { selectedIds, setSelectedIds } = useContext(RecipesContext);
   const { items: pantryItems } = useContext(PantryContext);
   const { plans, activePlanId } = useContext(PlannerContext);
   const responsive = useResponsive();
-
-  // Get responsive styles based on current screen size
   const responsiveStyles = styles.getResponsiveStyles(responsive.screenSize);
 
-  const [neededIngredients, setNeededIngredients] = useState<string[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'all' | 'byPlan'>('byPlan');
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(activePlanId);
-  const [ingredientsByCategory, setIngredientsByCategory] = useState<{ [key: string]: string[] }>(
-    {},
-  );
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
 
-  // Helper function to categorize ingredients
-  const categorizeIngredient = (ingredient: string): string => {
-    const lowerIngredient = ingredient.toLowerCase();
-    if (
-      lowerIngredient.includes('milk') ||
-      lowerIngredient.includes('cheese') ||
-      lowerIngredient.includes('yogurt') ||
-      lowerIngredient.includes('butter')
-    ) {
-      return 'Dairy';
-    } else if (
-      lowerIngredient.includes('apple') ||
-      lowerIngredient.includes('banana') ||
-      lowerIngredient.includes('berry') ||
-      lowerIngredient.includes('fruit')
-    ) {
-      return 'Fruits';
-    } else if (
-      lowerIngredient.includes('carrot') ||
-      lowerIngredient.includes('lettuce') ||
-      lowerIngredient.includes('onion') ||
-      lowerIngredient.includes('potato')
-    ) {
-      return 'Vegetables';
-    } else if (
-      lowerIngredient.includes('beef') ||
-      lowerIngredient.includes('chicken') ||
-      lowerIngredient.includes('pork') ||
-      lowerIngredient.includes('fish')
-    ) {
-      return 'Meat & Seafood';
-    } else if (
-      lowerIngredient.includes('pasta') ||
-      lowerIngredient.includes('rice') ||
-      lowerIngredient.includes('bread') ||
-      lowerIngredient.includes('flour')
-    ) {
-      return 'Grains & Bakery';
-    } else if (
-      lowerIngredient.includes('oil') ||
-      lowerIngredient.includes('vinegar') ||
-      lowerIngredient.includes('sauce') ||
-      lowerIngredient.includes('spice')
-    ) {
-      return 'Condiments & Spices';
-    } else {
-      return 'Other';
-    }
+  const getRecipeIdsFromPlan = (planId: string | null): string[] => {
+    if (!planId) return [];
+    const plan = plans.find((p) => p.id === planId);
+    return plan ? plan.recipeIds : [];
   };
 
+  const recipeIdsFromPlan = getRecipeIdsFromPlan(selectedPlanId);
+
+  const recipeIds = useMemo(() => {
+    if (viewMode === 'all') {
+      return [...new Set(plans.flatMap((p) => p.recipeIds))]; // avoid duplicates
+    } else if (viewMode === 'byPlan' && selectedPlanId) {
+      const plan = plans.find((p) => p.id === selectedPlanId);
+      return plan?.recipeIds || [];
+    }
+    return [];
+  }, [viewMode, selectedPlanId, plans]);
+
+  const { groceryList, loading, error } = useGroceryList({
+    isGuest: true,
+    userId: undefined, // we’re in guest mode
+    recipeIds,
+    pantryItems,
+  });
+
+  const ingredientsByCategory = groceryList?.categorized || {};
+  const neededIngredients = groceryList?.raw ? Object.keys(groceryList.raw) : [];
+
   useEffect(() => {
-    const fetchGroceryList = async () => {
-      setLoading(true);
-      try {
-        // In the future, this would be an API call to your FastAPI backend
-        // const response = await fetch('api/grocery-list', {
-        //   method: 'POST',
-        //   body: JSON.stringify({ planId: selectedPlanId })
-        // });
-        // const data = await response.json();
-        // setNeededIngredients(data.ingredients);
-
-        // For now, we'll use the fallback logic
-        let recipesToUse: Recipe[] = [];
-
-        if (viewMode === 'byPlan' && selectedPlanId) {
-          const selectedPlan = plans.find((p) => p.id === selectedPlanId);
-          if (selectedPlan) {
-            recipesToUse = fallbackRecipes.filter((r) => selectedPlan.recipeIds.includes(r.id));
-          }
-        } else {
-          recipesToUse = fallbackRecipes.filter((r) => selectedIds.has(r.id));
-        }
-
-        // Flatten and normalize recipe ingredients
-        const allIngredients = recipesToUse.flatMap((r) => r.ingredients.map((i) => normalize(i)));
-
-        // Normalize pantry names
-        const pantrySet = new Set(pantryItems.map((p) => normalize(p.name)));
-
-        const needed = allIngredients.filter((ing) => !pantrySet.has(ing));
-
-        // Remove duplicates and sort alphabetically
-        const uniqueNeeded = [...new Set(needed)].sort();
-        setNeededIngredients(uniqueNeeded);
-
-        // Categorize ingredients
-        const categorized: { [key: string]: string[] } = {};
-        uniqueNeeded.forEach((ingredient) => {
-          const category = categorizeIngredient(ingredient);
-          if (!categorized[category]) {
-            categorized[category] = [];
-          }
-          categorized[category].push(ingredient);
-        });
-
-        setIngredientsByCategory(categorized);
-      } catch (error) {
-        console.error('Error fetching grocery list:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGroceryList();
-  }, [selectedIds, pantryItems, selectedPlanId, viewMode, plans, activePlanId]);
+    if (activePlanId !== selectedPlanId) {
+      setSelectedPlanId(activePlanId);
+    }
+  }, [activePlanId]);
 
   const toggleItemCompletion = (item: string) => {
     setCompletedItems((prev) => {
@@ -159,60 +75,61 @@ export default function GroceryListScreen() {
     });
   };
 
-  const renderPlanSelector = () => {
-    return (
-      <View style={responsiveStyles.planSelectorContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+  const renderPlanSelector = () => (
+    <View style={responsiveStyles.planSelectorContainer}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <TouchableOpacity
+          style={[
+            responsiveStyles.planButton,
+            viewMode === 'all' && responsiveStyles.activePlanButton,
+          ]}
+          onPress={() => {
+            setViewMode('all');
+            setSelectedPlanId(null);
+            const allIds = plans.flatMap((p) => p.recipeIds);
+            setSelectedIds(new Set(allIds)); // ensure unique
+          }}
+        >
+          <Text
+            style={[
+              responsiveStyles.planButtonText,
+              viewMode === 'all' && responsiveStyles.activePlanButtonText,
+            ]}
+          >
+            All
+          </Text>
+        </TouchableOpacity>
+
+        {plans.map((plan) => (
           <TouchableOpacity
+            key={plan.id}
             style={[
               responsiveStyles.planButton,
-              viewMode === 'all' && responsiveStyles.activePlanButton,
+              viewMode === 'byPlan' &&
+                selectedPlanId === plan.id &&
+                responsiveStyles.activePlanButton,
             ]}
             onPress={() => {
-              setViewMode('all');
-              setSelectedPlanId(null);
+              setViewMode('byPlan');
+              setSelectedPlanId(plan.id);
+              setSelectedIds(new Set(plan.recipeIds)); // update selectedIds with recipes of this plan
             }}
           >
             <Text
               style={[
                 responsiveStyles.planButtonText,
-                viewMode === 'all' && responsiveStyles.activePlanButtonText,
-              ]}
-            >
-              All Recipes
-            </Text>
-          </TouchableOpacity>
-
-          {plans.map((plan) => (
-            <TouchableOpacity
-              key={plan.id}
-              style={[
-                responsiveStyles.planButton,
                 viewMode === 'byPlan' &&
                   selectedPlanId === plan.id &&
-                  responsiveStyles.activePlanButton,
+                  responsiveStyles.activePlanButtonText,
               ]}
-              onPress={() => {
-                setViewMode('byPlan');
-                setSelectedPlanId(plan.id);
-              }}
             >
-              <Text
-                style={[
-                  responsiveStyles.planButtonText,
-                  viewMode === 'byPlan' &&
-                    selectedPlanId === plan.id &&
-                    responsiveStyles.activePlanButtonText,
-                ]}
-              >
-                {plan.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-    );
-  };
+              {plan.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
 
   const renderCategoryHeader = (category: string) => {
     const count = ingredientsByCategory[category]?.length || 0;
@@ -272,7 +189,7 @@ export default function GroceryListScreen() {
             <Feather name="shopping-bag" size={64} color="#BDBDBD" />
             <Text style={responsiveStyles.emptyTitle}>Your shopping list is empty</Text>
             <Text style={responsiveStyles.emptySubtitle}>
-              Add recipes to your meal plan to generate a shopping list
+              Select a plan or recipe to generate your grocery list
             </Text>
           </View>
         }
@@ -280,7 +197,6 @@ export default function GroceryListScreen() {
     );
   };
 
-  // Adjust layout based on screen size
   const containerStyle = [
     responsiveStyles.container,
     responsive.isDesktop && { maxWidth: 800, alignSelf: 'center' as const },
