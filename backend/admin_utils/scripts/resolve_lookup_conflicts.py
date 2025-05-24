@@ -11,13 +11,13 @@ import sys
 
 # Add backend/admin_utils to the Python path
 SCRIPT_DIR = os.path.dirname(__file__)
-ADMIN_UTILS_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
-sys.path.append(ADMIN_UTILS_DIR)
+BACKEND_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..",".."))
+sys.path.append(BACKEND_DIR)
 
 # Import Supabase client and shared utilities
-from supabase.supabase_client import get_supabase_client
-from utils.ingredient_lookup import split_and_clean, join_set
-from scripts.validate_lookup_table import LookupTableValidator
+from admin_utils.supabase.supabase_client import get_supabase_client
+from admin_utils.utils.ingredient_lookup import split_and_clean, join_set
+from admin_utils.scripts.validate_lookup_table import LookupTableValidator
 
 # Configure logging
 logging.basicConfig(
@@ -366,9 +366,14 @@ class ConflictResolver:
     def _apply_synonym_fix(self, entry_id, new_synonyms):
         """Apply synonym fix to database"""
         try:
-            supabase.table(self.table_name).update({
+            # entry_id is the canonical value (primary key)
+            result = supabase.table(self.table_name).update({
                 "synonym": new_synonyms
-            }).eq("id", entry_id).execute()
+            }).eq("canonical", entry_id).execute()
+            
+            if not result.data:
+                print(f"❌ No entry found with canonical '{entry_id}'")
+                return
             
             self.fixes_applied.append({
                 "type": "synonym_update",
@@ -383,9 +388,14 @@ class ConflictResolver:
     def _apply_plural_fix(self, entry_id, new_plurals):
         """Apply plural fix to database"""
         try:
-            supabase.table(self.table_name).update({
+            # entry_id is the canonical value (primary key)
+            result = supabase.table(self.table_name).update({
                 "plurals": new_plurals
-            }).eq("id", entry_id).execute()
+            }).eq("canonical", entry_id).execute()
+            
+            if not result.data:
+                print(f"❌ No entry found with canonical '{entry_id}'")
+                return
             
             self.fixes_applied.append({
                 "type": "plural_update",
@@ -400,9 +410,14 @@ class ConflictResolver:
     def _apply_category_fix(self, entry_id, new_category):
         """Apply category fix to database"""
         try:
-            supabase.table(self.table_name).update({
+            # entry_id is the canonical value (primary key)
+            result = supabase.table(self.table_name).update({
                 "category": new_category
-            }).eq("id", entry_id).execute()
+            }).eq("canonical", entry_id).execute()
+            
+            if not result.data:
+                print(f"❌ No entry found with canonical '{entry_id}'")
+                return
             
             self.fixes_applied.append({
                 "type": "category_update",
@@ -417,10 +432,10 @@ class ConflictResolver:
     def _remove_synonym_from_entry(self, entry_id, synonym_to_remove):
         """Remove a specific synonym from an entry"""
         try:
-            # Get current entry
-            response = supabase.table(self.table_name).select("synonym").eq("id", entry_id).execute()
+            # entry_id is the canonical value (primary key)
+            response = supabase.table(self.table_name).select("synonym").eq("canonical", entry_id).execute()
             if not response.data:
-                print(f"❌ Entry {entry_id} not found")
+                print(f"❌ Entry with canonical '{entry_id}' not found")
                 return
             
             current_synonyms = response.data[0].get('synonym', '')
@@ -435,10 +450,10 @@ class ConflictResolver:
     def _remove_plural_from_entry(self, entry_id, plural_to_remove):
         """Remove a specific plural from an entry"""
         try:
-            # Get current entry
-            response = supabase.table(self.table_name).select("plurals").eq("id", entry_id).execute()
+            # entry_id is the canonical value (primary key)
+            response = supabase.table(self.table_name).select("plurals").eq("canonical", entry_id).execute()
             if not response.data:
-                print(f"❌ Entry {entry_id} not found")
+                print(f"❌ Entry with canonical '{entry_id}' not found")
                 return
             
             current_plurals = response.data[0].get('plurals', '')
@@ -453,14 +468,18 @@ class ConflictResolver:
     def _merge_entries(self, primary_id, secondary_id):
         """Merge two entries"""
         try:
-            # Get both entries
-            response = supabase.table(self.table_name).select("*").in_("id", [primary_id, secondary_id]).execute()
+            # primary_id and secondary_id are canonical values (primary keys)
+            response = supabase.table(self.table_name).select("*").in_("canonical", [primary_id, secondary_id]).execute()
             if len(response.data) != 2:
                 print(f"❌ Could not find both entries")
                 return
             
-            primary = next(e for e in response.data if e['id'] == primary_id)
-            secondary = next(e for e in response.data if e['id'] == secondary_id)
+            primary = next((e for e in response.data if e['canonical'] == primary_id), None)
+            secondary = next((e for e in response.data if e['canonical'] == secondary_id), None)
+            
+            if not primary or not secondary:
+                print(f"❌ Could not find one or both entries")
+                return
             
             # Merge synonyms
             primary_synonyms = split_and_clean(primary.get('synonym', ''))
@@ -480,10 +499,10 @@ class ConflictResolver:
                 "synonym": join_set(merged_synonyms),
                 "plurals": join_set(merged_plurals),
                 "category": category
-            }).eq("id", primary_id).execute()
+            }).eq("canonical", primary_id).execute()
             
             # Delete secondary entry
-            supabase.table(self.table_name).delete().eq("id", secondary_id).execute()
+            supabase.table(self.table_name).delete().eq("canonical", secondary_id).execute()
             
             self.fixes_applied.append({
                 "type": "merge_entries",
@@ -498,14 +517,19 @@ class ConflictResolver:
     def _delete_entry(self, entry_id):
         """Delete an entry"""
         try:
-            supabase.table(self.table_name).delete().eq("id", entry_id).execute()
+            # entry_id is the canonical value (primary key)
+            result = supabase.table(self.table_name).delete().eq("canonical", entry_id).execute()
+            
+            if not result.data:
+                print(f"❌ No entry found with canonical '{entry_id}'")
+                return
             
             self.fixes_applied.append({
                 "type": "delete_entry",
                 "entry_id": entry_id,
                 "timestamp": datetime.now().isoformat()
             })
-            print(f"✅ Entry {entry_id} deleted")
+            print(f"✅ Entry '{entry_id}' deleted")
         except Exception as e:
             print(f"❌ Error deleting entry: {e}")
     

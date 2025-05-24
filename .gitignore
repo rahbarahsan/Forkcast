@@ -47,6 +47,9 @@ coverage/
 
 # Ignore pipeline_config.json
 backend/admin_utils/config/pipeline_config.json
+backend/admin_utils/logs/
+backend/admin_utils/csv/*
+backend/admin_utils/cache/
 
 # Python
 # Ignore __pycache__ in any directory

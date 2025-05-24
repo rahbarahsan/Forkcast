@@ -1,7 +1,7 @@
 {
   "cache_version": "1.0",
-  "created": "2025-05-24T04:07:13.543398",
-  "total_entries": 34,
+  "created": "2025-05-24T05:21:14.314335",
+  "total_entries": 46,
   "entries": {
     "b10946b9d7af11632c9f8ba6b2453f65a13e3981671b7b297eab4180ad276e9d": {
       "input": "320g Arborio rice",
@@ -511,6 +511,186 @@
       "model": "openai/chatgpt-4o-latest",
       "additional_context": "correction_validation",
       "timestamp": "2025-05-24T04:07:13.542951",
+      "estimated_cost": 0.003
+    },
+    "527a35d07e54fc37d405fced76d2b655f6e5f48fd8cddc67f09cd219ff42a32b": {
+      "input": "800g boneless chicken thighs, cut into chunks",
+      "output": {
+        "name": "chicken thigh",
+        "unit": "g",
+        "modifiers": "boneless, cut into chunks",
+        "category": "Meat & Seafood",
+        "synonym_of": "chicken thighs",
+        "plural": "chicken thighs"
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:05.857820",
+      "estimated_cost": 0.003
+    },
+    "acda94b9ba17447b193f24829ac3cf5adccf76256e3eddd03161583310ad2aa2": {
+      "input": "400g canned tomatoes",
+      "output": {
+        "name": "tomatoes",
+        "unit": "g",
+        "modifiers": "canned",
+        "category": "Vegetables",
+        "synonym_of": "",
+        "plural": "tomato"
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:06.567491",
+      "estimated_cost": 0.003
+    },
+    "2c90a6d73fa4768b452572dcf0179bc53e4137d6cd723f440b794cdefdd9bfcc": {
+      "input": "200ml heavy cream",
+      "output": {
+        "name": "heavy cream",
+        "unit": "ml",
+        "modifiers": "",
+        "category": "Dairy",
+        "synonym_of": "whipping cream",
+        "plural": ""
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:07.296481",
+      "estimated_cost": 0.003
+    },
+    "341e4e57656fabba3100c40722f69bd51a744f9fc8b5afa482f51a8618f940c0": {
+      "input": "1 tbsp honey",
+      "output": {
+        "name": "honey",
+        "unit": "tbsp",
+        "modifiers": "",
+        "category": "Condiments & Spices",
+        "synonym_of": "",
+        "plural": ""
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:08.068859",
+      "estimated_cost": 0.003
+    },
+    "4b3a48b8358464039744525fb253ca676155a7bd5d0fc5c3d974fe49dbb03dac": {
+      "input": "2 carrots, diced",
+      "output": {
+        "name": "carrots",
+        "unit": "",
+        "modifiers": "diced",
+        "category": "Vegetables",
+        "synonym_of": "",
+        "plural": "carrot"
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:08.757468",
+      "estimated_cost": 0.003
+    },
+    "feafa4b4f3ce71eb01d437e8c0bba103381ffeccd1af78ed5c0a8df9a132abd1": {
+      "input": "1 red bell pepper, chopped",
+      "output": {
+        "name": "red bell pepper",
+        "unit": "",
+        "modifiers": "chopped",
+        "category": "Vegetables",
+        "synonym_of": "bell pepper",
+        "plural": "red bell peppers"
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:09.591196",
+      "estimated_cost": 0.003
+    },
+    "ffaa00398bb1cc411a1ac3adcba20880949b4133a935b71766d6e5cf9da71c96": {
+      "input": "1 zucchini, chopped",
+      "output": {
+        "name": "zucchini",
+        "unit": "",
+        "modifiers": "chopped",
+        "category": "Vegetables",
+        "synonym_of": "",
+        "plural": "zucchinis"
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:10.307139",
+      "estimated_cost": 0.003
+    },
+    "2a99722e00e498f8c678bec57d97b677170f5099e83d72a96caa33411170490c": {
+      "input": "1 tsp paprika",
+      "output": {
+        "name": "paprika",
+        "unit": "tsp",
+        "modifiers": "",
+        "category": "Condiments & Spices",
+        "synonym_of": "",
+        "plural": ""
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:11.074917",
+      "estimated_cost": 0.003
+    },
+    "4328829d8309ba6866eb970449cfbd86722a9c4a814c305247e71ef362fc5448": {
+      "input": "1/4 tsp cayenne pepper (optional)",
+      "output": {
+        "name": "cayenne pepper",
+        "unit": "tsp",
+        "modifiers": "optional",
+        "category": "Condiments & Spices",
+        "synonym_of": "",
+        "plural": ""
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:11.880769",
+      "estimated_cost": 0.003
+    },
+    "45e9baeec84be545f72be1f752755652f6aac6f57d7f8bd01ceb227723f03510": {
+      "input": "400g canned diced tomatoes",
+      "output": {
+        "name": "tomatoes",
+        "unit": "g",
+        "modifiers": "canned, diced",
+        "category": "Vegetables",
+        "synonym_of": "",
+        "plural": "tomato"
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:12.815323",
+      "estimated_cost": 0.003
+    },
+    "eb5714c0b66e6954e2f9d5054942d2acbc757566d36eb816c860eec59a884612": {
+      "input": "2 cups vegetable broth",
+      "output": {
+        "name": "vegetable broth",
+        "unit": "cups",
+        "modifiers": "",
+        "category": "Other",
+        "synonym_of": "veggie broth,vegetable stock",
+        "plural": ""
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:13.489352",
+      "estimated_cost": 0.003
+    },
+    "f7204df6f87f1336db25cd03c857e9efa0a8de8d6d3fc2de3cfa0722e932e1dd": {
+      "input": "Fresh cilantro, chopped (for garnish)",
+      "output": {
+        "name": "cilantro",
+        "unit": "",
+        "modifiers": "fresh, chopped, for garnish",
+        "category": "Condiments & Spices",
+        "synonym_of": "coriander leaves",
+        "plural": ""
+      },
+      "model": "openai/chatgpt-4o-latest",
+      "additional_context": "correction_validation",
+      "timestamp": "2025-05-24T05:21:14.314108",
       "estimated_cost": 0.003
     }
   }
