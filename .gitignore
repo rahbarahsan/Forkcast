@@ -1,5 +1,5 @@
-# Node modules
-node_modules/
+# Node modules - ignore in any directory
+**/node_modules/
 .buckd/
 .bazel/
 .pnp/
@@ -41,14 +41,16 @@ Desktop.ini
 # Testing
 coverage/
 
-# Environment files
-.env
-.env.*
+# Environment files - ignore in any directory
+**/.env
+**/.env.*
+
+# Ignore pipeline_config.json
+backend/admin_utils/config/pipeline_config.json
 
 # Python
-__pycache__/
- backend/grocery_rules/__pycache__/
- backend/smart_grocery_aggregator/__pycache__/
+# Ignore __pycache__ in any directory
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -60,6 +62,11 @@ ENV/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Files ending with config
+**/*config.*
+**/*config
+!backend/admin_utils/config/pipeline_config_example.json
 
 # Build artifacts
 dist/

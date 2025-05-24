@@ -1,0 +1,9 @@
+timestamp,action,canonical,data
+2025-05-24T04:09:02.364526,UPDATE,coconut milk,"{""plurals"": ""Added: coconut milks""}"
+2025-05-24T04:09:02.367481,UPDATE,rice,"{""plurals"": ""Added: rices""}"
+2025-05-24T04:09:02.368339,UPDATE,yogurt,"{""plurals"": ""Added: yogurts""}"
+2025-05-24T04:09:02.369519,UPDATE,cumin,"{""plurals"": ""Added: cumins""}"
+2025-05-24T04:09:02.370082,UPDATE,coriander,"{""plurals"": ""Added: corianders""}"
+2025-05-24T04:09:02.370718,UPDATE,turmeric,"{""plurals"": ""Added: turmerics""}"
+2025-05-24T04:09:02.371521,UPDATE,cinnamon,"{""plurals"": ""Added: cinnamons""}"
+2025-05-24T04:09:02.372813,UPDATE,rice,"{""plurals"": ""Added: rices""}"

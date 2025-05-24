@@ -1,0 +1,512 @@
+[
+  {
+    "cache_key": "b10946b9d7af11632c9f8ba6b2453f65a13e3981671b7b297eab4180ad276e9d",
+    "input": "320g Arborio rice",
+    "output": {
+      "name": "Arborio rice",
+      "unit": "g",
+      "modifiers": "",
+      "category": "Grains & Bakery",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:31:58.882189",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "830e41ba880e858f6b8038f7a2c7c7bb04f476909579dd977ac37fc7c9766c7b",
+    "input": "300g mixed mushrooms (porcini, cremini, shiitake)",
+    "output": {
+      "name": "mushrooms",
+      "unit": "g",
+      "modifiers": "mixed (porcini, cremini, shiitake)",
+      "category": "Vegetables",
+      "synonym_of": "",
+      "plural": "mushroom"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:31:59.767970",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "befee46046c056370c0b5d17529e91a3ade5e20dc52f2fa138cf01f3f482e978",
+    "input": "150ml dry white wine",
+    "output": {
+      "name": "white wine",
+      "unit": "ml",
+      "modifiers": "dry",
+      "category": "Other",
+      "synonym_of": "wine",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:01.008685",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "c2fd8f99c982121acd76e11e39b2b103d829b9f694f3f3ed5774e5c9fc8ddc9a",
+    "input": "chicken stock, warm",
+    "output": {
+      "name": "chicken stock",
+      "unit": "",
+      "modifiers": "warm",
+      "category": "Meat & Seafood",
+      "synonym_of": "broth",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:01.762602",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "68af95f01573982e671060f75a05ca008558e884f5c6611b3824c297e4952f64",
+    "input": "60g Parmesan cheese, grated",
+    "output": {
+      "name": "Parmesan cheese",
+      "unit": "g",
+      "modifiers": "grated",
+      "category": "Dairy",
+      "synonym_of": "Parmigiano-Reggiano",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:02.388480",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "208e86dc94992cd91d6c66ebc5969eb2622b6f862e7cdd3bf22cdd9cba0c9d29",
+    "input": "2 tbsp olive oil",
+    "output": {
+      "name": "olive oil",
+      "unit": "tbsp",
+      "modifiers": "",
+      "category": "Condiments & Spices",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:03.237606",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "a9856a10775567307c5e40ffa23b7d7baf9af5b99efeae756ed7df711da78a48",
+    "input": "2 tbsp fresh parsley, chopped",
+    "output": {
+      "name": "parsley",
+      "unit": "tbsp",
+      "modifiers": "fresh, chopped",
+      "category": "Vegetables",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:04.010848",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "0afdfd2550c054550221f760db73b96620c8592893b84f7f95f51744c67d8c3b",
+    "input": "black pepper to taste",
+    "output": {
+      "name": "black pepper",
+      "unit": "",
+      "modifiers": "to taste",
+      "category": "Condiments & Spices",
+      "synonym_of": "pepper",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:04.729170",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "a59ea119c735a043953ba0eb4e0772f1f806561769dc2226f9ce277ff83f4182",
+    "input": "12 corn tortillas",
+    "output": {
+      "name": "corn tortilla",
+      "unit": "",
+      "modifiers": "",
+      "category": "Grains & Bakery",
+      "synonym_of": "",
+      "plural": "corn tortillas"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:05.383561",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "9d9f518e79dea7862ed4b45ce8089779801ea7b73893a06e58881c1988a2b26e",
+    "input": "2 cups enchilada sauce",
+    "output": {
+      "name": "enchilada sauce",
+      "unit": "cups",
+      "modifiers": "",
+      "category": "Condiments & Spices",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:06.957230",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "7ae6ddfd2d61ac331dad74788c260d24ce305526f02bc017c4612b8bd8fe872b",
+    "input": "1 cup Mexican blend cheese, shredded",
+    "output": {
+      "name": "Mexican blend cheese",
+      "unit": "cup",
+      "modifiers": "shredded",
+      "category": "Dairy",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:07.780397",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "d0d6d89154f1272a38fd909d254b01b3d68e3f0b2e2f812ce5ef4452c579aeae",
+    "input": "1 bell pepper, diced",
+    "output": {
+      "name": "bell pepper",
+      "unit": "",
+      "modifiers": "diced",
+      "category": "Vegetables",
+      "synonym_of": "capsicum",
+      "plural": "bell peppers"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:08.674434",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "1aeb803178cd47758fdd339b85fce9ea781e408f5b8695ae4c521f3176415b2c",
+    "input": "1 tbsp vegetable oil",
+    "output": {
+      "name": "vegetable oil",
+      "unit": "tbsp",
+      "modifiers": "",
+      "category": "Condiments & Spices",
+      "synonym_of": "cooking oil",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:09.416115",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "77eec8dabc3583539b52dbb46265f69ac0091b8e3696b867d93eda99962a850d",
+    "input": "1 tsp ground cumin",
+    "output": {
+      "name": "cumin",
+      "unit": "tsp",
+      "modifiers": "ground",
+      "category": "Condiments & Spices",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:10.162099",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "dacad706408f565fa6fc118bd1a94c22bd9c258fd35e6bafe189ca3defb895ac",
+    "input": "1 tsp dried oregano",
+    "output": {
+      "name": "oregano",
+      "unit": "tsp",
+      "modifiers": "dried",
+      "category": "Condiments & Spices",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:10.794279",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "cef949500e0fdb485cbde6d9d5411c10bda3fdb1a911bf5d6c420983f9027069",
+    "input": "For garnish: cilantro, sour cream, avocado slices",
+    "output": {
+      "name": "cilantro",
+      "unit": "",
+      "modifiers": "",
+      "category": "Condiments & Spices",
+      "synonym_of": "coriander leaves",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T02:32:11.405048",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "f1ef5cb4d8b359ac2a3847b3da19acab92b5dab028c12d5dd2c7ce72208152c3",
+    "input": "600g chicken thighs, sliced",
+    "output": {
+      "name": "chicken thighs",
+      "unit": "g",
+      "modifiers": "sliced",
+      "category": "Meat & Seafood",
+      "synonym_of": "chicken",
+      "plural": "chicken thigh"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:06:59.079341",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "3fc6256a6993fbc2ecbc8f682daad053e1f55e1f5ed6b357fada10d895111442",
+    "input": "4 tbsp green curry paste",
+    "output": {
+      "name": "green curry paste",
+      "unit": "tbsp",
+      "modifiers": "",
+      "category": "Condiments & Spices",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:00.411302",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "898b80b95e589b6270432c411e30e0b9412b19d3e06fd5475fdbb87b73c05fbd",
+    "input": "2 Thai eggplants, quartered",
+    "output": {
+      "name": "Thai eggplant",
+      "unit": "",
+      "modifiers": "quartered",
+      "category": "Vegetables",
+      "synonym_of": "eggplant",
+      "plural": "Thai eggplants"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:01.262247",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "c2008f925dc2462e03dedb5f67483f796f25846184061015515663711ac62ce9",
+    "input": "1 red bell pepper, sliced",
+    "output": {
+      "name": "red bell pepper",
+      "unit": "",
+      "modifiers": "sliced",
+      "category": "Vegetables",
+      "synonym_of": "bell pepper, sweet pepper",
+      "plural": "red bell peppers"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:02.077451",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "4fb15331089613de7371840b3c444a9dc507aaec8f2a666ca5ff2da6f2870165",
+    "input": "100g green beans, trimmed",
+    "output": {
+      "name": "green beans",
+      "unit": "g",
+      "modifiers": "trimmed",
+      "category": "Vegetables",
+      "synonym_of": "string beans,snap beans",
+      "plural": "green bean"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:02.971264",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "1d5f79c0de96f78372e7a502950f4d6ff273c0696ba1b3b5cdf5a9ee763004bb",
+    "input": "4 kaffir lime leaves",
+    "output": {
+      "name": "kaffir lime leaves",
+      "unit": "",
+      "modifiers": "",
+      "category": "Condiments & Spices",
+      "synonym_of": "makrut lime leaves",
+      "plural": "kaffir lime leaf"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:03.720215",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "7f59ecbbfb8bdee5f7d14537a7572a9e66154f01f7e9372c38f8e0b9588eca85",
+    "input": "2 tbsp fish sauce",
+    "output": {
+      "name": "fish sauce",
+      "unit": "tbsp",
+      "modifiers": "",
+      "category": "Condiments & Spices",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:04.314570",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "0299c1ae37210101ed1d894256f9abd0e0a10e73e43bb60d8fe16f83b5832508",
+    "input": "1 tbsp palm sugar",
+    "output": {
+      "name": "palm sugar",
+      "unit": "tbsp",
+      "modifiers": "",
+      "category": "Condiments & Spices",
+      "synonym_of": "jaggery",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:05.151681",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "838335c33fe2ce05c1db6bbb7112fb6fde855ec3c05e4aa8bc954d7e60b966d5",
+    "input": "1 handful Thai basil leaves",
+    "output": {
+      "name": "Thai basil leaves",
+      "unit": "handful",
+      "modifiers": "",
+      "category": "Vegetables",
+      "synonym_of": "basil",
+      "plural": "Thai basil leaf"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:05.801167",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "d7513aaa95c79f0f6287c03ea947ee59006da8cc62034cec34a73c4486c0c0a5",
+    "input": "2 red chilies, sliced (optional)",
+    "output": {
+      "name": "red chilies",
+      "unit": "",
+      "modifiers": "sliced (optional)",
+      "category": "Condiments & Spices",
+      "synonym_of": "red chili,red chilli,red chile",
+      "plural": "red chili"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:06.841618",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "1618967884328e82389c73af7c2a4d79673abd50c26956dc9126ec001ffe61cf",
+    "input": "2 tbsp vegetable oil",
+    "output": {
+      "name": "vegetable oil",
+      "unit": "tbsp",
+      "modifiers": "",
+      "category": "Condiments & Spices",
+      "synonym_of": "cooking oil",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:07.681849",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "12ab05757a39cecc183aaab93d0a64ba913002cde4fa55ea7238cc151bae464e",
+    "input": "500g boneless chicken thighs",
+    "output": {
+      "name": "chicken thighs",
+      "unit": "g",
+      "modifiers": "boneless",
+      "category": "Meat & Seafood",
+      "synonym_of": "",
+      "plural": "chicken thigh"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:09.094838",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "6f226bcee0c669fcae074c1ac96484b1c712954d3508f1525706121fcfce07a9",
+    "input": "1/2 tsp paprika",
+    "output": {
+      "name": "paprika",
+      "unit": "tsp",
+      "modifiers": "",
+      "category": "Condiments & Spices",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:09.709328",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "6398f5a13ae5967c0d9a763cceead32b9126c577e1b6271f4ec41badc941f727",
+    "input": "Juice of 1 lemon",
+    "output": {
+      "name": "lemon",
+      "unit": "",
+      "modifiers": "juice of 1",
+      "category": "Fruits",
+      "synonym_of": "",
+      "plural": "lemons"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:10.322970",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "063f9f775e2267a60ec9a9df377857b21b14d26a955bf23fa8515a6ab4e6e332",
+    "input": "couscous (for serving)",
+    "output": {
+      "name": "couscous",
+      "unit": "",
+      "modifiers": "for serving",
+      "category": "Grains & Bakery",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:10.938526",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "20d3e583894459da4bcfd7afe036688ecb2b41a04bf68dde9e7ca77840e28fc5",
+    "input": "Sliced cucumbers, cherry tomatoes, lettuce (for bowl)",
+    "output": {
+      "name": "cucumbers",
+      "unit": "",
+      "modifiers": "sliced",
+      "category": "Vegetables",
+      "synonym_of": "",
+      "plural": "cucumber"
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:11.943144",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "ebabf699608d68204315d489d0c20762ef639923e47ab3ed158559b814952799",
+    "input": "Tahini sauce",
+    "output": {
+      "name": "tahini sauce",
+      "unit": "",
+      "modifiers": "",
+      "category": "Condiments & Spices",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:12.726469",
+    "estimated_cost": 0.003
+  },
+  {
+    "cache_key": "917a557f2d57f4c916eec852cea822f4746ebb8b4b74e862c6fbca297f158f55",
+    "input": "garlic sauce (for drizzling)",
+    "output": {
+      "name": "garlic sauce",
+      "unit": "",
+      "modifiers": "for drizzling",
+      "category": "Condiments & Spices",
+      "synonym_of": "",
+      "plural": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "timestamp": "2025-05-24T04:07:13.542951",
+    "estimated_cost": 0.003
+  }
+]
