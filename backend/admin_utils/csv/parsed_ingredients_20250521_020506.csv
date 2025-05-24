@@ -1,0 +1,27 @@
+recipe_id,raw_text,quantity,unit,name,modifiers,normalized_name,category,synonym_of,plural,attention_needed
+80c9e121-37b9-474e-b1ad-05062b20d42e,320g Arborio rice,320,g,Arborio rice,,,,,,True
+80c9e121-37b9-474e-b1ad-05062b20d42e,"300g mixed mushrooms (porcini, cremini, shiitake)",300,g,"mixed mushrooms (porcini, cremini, shiitake)",mixed,,,,,True
+80c9e121-37b9-474e-b1ad-05062b20d42e,"1 onion, finely diced",1,,onion,finely diced,onion,Vegetables,,onions,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,"2 cloves garlic, minced",2,cloves,garlic,minced,garlic,Vegetables,,garlics,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,150ml dry white wine,150,ml,dry white wine,,,,,,True
+80c9e121-37b9-474e-b1ad-05062b20d42e,"1L vegetable or chicken stock, warm",1,l,vegetable or chicken stock,warm,,,,,True
+80c9e121-37b9-474e-b1ad-05062b20d42e,"60g Parmesan cheese, grated",60,g,Parmesan cheese,grated,,,,,True
+80c9e121-37b9-474e-b1ad-05062b20d42e,30g butter,30,g,butter,,butter,Dairy,,,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,2 tbsp olive oil,2,tbsp,olive oil,,,,,,True
+80c9e121-37b9-474e-b1ad-05062b20d42e,"2 tbsp fresh parsley, chopped",2,tbsp,fresh parsley,chopped,,,,,True
+80c9e121-37b9-474e-b1ad-05062b20d42e,Salt and black pepper to taste,,,salt and black pepper to taste,,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,12 corn tortillas,12,,corn tortillas,,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,"3 cups cooked chicken, shredded",3,cups,cooked chicken,shredded,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,2 cups enchilada sauce,2,cups,enchilada sauce,,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,"1 cup Mexican blend cheese, shredded",1,cup,Mexican blend cheese,shredded,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,"1 onion, diced",1,,onion,diced,onion,Vegetables,,onions,False
+4aa01414-ff71-481f-bffa-0987665a0490,"2 cloves garlic, minced",2,cloves,garlic,minced,garlic,Vegetables,,garlics,False
+4aa01414-ff71-481f-bffa-0987665a0490,"1 bell pepper, diced",1,,bell pepper,diced,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,1 tbsp vegetable oil,1,tbsp,vegetable oil,,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,1 tsp ground cumin,1,tsp,ground cumin,,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,1 tsp dried oregano,1,tsp,dried oregano,,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,1/2 tsp chili powder,1/2,tsp,chili powder,,chili powder,Condiments & Spices,,,False
+4aa01414-ff71-481f-bffa-0987665a0490,Salt and pepper to taste,,,salt and pepper to taste,,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,"For garnish: cilantro, sour cream, avocado slices",,,cilantro,,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,"For garnish: cilantro, sour cream, avocado slices",,,sour cream,,,,,,True
+4aa01414-ff71-481f-bffa-0987665a0490,"For garnish: cilantro, sour cream, avocado slices",,,avocado slices,,,,,,True

@@ -1,0 +1,30 @@
+recipe_id,raw_text,quantity,unit,name,modifiers,normalized_name,category,synonym_of,plural,attention_needed
+80c9e121-37b9-474e-b1ad-05062b20d42e,320g Arborio rice,320,g,Arborio rice,320,,Grains & Bakery,,Arborio rices,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,"300g mixed mushrooms (porcini, cremini, shiitake)",300,g,mixed mushrooms,300,,Vegetables,"porcini, cremini, shiitake",mushrooms,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,"1 onion, finely diced",1,,onion,finely diced,onion,Vegetables,,onions,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,"2 cloves garlic, minced",2,cloves,garlic,minced,garlic,Vegetables,,garlics,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,150ml dry white wine,150,ml,white wine,dry,,Other,,white wines,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,1L vegetable,1,L,vegetable,,,Vegetables,,vegetables,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,"chicken stock, warm",,,chicken stock,warm,,Meat & Seafood,chicken broth,chicken stocks,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,"60g Parmesan cheese, grated",60,g,Parmesan cheese,grated,,Dairy,Parmigiano-Reggiano,Parmesan cheeses,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,30g butter,30,g,butter,,butter,Dairy,,,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,2 tbsp olive oil,2,tbsp,olive oil,,,Condiments & Spices,,olive oils,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,"2 tbsp fresh parsley, chopped",2,tbsp,parsley,"fresh, chopped",,Vegetables,,parsleys,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,Salt,,,Salt,,,Condiments & Spices,,Salts,False
+80c9e121-37b9-474e-b1ad-05062b20d42e,black pepper to taste,,,black pepper,to taste,,Condiments & Spices,,black peppers,False
+4aa01414-ff71-481f-bffa-0987665a0490,12 corn tortillas,12,,corn,,,Grains & Bakery,,corns,False
+4aa01414-ff71-481f-bffa-0987665a0490,"3 cups cooked chicken, shredded",3,cups,chicken,"cooked, shredded",,Meat & Seafood,,chickens,False
+4aa01414-ff71-481f-bffa-0987665a0490,2 cups enchilada sauce,2,cups,enchilada sauce,,,Condiments & Spices,,,False
+4aa01414-ff71-481f-bffa-0987665a0490,"1 cup Mexican blend cheese, shredded",1,cup,Mexican blend cheese,shredded,,Dairy,,Mexican blend cheeses,False
+4aa01414-ff71-481f-bffa-0987665a0490,"1 onion, diced",1,,onion,diced,onion,Vegetables,,onions,False
+4aa01414-ff71-481f-bffa-0987665a0490,"2 cloves garlic, minced",2,cloves,garlic,minced,garlic,Vegetables,,garlics,False
+4aa01414-ff71-481f-bffa-0987665a0490,"1 bell pepper, diced",1,1,bell pepper,diced,,Vegetables,,bell peppers,False
+4aa01414-ff71-481f-bffa-0987665a0490,1 tbsp vegetable oil,1,tbsp,vegetable oil,,,Other,,vegetable oils,False
+4aa01414-ff71-481f-bffa-0987665a0490,1 tsp ground cumin,1,tsp,cumin,ground,,Condiments & Spices,,"cumins,cumin seeds",False
+4aa01414-ff71-481f-bffa-0987665a0490,1 tsp dried oregano,1,tsp,oregano,dried,,Condiments & Spices,,"oreganos,oregani",False
+4aa01414-ff71-481f-bffa-0987665a0490,1/2 tsp chili powder,02-Jan,tsp,chili powder,,chili powder,Condiments & Spices,,,False
+4aa01414-ff71-481f-bffa-0987665a0490,Salt,,,Salt,,,Condiments & Spices,,Salts,False
+4aa01414-ff71-481f-bffa-0987665a0490,pepper to taste,,,pepper,to taste,,Condiments & Spices,,peppers,False
+4aa01414-ff71-481f-bffa-0987665a0490,"For garnish: cilantro, sour cream, avocado slices",,slices,avocado,,,Fruits,alligator pear,avocados,False
+4aa01414-ff71-481f-bffa-0987665a0490,"For garnish: cilantro, sour cream, avocado slices",,,cilantro,,,Vegetables,"coriander, Chinese parsley",cilantros,False
+4aa01414-ff71-481f-bffa-0987665a0490,"For garnish: cilantro, sour cream, avocado slices",,slices,avocado,,,Fruits,,avocados,False
