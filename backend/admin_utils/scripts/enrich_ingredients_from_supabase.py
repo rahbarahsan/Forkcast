@@ -155,7 +155,7 @@ def process_parsed_ingredient(parsed, recipe_id, ingredient_text, ingredient_loo
         "unit": parsed.get("unit", ""),
         "name": name,
         "modifiers": modifiers,
-        "normalize": canonical,  # Keep canonical as normalize for backward compatibility
+        "canonical": canonical,  # Use canonical consistently
         "category": category,
         "synonym_of": parsed.get("synonym_of", ""),
         "plural": plural,
@@ -269,7 +269,7 @@ def main():
     csv_path = os.path.join(CSV_DIR, filename)
 
     # Define CSV field names to match Supabase table structure
-    csv_fieldnames = ["recipe_id", "raw_text", "quantity", "unit", "name", "modifiers", "normalize", "category", "synonym_of", "plural", "needs_attention"]
+    csv_fieldnames = ["recipe_id", "raw_text", "quantity", "unit", "name", "modifiers", "canonical", "category", "synonym_of", "plural", "needs_attention"]
 
     with open(csv_path, "w", newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=csv_fieldnames)

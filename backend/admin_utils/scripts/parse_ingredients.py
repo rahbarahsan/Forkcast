@@ -4,11 +4,23 @@ import re
 import openai
 import time
 import json
+import inflect
 from typing import List, Dict
 from dotenv import load_dotenv
 from .llm_toggle_loader import get_llm_mode
 import nltk
 from nltk import pos_tag, word_tokenize
+
+# Import enhanced lookup utilities
+try:
+    from ..utils.ingredient_lookup import find_ingredient_in_lookup_enhanced
+    ENHANCED_LOOKUP_AVAILABLE = True
+except ImportError:
+    ENHANCED_LOOKUP_AVAILABLE = False
+    print("⚠️ Enhanced lookup utilities not available, using basic lookup")
+
+# Initialize inflect engine for plural handling
+p = inflect.engine()
 
 # Import caching and logging utilities
 try:
@@ -189,6 +201,27 @@ def extract_nouns(text):
         result += " " + parenthetical_content
     
     return [result.strip()] if result.strip() else [text.lower()]
+
+# --- Helper function to use the enhanced lookup from utils ---
+def perform_ingredient_lookup(name, ingredient_lookup):
+    """Wrapper to use the enhanced lookup from utils with logging"""
+    if not name or not ingredient_lookup:
+        print(f"❌ Cannot lookup: empty name or lookup table")
+        return None
+        
+    # Normalize the name for lookup
+    normalized_name = name.lower().strip()
+    
+    # Use the enhanced lookup from utils if available
+    if ENHANCED_LOOKUP_AVAILABLE:
+        result = find_ingredient_in_lookup_enhanced(normalized_name, ingredient_lookup)
+        if result:
+            print(f"✅ Lookup found match for '{normalized_name}' -> canonical: '{result.get('canonical', '')}'")
+            return result
+    else:
+        print(f"❌ Enhanced lookup not available, no match found for '{normalized_name}'")
+    
+    return None
 
 # --- Local Parsing using regex ---
 def parse_ingredient_line_local(text: str, ingredient_lookup: list = None) -> Dict[str, str]:
@@ -569,43 +602,47 @@ def parse_ingredient_line_local(text: str, ingredient_lookup: list = None) -> Di
     if not name:
         name = raw.strip()
 
-    # Normalize name by checking against ingredient_lookup
-    canonical = ""
-    if ingredient_lookup:
-        for item in ingredient_lookup:
-            if item["canonical"].lower() == name.lower():
-                canonical = item["canonical"]
-                break
-    
-    # Determine category based on name
+    # Use enhanced lookup to get category and other information
     category = ""
-    if any(veg in name.lower() for veg in ["tomato", "onion", "garlic", "pepper", "carrot", "lettuce", "cucumber", "spinach", "kale", "broccoli", "cabbage", "celery", "potato", "zucchini", "eggplant", "basil", "cilantro", "parsley"]):
-        category = "Vegetables"
-    elif any(fruit in name.lower() for fruit in ["apple", "orange", "banana", "lemon", "lime", "berry", "strawberry", "blueberry", "grape", "melon", "watermelon", "peach", "pear", "plum", "cherry", "mango", "pineapple", "avocado"]):
-        category = "Fruits"
-    elif any(meat in name.lower() for meat in ["beef", "chicken", "pork", "lamb", "turkey", "fish", "salmon", "tuna", "shrimp", "prawn", "crab", "lobster", "meat", "steak", "ground", "mince", "sausage", "bacon", "ham"]):
-        category = "Meat & Seafood"
-    elif any(dairy in name.lower() for dairy in ["milk", "cream", "cheese", "yogurt", "butter", "egg", "curd", "ghee"]):
-        category = "Dairy"
-    elif any(grain in name.lower() for grain in ["flour", "rice", "pasta", "bread", "oat", "cereal", "grain", "wheat", "barley", "corn", "noodle", "tortilla", "pita"]):
-        category = "Grains & Bakery"
-    elif any(condiment in name.lower() for condiment in ["salt", "pepper", "spice", "herb", "sauce", "oil", "vinegar", "sugar", "honey", "syrup", "ketchup", "mustard", "mayonnaise", "soy", "chili", "cumin", "coriander", "cinnamon", "nutmeg", "vanilla"]):
-        category = "Condiments & Spices"
-    else:
-        category = "Other"
-    
-    # Determine plural form if different from name
     plural = ""
-    if name.endswith("y") and not name.endswith("ey"):
-        plural = name[:-1] + "ies"
-    elif name.endswith(("s", "x", "z", "ch", "sh")):
-        plural = name + "es"
-    elif not name.endswith("s"):
-        plural = name + "s"
+    canonical = ""
+    synonym_of = ""
     
-    # Only set plural if it's different from name
-    if plural == name:
-        plural = ""
+    # First try to find a match in the lookup table
+    lookup_result = perform_ingredient_lookup(name, ingredient_lookup)
+    
+    if lookup_result:
+        # Use category from lookup table
+        category = lookup_result.get("category", "")
+        # Use canonical from lookup table
+        canonical = lookup_result.get("canonical", "")
+        # Get plural form from lookup table
+        plural = lookup_result.get("plurals", "") or lookup_result.get("plural", "")
+        # Get synonym information
+        synonym_of = lookup_result.get("synonym_of", "")
+    else:
+        # For local mode, leave category empty if not found in lookup
+        # This ensures categories are only assigned from the lookup table
+        category = ""
+        
+        # Use inflect for better plural generation if no lookup match
+        if not plural:
+            try:
+                generated_plural = p.plural(name)
+                if generated_plural and generated_plural != name:
+                    plural = generated_plural
+            except Exception:
+                # Fallback to basic plural rules if inflect fails
+                if name.endswith("y") and not name.endswith("ey"):
+                    plural = name[:-1] + "ies"
+                elif name.endswith(("s", "x", "z", "ch", "sh")):
+                    plural = name + "es"
+                elif not name.endswith("s"):
+                    plural = name + "s"
+                
+                # Only set plural if it's different from name
+                if plural == name:
+                    plural = ""
     
     return {
         "raw_text": text,
@@ -615,7 +652,7 @@ def parse_ingredient_line_local(text: str, ingredient_lookup: list = None) -> Di
         "modifiers": modifiers,
         "canonical": canonical,
         "category": category,
-        "synonym_of": "",
+        "synonym_of": synonym_of,
         "plural": plural
     }
 
@@ -717,13 +754,22 @@ JSON:"""
             
             name = parsed_json.get("name", "")
             
-            # Normalize name by checking against ingredient_lookup
+            # Use enhanced lookup to get canonical, category, and plural
             canonical = ""
-            if ingredient_lookup:
-                for item in ingredient_lookup:
-                    if item["canonical"].lower() == name.lower():
-                        canonical = item["canonical"]
-                        break
+            # For API mode, we can keep the LLM's category suggestion as a fallback
+            category = parsed_json.get("category", "")
+            plural = parsed_json.get("plural", "")
+            synonym_of = parsed_json.get("synonym_of", "")
+            
+            lookup_result = perform_ingredient_lookup(name, ingredient_lookup)
+            if lookup_result:
+                canonical = lookup_result.get("canonical", "")
+                # Always prefer lookup table category over LLM's suggestion
+                category = lookup_result.get("category", "")
+                if not plural:
+                    plural = lookup_result.get("plurals", "") or lookup_result.get("plural", "")
+                if not synonym_of:
+                    synonym_of = lookup_result.get("synonym_of", "")
             
             result = {
                 "raw_text": text,
@@ -732,9 +778,9 @@ JSON:"""
                 "name": name,
                 "modifiers": parsed_json.get("modifiers", ""),
                 "canonical": canonical,
-                "category": parsed_json.get("category", ""),
-                "synonym_of": parsed_json.get("synonym_of", ""),
-                "plural": parsed_json.get("plural", "")
+                "category": category,
+                "synonym_of": synonym_of,
+                "plural": plural
             }
             
         except json.JSONDecodeError:
@@ -821,6 +867,35 @@ def main():
     mode = get_llm_mode()
     print(f"🔁 Using LLM mode: {mode}")
     print(f"📱 Using model: {model_name}")
+    
+    # Print category assignment policy based on mode
+    if mode == "local":
+        print("🏷️ Category Policy: Only assigning categories from lookup table (empty if not found)")
+    else:
+        print("🏷️ Category Policy: Using LLM suggestions with lookup table overrides")
+    
+    if ENHANCED_LOOKUP_AVAILABLE:
+        print("✅ Using enhanced lookup (searches canonical, synonyms, and plurals)")
+    else:
+        print("⚠️ Using basic lookup (canonical only)")
+
+    # Fetch ingredient lookup data
+    try:
+        from ..supabase.ingredient_lookup_fetcher import fetch_ingredient_lookup
+        ingredient_lookup = fetch_ingredient_lookup()
+        print(f"✅ Fetched {len(ingredient_lookup)} entries from ingredient lookup table")
+        
+        # Validate lookup table structure
+        if ingredient_lookup and len(ingredient_lookup) > 0:
+            sample = ingredient_lookup[0]
+            print(f"📊 Lookup table sample: {sample}")
+            if "canonical" not in sample:
+                print("⚠️ Warning: 'canonical' field missing from lookup table")
+            if "category" not in sample:
+                print("⚠️ Warning: 'category' field missing from lookup table")
+    except ImportError:
+        print("⚠️ Could not import ingredient_lookup_fetcher, proceeding without lookup data")
+        ingredient_lookup = None
 
     # Initialize cache and logger for API mode
     cache = None
@@ -836,13 +911,13 @@ def main():
     print(f"📄 Processing {len(lines)} ingredient lines...")
 
     if mode == "local":
-        parsed = [parse_ingredient_line_local(line) for line in lines]
+        parsed = [parse_ingredient_line_local(line, ingredient_lookup=ingredient_lookup) for line in lines]
     else:
         parsed = []
         for i, line in enumerate(lines):
             if i % 10 == 0:  # Progress indicator
                 print(f"🔄 Processing {i+1}/{len(lines)}...")
-            result = parse_ingredient_line_api(line, ingredient_lookup=None, cache=cache, api_logger=api_logger)
+            result = parse_ingredient_line_api(line, ingredient_lookup=ingredient_lookup, cache=cache, api_logger=api_logger)
             parsed.append(result)
 
     write_output(parsed, output_path)

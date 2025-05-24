@@ -357,9 +357,9 @@ def main():
 
         key = (row["recipe_id"], row["name"])
         
-        # Check if normalized_name exists in Supabase lookup table using enhanced lookup
-        normalized_name = row.get("normalized_name", "")
-        supabase_data = check_ingredient_in_supabase(normalized_name, ingredient_lookup)
+        # Check if canonical exists in Supabase lookup table using enhanced lookup
+        canonical = row.get("canonical", "")
+        supabase_data = check_ingredient_in_supabase(canonical, ingredient_lookup)
 
         # Add debug logging to see the actual value of needs_attention
         attention_value = row.get("needs_attention")
@@ -372,7 +372,7 @@ def main():
             
             if supabase_data:
                 supabase_matched_count += 1
-                logging.info(f"✅ Found matching data in Supabase for normalized name: '{normalized_name}' using enhanced lookup")
+                logging.info(f"✅ Found matching data in Supabase for canonical name: '{canonical}' using enhanced lookup")
                 # Use data from Supabase lookup table
                 row["name"] = supabase_data.get("name", row["name"])
                 row["unit"] = supabase_data.get("unit", row["unit"])
@@ -382,7 +382,7 @@ def main():
                 row["needs_attention"] = "False"
                 logging.info(f"✅ Updated row with Supabase data: name='{row['name']}', unit='{row['unit']}', modifiers='{row['modifiers']}'")
             else:
-                logging.info(f"❌ No matching data in Supabase for '{normalized_name}' (checked canonical, synonyms, and plurals). Attempting to enrich with OpenAI API...")
+                logging.info(f"❌ No matching data in Supabase for '{canonical}' (checked canonical, synonyms, and plurals). Attempting to enrich with OpenAI API...")
                 # Enrich ingredient data using OpenAI API with caching
                 enriched_data = enrich_ingredient_data(
                     row["raw_text"], 
