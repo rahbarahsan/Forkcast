@@ -1,0 +1,24 @@
+[
+  {
+    "timestamp": "2025-05-24T03:25:15.240800",
+    "recipe_id": "",
+    "input_text": "Sliced cucumbers, cherry tomatoes, lettuce (for bowl)",
+    "output_data": {
+      "raw_text": "Sliced cucumbers, cherry tomatoes, lettuce (for bowl)",
+      "quantity": "",
+      "unit": "",
+      "name": "ERROR: 'list' object has no attribute 'get'",
+      "modifiers": "",
+      "canonical": ""
+    },
+    "model": "openai/chatgpt-4o-latest",
+    "success": false,
+    "error_message": "'list' object has no attribute 'get'",
+    "response_time_ms": 1303.6606311798096,
+    "estimated_cost": 0.002,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0,
+    "cache_hit": false
+  }
+]
