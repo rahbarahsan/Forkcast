@@ -1,1 +1,0 @@
-timestamp,recipe_id,input_text,output_data,model,success,error_message,response_time_ms,estimated_cost,input_tokens,output_tokens,total_tokens,cache_hit

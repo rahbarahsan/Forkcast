@@ -1,8 +1,0 @@
-timestamp,action,canonical,data
-2025-05-24T02:54:10.034456,UPDATE,onion,"{""synonym"": ""Added: piyaj"", ""plurals"": ""Added: piyajs""}"
-2025-05-24T02:54:10.035253,UPDATE,garlic,"{""synonym"": ""Added: roshun"", ""plurals"": ""Added: roshuns""}"
-2025-05-24T02:54:10.036351,INSERT,vegetable,"{""canonical"": ""vegetable"", ""synonym"": """", ""plurals"": ""vegetables"", ""category"": ""Vegetables""}"
-2025-05-24T02:54:10.038708,UPDATE,salt,"{""synonym"": ""Added: lobon"", ""plurals"": ""Added: lobons, salts""}"
-2025-05-24T02:54:10.040118,UPDATE,chicken,"{""synonym"": ""Added: murgi"", ""plurals"": ""Added: chickens, murgis""}"
-2025-05-24T02:54:10.042484,UPDATE,chili powder,"{""plurals"": ""Added: chili powders""}"
-2025-05-24T02:54:10.043181,UPDATE,salt,"{""plurals"": ""Added: salts""}"

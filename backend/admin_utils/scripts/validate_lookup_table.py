@@ -103,8 +103,11 @@ class LookupTableValidator:
         logging.info("🔍 Checking for internal duplicates...")
         
         for i, entry in enumerate(self.data):
-            entry_id = entry.get('id', f'row_{i}')
             canonical = entry.get('canonical', '').strip()
+            if not canonical:
+                # Skip entries without canonical
+                continue
+            entry_id = canonical  # Use canonical as the primary key
             
             # Check synonym duplicates
             synonym_str = entry.get('synonym', '')
@@ -178,8 +181,11 @@ class LookupTableValidator:
         plural_index = defaultdict(list)
         
         for i, entry in enumerate(self.data):
-            entry_id = entry.get('id', f'row_{i}')
-            canonical = entry.get('canonical', '').strip().lower()
+            canonical_raw = entry.get('canonical', '').strip()
+            if not canonical_raw:
+                continue
+            entry_id = canonical_raw  # Use canonical as the primary key
+            canonical = canonical_raw.lower()
             
             # Index canonical names
             if canonical:
@@ -262,7 +268,6 @@ class LookupTableValidator:
         logging.info("🔍 Checking data quality...")
         
         for i, entry in enumerate(self.data):
-            entry_id = entry.get('id', f'row_{i}')
             canonical = entry.get('canonical', '').strip()
             
             # Check for empty canonical
@@ -270,10 +275,13 @@ class LookupTableValidator:
                 self.conflicts.append({
                     'type': 'empty_canonical',
                     'severity': 'critical',
-                    'entry_id': entry_id,
+                    'entry_id': f'row_{i}',  # Use row index for entries without canonical
                     'issue': "Entry has empty canonical name",
                     'entry': entry
                 })
+                continue  # Skip further checks for this entry
+            
+            entry_id = canonical  # Use canonical as the primary key
             
             # Check for whitespace issues
             synonym_str = entry.get('synonym', '')
@@ -305,8 +313,10 @@ class LookupTableValidator:
         logging.info("🔍 Checking category validity...")
         
         for i, entry in enumerate(self.data):
-            entry_id = entry.get('id', f'row_{i}')
             canonical = entry.get('canonical', '').strip()
+            if not canonical:
+                continue
+            entry_id = canonical  # Use canonical as the primary key
             category = entry.get('category', '').strip()
             
             if category and category not in ALLOWED_CATEGORIES:
