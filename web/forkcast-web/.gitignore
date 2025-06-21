@@ -1,7 +1,7 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# dependencies
-node_modules/
+# dependencies - ignore in any directory
+**/node_modules/
 
 # Expo
 .expo/
@@ -29,8 +29,17 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# Environment files - ignore in any directory
+**/.env
+**/.env.*
+
+# Python
+# Ignore __pycache__ in any directory
+**/__pycache__/
+
+# Files ending with config
+**/*config.*
+**/*config
 
 # typescript
 *.tsbuildinfo

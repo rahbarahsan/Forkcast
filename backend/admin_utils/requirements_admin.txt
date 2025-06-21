@@ -1,0 +1,24 @@
+# Core NLP tools
+nltk>=3.8.1
+inflect>=7.0.0
+pandas>=2.2.2
+tqdm>=4.66.2
+python-dotenv>=1.0.1
+supabase
+gotrue
+postgrest
+storage3
+websockets==11.0.3
+requests
+
+# LLM Interface Tools (Optional)
+openai>=1.23.2           # API access if needed
+#ollama>=0.1.8            # For local model interface (if using Ollama)
+
+# GPU-ready Torch (manually install to match CUDA version)
+# DO NOT INSTALL VIA requirements.txt
+# Use: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# Example for CUDA 11.8: https://pytorch.org/get-started/locally/
+
+# Optional: Transformers if using HuggingFace models locally
+#transformers>=4.39.3
