@@ -88,8 +88,10 @@ async def generate_grocery_list(req: GroceryRequest):
                 raise ValueError(f"Invalid recipe format: {recipe}. 'ingredients' must be a list.")
 
         print(f"DEBUG: Pantry items detail: {[{'id': p.id, 'name': p.name, 'quantity': p.quantity} for p in pantry_items]}")
+        print(f"DEBUG: Processing {len(recipes)} recipes with IDs: {[r.id for r in recipes if hasattr(r, 'id')]}")
 
         try:
+            # The SmartGroceryAggregator will now fetch pre-processed ingredients from grocery_items_per_recipe table
             aggregator = SmartGroceryAggregator(recipes, pantry_items)
             categorized, raw = aggregator.generate()
         except Exception as agg_error:
