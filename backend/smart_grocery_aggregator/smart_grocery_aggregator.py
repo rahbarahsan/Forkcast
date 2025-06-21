@@ -1,6 +1,7 @@
 from typing import List, Dict, Set, Tuple, Optional
 import re
 from unittest.mock import MagicMock
+from difflib import SequenceMatcher
 
 # Handle imports for both direct execution and module import
 try:
@@ -189,9 +190,18 @@ def normalize_ingredient_name(name_part: str) -> str:
     Normalizes an ingredient name part (removes plural, resolves synonyms).
     Returns the canonical name if found, otherwise returns the normalized original name part.
     """
+    if not name_part:
+        return ""
     normalized_name_part = normalize_plural(name_part.strip().lower())
     canonical_name = get_canonical_name(normalized_name_part)
     return canonical_name if canonical_name is not None else normalized_name_part
+
+def string_similarity(a: str, b: str) -> float:
+    """
+    Calculate the similarity ratio between two strings.
+    Returns a float between 0 and 1, where 1 means the strings are identical.
+    """
+    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
 def smart_grocery_aggregation(
     recipes: List,
@@ -360,78 +370,115 @@ def smart_grocery_aggregation(
         # Try to match pantry items with needed ingredients using different normalization methods
         for ing, units in pantry_map.items():
             try:
-                # Check for direct match
-                if ing in needed_ingredients:
-                    print(f"DEBUG: Found exact matching ingredient in pantry: {ing}")
-                    # Calculate total estimated weight for this ingredient in the pantry
-                    pantry_total_weight = sum(estimate_weight(qty, unit) for unit, qty in units.items())
-                    print(f"DEBUG: Pantry total weight for {ing}: {pantry_total_weight} kg")
-                    print(f"DEBUG: Before deduction: needed_ingredients[{ing}]['kg'] = {needed_ingredients[ing]['kg']}")
-                    # Subtract pantry weight from needed weight
-                    needed_ingredients[ing]["kg"] -= pantry_total_weight
-                    print(f"DEBUG: After deduction: needed_ingredients[{ing}]['kg'] = {needed_ingredients[ing]['kg']}")
-                    # Remove the ingredient if the needed quantity is zero or less
-                    if needed_ingredients[ing]["kg"] <= 0:
-                        print(f"DEBUG: Removing {ing} from needed_ingredients as it's fully covered by pantry")
-                        del needed_ingredients[ing]
+                # Check for direct match (case-insensitive)
+                matched = False
+                for needed_ing in list(needed_ingredients.keys()):
+                    # Case 1: Direct match (case-insensitive)
+                    if ing.lower() == needed_ing.lower():
+                        print(f"DEBUG: Found exact matching ingredient in pantry: {ing} -> {needed_ing}")
+                        pantry_total_weight = sum(estimate_weight(qty, unit) for unit, qty in units.items())
+                        print(f"DEBUG: Pantry total weight for {ing}: {pantry_total_weight} kg")
+                        print(f"DEBUG: Before deduction: needed_ingredients[{needed_ing}]['kg'] = {needed_ingredients[needed_ing]['kg']}")
+                        needed_ingredients[needed_ing]["kg"] -= pantry_total_weight
+                        print(f"DEBUG: After deduction: needed_ingredients[{needed_ing}]['kg'] = {needed_ingredients[needed_ing]['kg']}")
+                        if needed_ingredients[needed_ing]["kg"] <= 0:
+                            print(f"DEBUG: Removing {needed_ing} from needed_ingredients as it's fully covered by pantry")
+                            del needed_ingredients[needed_ing]
+                        matched = True
+                        break
+                
+                if matched:
                     continue
                 
-                # Check if this is a plural form in our mapping
-                if ing in plural_to_ingredient and plural_to_ingredient[ing] in needed_ingredients:
-                    matched_ing = plural_to_ingredient[ing]
-                    print(f"DEBUG: Found match using plural mapping: {ing} -> {matched_ing}")
-                    pantry_total_weight = sum(estimate_weight(qty, unit) for unit, qty in units.items())
-                    print(f"DEBUG: Pantry total weight for {ing} (matched as {matched_ing}): {pantry_total_weight} kg")
-                    print(f"DEBUG: Before deduction: needed_ingredients[{matched_ing}]['kg'] = {needed_ingredients[matched_ing]['kg']}")
-                    needed_ingredients[matched_ing]["kg"] -= pantry_total_weight
-                    print(f"DEBUG: After deduction: needed_ingredients[{matched_ing}]['kg'] = {needed_ingredients[matched_ing]['kg']}")
-                    if needed_ingredients[matched_ing]["kg"] <= 0:
-                        print(f"DEBUG: Removing {matched_ing} from needed_ingredients as it's fully covered by pantry")
-                        del needed_ingredients[matched_ing]
+                # Case 2: Check if this is a plural form in our mapping
+                for needed_ing in list(needed_ingredients.keys()):
+                    if ing in plural_to_ingredient and plural_to_ingredient[ing].lower() == needed_ing.lower():
+                        print(f"DEBUG: Found match using plural mapping: {ing} -> {needed_ing}")
+                        pantry_total_weight = sum(estimate_weight(qty, unit) for unit, qty in units.items())
+                        print(f"DEBUG: Pantry total weight for {ing} (matched as {needed_ing}): {pantry_total_weight} kg")
+                        print(f"DEBUG: Before deduction: needed_ingredients[{needed_ing}]['kg'] = {needed_ingredients[needed_ing]['kg']}")
+                        needed_ingredients[needed_ing]["kg"] -= pantry_total_weight
+                        print(f"DEBUG: After deduction: needed_ingredients[{needed_ing}]['kg'] = {needed_ingredients[needed_ing]['kg']}")
+                        if needed_ingredients[needed_ing]["kg"] <= 0:
+                            print(f"DEBUG: Removing {needed_ing} from needed_ingredients as it's fully covered by pantry")
+                            del needed_ingredients[needed_ing]
+                        matched = True
+                        break
+                
+                if matched:
                     continue
                 
-                # Try to find a match using basic plural normalization
-                # Try to find a match by removing 's' at the end
-                if ing.endswith('s') and ing[:-1] in needed_ingredients:
-                    matched_ing = ing[:-1]
-                    print(f"DEBUG: Found match by removing 's': {matched_ing}")
-                    pantry_total_weight = sum(estimate_weight(qty, unit) for unit, qty in units.items())
-                    print(f"DEBUG: Pantry total weight for {ing} (matched as {matched_ing}): {pantry_total_weight} kg")
-                    print(f"DEBUG: Before deduction: needed_ingredients[{matched_ing}]['kg'] = {needed_ingredients[matched_ing]['kg']}")
-                    needed_ingredients[matched_ing]["kg"] -= pantry_total_weight
-                    print(f"DEBUG: After deduction: needed_ingredients[{matched_ing}]['kg'] = {needed_ingredients[matched_ing]['kg']}")
-                    if needed_ingredients[matched_ing]["kg"] <= 0:
-                        print(f"DEBUG: Removing {matched_ing} from needed_ingredients as it's fully covered by pantry")
-                        del needed_ingredients[matched_ing]
+                # Case 3: Try to find a match using basic plural normalization
+                for needed_ing in list(needed_ingredients.keys()):
+                    # Try removing 's' at the end
+                    if ing.lower().endswith('s') and ing.lower()[:-1] == needed_ing.lower():
+                        print(f"DEBUG: Found match by removing 's': {ing} -> {needed_ing}")
+                        pantry_total_weight = sum(estimate_weight(qty, unit) for unit, qty in units.items())
+                        print(f"DEBUG: Pantry total weight for {ing} (matched as {needed_ing}): {pantry_total_weight} kg")
+                        print(f"DEBUG: Before deduction: needed_ingredients[{needed_ing}]['kg'] = {needed_ingredients[needed_ing]['kg']}")
+                        needed_ingredients[needed_ing]["kg"] -= pantry_total_weight
+                        print(f"DEBUG: After deduction: needed_ingredients[{needed_ing}]['kg'] = {needed_ingredients[needed_ing]['kg']}")
+                        if needed_ingredients[needed_ing]["kg"] <= 0:
+                            print(f"DEBUG: Removing {needed_ing} from needed_ingredients as it's fully covered by pantry")
+                            del needed_ingredients[needed_ing]
+                        matched = True
+                        break
+                    
+                    # Try adding 's' at the end
+                    if ing.lower() + 's' == needed_ing.lower():
+                        print(f"DEBUG: Found match by adding 's': {ing} -> {needed_ing}")
+                        pantry_total_weight = sum(estimate_weight(qty, unit) for unit, qty in units.items())
+                        print(f"DEBUG: Pantry total weight for {ing} (matched as {needed_ing}): {pantry_total_weight} kg")
+                        print(f"DEBUG: Before deduction: needed_ingredients[{needed_ing}]['kg'] = {needed_ingredients[needed_ing]['kg']}")
+                        needed_ingredients[needed_ing]["kg"] -= pantry_total_weight
+                        print(f"DEBUG: After deduction: needed_ingredients[{needed_ing}]['kg'] = {needed_ingredients[needed_ing]['kg']}")
+                        if needed_ingredients[needed_ing]["kg"] <= 0:
+                            print(f"DEBUG: Removing {needed_ing} from needed_ingredients as it's fully covered by pantry")
+                            del needed_ingredients[needed_ing]
+                        matched = True
+                        break
+                
+                if matched:
                     continue
                 
-                # Try to find a match by adding 's' at the end
-                if ing + 's' in needed_ingredients:
-                    matched_ing = ing + 's'
-                    print(f"DEBUG: Found match by adding 's': {matched_ing}")
-                    pantry_total_weight = sum(estimate_weight(qty, unit) for unit, qty in units.items())
-                    print(f"DEBUG: Pantry total weight for {ing} (matched as {matched_ing}): {pantry_total_weight} kg")
-                    print(f"DEBUG: Before deduction: needed_ingredients[{matched_ing}]['kg'] = {needed_ingredients[matched_ing]['kg']}")
-                    needed_ingredients[matched_ing]["kg"] -= pantry_total_weight
-                    print(f"DEBUG: After deduction: needed_ingredients[{matched_ing}]['kg'] = {needed_ingredients[matched_ing]['kg']}")
-                    if needed_ingredients[matched_ing]["kg"] <= 0:
-                        print(f"DEBUG: Removing {matched_ing} from needed_ingredients as it's fully covered by pantry")
-                        del needed_ingredients[matched_ing]
-                    continue
-                
-                # Try more complex plural forms using normalize_plural
+                # Case 4: Try more complex plural forms using normalize_plural
                 singular_form = normalize_plural(ing)
-                if singular_form != ing and singular_form in needed_ingredients:
-                    matched_ing = singular_form
-                    print(f"DEBUG: Found match using normalize_plural: {ing} -> {matched_ing}")
+                for needed_ing in list(needed_ingredients.keys()):
+                    if singular_form.lower() != ing.lower() and singular_form.lower() == needed_ing.lower():
+                        print(f"DEBUG: Found match using normalize_plural: {ing} -> {needed_ing}")
+                        pantry_total_weight = sum(estimate_weight(qty, unit) for unit, qty in units.items())
+                        print(f"DEBUG: Pantry total weight for {ing} (matched as {needed_ing}): {pantry_total_weight} kg")
+                        print(f"DEBUG: Before deduction: needed_ingredients[{needed_ing}]['kg'] = {needed_ingredients[needed_ing]['kg']}")
+                        needed_ingredients[needed_ing]["kg"] -= pantry_total_weight
+                        print(f"DEBUG: After deduction: needed_ingredients[{needed_ing}]['kg'] = {needed_ingredients[needed_ing]['kg']}")
+                        if needed_ingredients[needed_ing]["kg"] <= 0:
+                            print(f"DEBUG: Removing {needed_ing} from needed_ingredients as it's fully covered by pantry")
+                            del needed_ingredients[needed_ing]
+                        matched = True
+                        break
+                
+                if matched:
+                    continue
+                
+                # Case 5: Try fuzzy matching with 90% similarity threshold
+                best_match = None
+                best_score = 0.0
+                for needed_ing in needed_ingredients.keys():
+                    score = string_similarity(ing, needed_ing)
+                    if score >= 0.9 and score > best_score:  # 90% similarity threshold
+                        best_match = needed_ing
+                        best_score = score
+                
+                if best_match:
+                    print(f"DEBUG: Found fuzzy match: {ing} -> {best_match} (similarity: {best_score:.2f})")
                     pantry_total_weight = sum(estimate_weight(qty, unit) for unit, qty in units.items())
-                    print(f"DEBUG: Pantry total weight for {ing} (matched as {matched_ing}): {pantry_total_weight} kg")
-                    print(f"DEBUG: Before deduction: needed_ingredients[{matched_ing}]['kg'] = {needed_ingredients[matched_ing]['kg']}")
-                    needed_ingredients[matched_ing]["kg"] -= pantry_total_weight
-                    print(f"DEBUG: After deduction: needed_ingredients[{matched_ing}]['kg'] = {needed_ingredients[matched_ing]['kg']}")
-                    if needed_ingredients[matched_ing]["kg"] <= 0:
-                        print(f"DEBUG: Removing {matched_ing} from needed_ingredients as it's fully covered by pantry")
-                        del needed_ingredients[matched_ing]
+                    print(f"DEBUG: Pantry total weight for {ing} (matched as {best_match}): {pantry_total_weight} kg")
+                    print(f"DEBUG: Before deduction: needed_ingredients[{best_match}]['kg'] = {needed_ingredients[best_match]['kg']}")
+                    needed_ingredients[best_match]["kg"] -= pantry_total_weight
+                    print(f"DEBUG: After deduction: needed_ingredients[{best_match}]['kg'] = {needed_ingredients[best_match]['kg']}")
+                    if needed_ingredients[best_match]["kg"] <= 0:
+                        print(f"DEBUG: Removing {best_match} from needed_ingredients as it's fully covered by pantry")
+                        del needed_ingredients[best_match]
                     continue
                 
                 print(f"DEBUG: No match found for pantry item {ing} using any normalization method")
