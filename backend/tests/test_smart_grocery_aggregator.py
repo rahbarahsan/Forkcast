@@ -1,11 +1,12 @@
 import sys
 import os
 import pytest
+from unittest.mock import patch, MagicMock
 
 # Add the parent directory to the path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from smart_grocery_aggregator.smart_grocery_aggregator import smart_grocery_aggregation
+from smart_grocery_aggregator.smart_grocery_aggregator import smart_grocery_aggregation, SmartGroceryAggregator
 
 def test_simple_exclusion_from_pantry():
     recipes = [
@@ -111,3 +112,169 @@ def test_unit_conversion_and_merging():
     
     # The oil should be in the Condiments & Spices category
     assert "oil" in categorized_ingredients.get("Condiments & Spices", [])
+
+@patch('smart_grocery_aggregator.smart_grocery_aggregator.supabase')
+def test_preprocessed_ingredients(mock_supabase):
+    """Test that pre-processed ingredients are used when available."""
+    # Configure the mock to return different responses based on the method chain
+    def side_effect(*args, **kwargs):
+        mock = MagicMock()
+        if args and args[0] == "grocery_items_per_recipe":
+            # For table check
+            if 'limit' in str(kwargs):
+                mock_response = MagicMock()
+                mock_response.data = [{"count": 2}]
+                return mock_response
+            # For recipe ingredients
+            else:
+                mock_response = MagicMock()
+                mock_response.data = [
+                    {
+                        "recipe_id": "1",
+                        "raw_text": "2 cloves garlic, minced",
+                        "quantity": "2",
+                        "unit": "cloves",
+                        "name": "garlic",
+                        "modifiers": "minced",
+                        "category": "Vegetables",
+                        "plural": "garlics"
+                    },
+                    {
+                        "recipe_id": "1",
+                        "raw_text": "1 tbsp olive oil",
+                        "quantity": "1",
+                        "unit": "tbsp",
+                        "name": "olive oil",
+                        "modifiers": "",
+                        "category": "Condiments & Spices",
+                        "plural": ""
+                    }
+                ]
+                return mock_response
+        return MagicMock()
+    
+    # Set up the mock to use the side effect
+    mock_supabase.table.return_value.select.return_value.limit.return_value.execute.side_effect = side_effect
+    mock_supabase.table.return_value.select.return_value.filter.return_value.execute.side_effect = side_effect
+    
+    # Create test data
+    recipes = [
+        {"id": "1", "ingredients": ["2 cloves garlic, minced", "1 tbsp olive oil"]}
+    ]
+    pantry = []
+    
+    # Create the aggregator
+    aggregator = SmartGroceryAggregator(recipes, pantry)
+    categorized, raw = aggregator.generate()
+    
+    # Verify that the pre-processed ingredients were used
+    assert "garlic" in raw
+    assert "olive oil" in raw
+    assert "Vegetables" in categorized
+    assert "garlic" in categorized["Vegetables"]
+    assert "Condiments & Spices" in categorized
+    assert "olive oil" in categorized["Condiments & Spices"]
+    
+    # Verify that Supabase was called with the correct parameters
+    mock_supabase.table.assert_called_with("grocery_items_per_recipe")
+    mock_supabase.table.return_value.select.assert_called_with("*")
+    # We're now using filter instead of in_
+    mock_supabase.table.return_value.select.return_value.filter.assert_called()
+
+@patch('smart_grocery_aggregator.smart_grocery_aggregator.supabase')
+def test_fallback_to_original_implementation(mock_supabase):
+    """Test that the original implementation is used when pre-processed ingredients are not available."""
+    # Configure the mock to return different responses based on the method chain
+    def side_effect(*args, **kwargs):
+        mock = MagicMock()
+        if args and args[0] == "grocery_items_per_recipe":
+            # For table check
+            if 'limit' in str(kwargs):
+                mock_response = MagicMock()
+                mock_response.data = [{"count": 0}]
+                return mock_response
+            # For recipe ingredients
+            else:
+                mock_response = MagicMock()
+                mock_response.data = []
+                return mock_response
+        return MagicMock()
+    
+    # Set up the mock to use the side effect
+    mock_supabase.table.return_value.select.return_value.limit.return_value.execute.side_effect = side_effect
+    mock_supabase.table.return_value.select.return_value.filter.return_value.execute.side_effect = side_effect
+    
+    # Create test data
+    recipes = [
+        {"id": "1", "ingredients": ["2 cloves garlic, minced", "1 tbsp olive oil"]}
+    ]
+    pantry = []
+    
+    # Create the aggregator
+    aggregator = SmartGroceryAggregator(recipes, pantry)
+    categorized, raw = aggregator.generate()
+    
+    # Verify that the original implementation was used
+    assert "garlic" in raw
+    assert "olive oil" in raw
+    
+    # Verify that Supabase was called with the correct parameters
+    mock_supabase.table.assert_called_with("grocery_items_per_recipe")
+    mock_supabase.table.return_value.select.assert_called_with("*")
+    # We're now using filter instead of in_
+    mock_supabase.table.return_value.select.return_value.filter.assert_called()
+
+@patch('smart_grocery_aggregator.smart_grocery_aggregator.supabase')
+def test_pantry_deduction_with_plural_forms(mock_supabase):
+    """Test that pantry deduction works with plural forms from pre-processed ingredients."""
+    # Configure the mock to return different responses based on the method chain
+    def side_effect(*args, **kwargs):
+        mock = MagicMock()
+        if args and args[0] == "grocery_items_per_recipe":
+            # For table check
+            if 'limit' in str(kwargs):
+                mock_response = MagicMock()
+                mock_response.data = [{"count": 1}]
+                return mock_response
+            # For recipe ingredients
+            else:
+                mock_response = MagicMock()
+                mock_response.data = [
+                    {
+                        "recipe_id": "1",
+                        "raw_text": "2 tomatoes, diced",
+                        "quantity": "2",
+                        "unit": "",
+                        "name": "tomato",
+                        "modifiers": "diced",
+                        "category": "Vegetables",
+                        "plural": "tomatoes"
+                    }
+                ]
+                return mock_response
+        return MagicMock()
+    
+    # Set up the mock to use the side effect
+    mock_supabase.table.return_value.select.return_value.limit.return_value.execute.side_effect = side_effect
+    mock_supabase.table.return_value.select.return_value.filter.return_value.execute.side_effect = side_effect
+    
+    # Create test data
+    recipes = [
+        {"id": "1", "ingredients": ["2 tomatoes, diced"]}
+    ]
+    pantry = [
+        {"name": "tomatoes", "quantity": "2"}
+    ]
+    
+    # Create the aggregator
+    aggregator = SmartGroceryAggregator(recipes, pantry)
+    categorized, raw = aggregator.generate()
+    
+    # Verify that the tomatoes were deducted from the pantry
+    assert "tomato" not in raw
+    
+    # Verify that Supabase was called with the correct parameters
+    mock_supabase.table.assert_called_with("grocery_items_per_recipe")
+    mock_supabase.table.return_value.select.assert_called_with("*")
+    # We're now using filter instead of in_
+    mock_supabase.table.return_value.select.return_value.filter.assert_called()
