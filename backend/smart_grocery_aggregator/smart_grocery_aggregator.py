@@ -221,36 +221,21 @@ def smart_grocery_aggregation(
     pantry_map = {}
     for item in pantry:
         # Handle both dictionary and PantryItem object
-        if hasattr(item, 'quantity') and hasattr(item, 'name'):
+        if hasattr(item, 'name'):
             # It's a PantryItem object
-            quantity_str = item.quantity or ""
             name_str = item.name
         else:
             # It's a dictionary
-            quantity_str = item.get('quantity', "")
             name_str = item.get('name', "")
             
-        # Parse the quantity string to get quantity and unit for pantry items
-        pantry_qty, pantry_unit, pantry_name_part = parse_ingredient_string(quantity_str)
+        # Normalize the name for matching
+        norm_name = normalize_ingredient_name(name_str)
         
-        # Normalize both the name field and the name extracted from quantity
-        norm_from_name_field = normalize_ingredient_name(name_str)
-        norm_from_qty_field = normalize_ingredient_name(pantry_name_part)
-        
-        # Use both normalized names to increase chances of matching
-        norm_keys = set([norm_from_name_field, norm_from_qty_field])
-        
-        # Add to pantry map with both possible normalized names
-        for norm in norm_keys:
-            if norm and norm != "":  # Skip empty names
-                if norm not in pantry_map:
-                    pantry_map[norm] = {}
-                pantry_map[norm][pantry_unit] = pantry_map[norm].get(pantry_unit, 0) + pantry_qty
-                print(f"DEBUG: Added pantry item: {norm} ({pantry_qty} {pantry_unit})")
-                
-        print(f"DEBUG: Pantry item processing - name_str: {name_str}, quantity_str: {quantity_str}")
-        print(f"DEBUG: Pantry item processing - parsed: qty={pantry_qty}, unit={pantry_unit}, name_part={pantry_name_part}")
-        print(f"DEBUG: Pantry item processing - normalized: from_name={norm_from_name_field}, from_qty={norm_from_qty_field}")
+        # Add to pantry map - we only care about the name for matching
+        if norm_name and norm_name != "":  # Skip empty names
+            if norm_name not in pantry_map:
+                pantry_map[norm_name] = {"kg": 1.0}  # Use a default weight of 1kg
+            print(f"DEBUG: Added pantry item: {norm_name}")
 
 
     # Process each recipe
