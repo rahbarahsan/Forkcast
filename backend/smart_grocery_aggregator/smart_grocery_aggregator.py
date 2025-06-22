@@ -489,7 +489,15 @@ def smart_grocery_aggregation(
     print(f"DEBUG: Needed ingredients after pantry deduction: {needed_ingredients}")
 
 
-    # Categorize ingredients that don't already have a category
+    # First, remove any ingredients from categorized_ingredients that were fully deducted
+    # This ensures they don't appear in the final grocery list
+    for cat in list(categorized_ingredients.keys()):
+        categorized_ingredients[cat] = [ing for ing in categorized_ingredients[cat] if ing in needed_ingredients]
+        # Remove empty categories
+        if not categorized_ingredients[cat]:
+            del categorized_ingredients[cat]
+    
+    # Then categorize ingredients that don't already have a category
     # Iterate through the keys of needed_ingredients (which are normalized names)
     for ing in needed_ingredients.keys():
         # Skip ingredients that already have a category assigned
