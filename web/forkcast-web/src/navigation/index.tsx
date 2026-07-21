@@ -32,6 +32,28 @@ export type RootTabParamList = {
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
+// Screen components are built once, at module scope, and never rebuilt.
+//
+// Passing `component={WebScreenWrapper(Screen)}` inline creates a new component
+// identity on every render of TabNavigator. React then treats it as a different
+// component, unmounts the current screen and remounts it -- which resets the
+// navigator to its initial route. Any re-render of an ancestor (the auth
+// provider settling its session, for instance) would silently bounce the user
+// back to Home and make every tab look broken.
+const isWebPlatform = Platform.OS === 'web';
+const wrap = (Screen: React.ComponentType<any>) =>
+  isWebPlatform ? WebScreenWrapper(Screen) : Screen;
+
+const Screens = {
+  Home: wrap(HomeScreen),
+  Discover: wrap(DiscoverRecipesScreen),
+  Planner: wrap(PlannerScreen),
+  Pantry: wrap(PantryScreen),
+  Groceries: wrap(GroceryListScreen),
+  History: wrap(HistoryScreen),
+  SignIn: wrap(SignInScreen),
+};
+
 function TabNavigator() {
   const isWeb = Platform.OS === 'web';
   const { isSmallWeb } = useResponsive();
@@ -91,36 +113,24 @@ function TabNavigator() {
       >
         <Tab.Screen
           name="Home"
-          component={isWeb ? WebScreenWrapper(HomeScreen) : HomeScreen}
+          component={Screens.Home}
           options={{ headerShown: false }} // Always hide header for Home
         />
         <Tab.Screen
           name="Discover"
-          component={isWeb ? WebScreenWrapper(DiscoverRecipesScreen) : DiscoverRecipesScreen}
+          component={Screens.Discover}
           options={{
             headerShown: false, // Always hide the tab navigator header for Discover
             tabBarLabel: 'Discover', // Keep the tab label as "Discover"
           }}
         />
-        <Tab.Screen
-          name="Planner"
-          component={isWeb ? WebScreenWrapper(PlannerScreen) : PlannerScreen}
-        />
-        <Tab.Screen
-          name="Pantry"
-          component={isWeb ? WebScreenWrapper(PantryScreen) : PantryScreen}
-        />
-        <Tab.Screen
-          name="Groceries"
-          component={isWeb ? WebScreenWrapper(GroceryListScreen) : GroceryListScreen}
-        />
-        <Tab.Screen
-          name="History"
-          component={isWeb ? WebScreenWrapper(HistoryScreen) : HistoryScreen}
-        />
+        <Tab.Screen name="Planner" component={Screens.Planner} />
+        <Tab.Screen name="Pantry" component={Screens.Pantry} />
+        <Tab.Screen name="Groceries" component={Screens.Groceries} />
+        <Tab.Screen name="History" component={Screens.History} />
         <Tab.Screen
           name="SignIn"
-          component={isWeb ? WebScreenWrapper(SignInScreen) : SignInScreen}
+          component={Screens.SignIn}
           options={{
             tabBarLabel: user ? 'Account' : 'Sign In',
             tabBarIcon: ({ color, size }) =>
