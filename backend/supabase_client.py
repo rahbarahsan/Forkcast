@@ -25,3 +25,31 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("Missing Supabase credentials")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+
+def client_for_token(access_token: str):
+    """Return a Supabase client that acts as the user owning `access_token`.
+
+    Queries made through this client carry the user's JWT, so Row Level Security
+    evaluates auth.uid() and returns only that user's rows. This is what keeps
+    per-user tables (pantry, plans) private: authorisation is enforced by the
+    database rather than by filtering in application code.
+    """
+    user_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    user_client.postgrest.auth(access_token)
+    return user_client
+
+
+def user_id_from_token(access_token: str):
+    """Verify `access_token` with Supabase and return its user id, or None.
+
+    The signature is checked by Supabase; an expired, forged or malformed token
+    yields None rather than raising.
+    """
+    try:
+        response = supabase.auth.get_user(access_token)
+    except Exception:
+        return None
+
+    user = getattr(response, "user", None)
+    return getattr(user, "id", None) if user else None
