@@ -44,6 +44,8 @@ coverage/
 # Environment files - ignore in any directory
 **/.env
 **/.env.*
+# ...but the templates must be committed so others can set the project up.
+!**/.env.example
 
 # Ignore pipeline_config.json
 backend/admin_utils/config/pipeline_config.json
@@ -69,7 +71,12 @@ ENV/
 # Files ending with config
 **/*config.*
 **/*config
+# Git cannot re-include a file whose parent directory is excluded, so the
+# directory itself has to be un-ignored before the example files below take
+# effect. (Without this line the negations silently do nothing.)
+!backend/admin_utils/config/
 !backend/admin_utils/config/pipeline_config_example.json
+!backend/admin_utils/config/.env.example
 
 # Build artifacts
 dist/

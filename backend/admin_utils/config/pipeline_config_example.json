@@ -1,0 +1,18 @@
+{
+  "parsing_mode": "local or api",
+  "gpt_model": "anthropic/claude-3-haiku or openai/chatgpt-4o-latest",
+  "use_full_recipe_table": " boolean value true = all recipes, false = selected list",
+  "selected_recipe_ids": [
+    "List of UUIDs with comma seperated if partial fetch"
+  ],
+  "api_recipe_ids": ["List of UUIDs with comma seperated if partial fetch"],
+  "track_api_usage": " boolean value true/false.Track API cost/usage if parsing_mode is api",
+  "save_with_timestamp": "bolean value true/false Save CSV with timestamp or overwrite",
+  "enrichment_file_prefix": "api prefix if parsing_mode is api",
+  "supabase_recipes_table": "recipes",
+  "supabase_lookup_table": "ingredient_lookup",
+  "supabase_grocery_table": "grocery_items_per_recipe",
+  "api_timeout_retry_seconds": "int number default 5",
+  "max_api_retries": "int number default 5",
+  "allow_category_override": "boolean true or false it has been used in finalize_corrections.py file to overwrite category"
+}
