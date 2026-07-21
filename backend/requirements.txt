@@ -1,7 +1,9 @@
 fastapi
 uvicorn
 python-dotenv
-supabase
+# 2.15.x rejects any key that is not JWT-shaped, which breaks Supabase's current
+# sb_publishable_ / sb_secret_ API keys with "Invalid API key" at startup.
+supabase>=2.31.0
 pytest
 httpx
 
