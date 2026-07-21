@@ -2,12 +2,11 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { PantryItem } from '../types';
 import { API_ENDPOINTS } from '../config/api';
+import { useAuth } from '../context/AuthContext';
 import { PANTRY_UPDATED_EVENT } from '../context/PantryContext';
 import { PLAN_UPDATED_EVENT } from '../context/PlannerContext';
 
 interface UseGroceryListProps {
-  isGuest: boolean;
-  userId?: string;
   selectedIds?: string[];
   planIds?: string[];
   recipeIds?: string[];
@@ -20,13 +19,15 @@ interface GroceryListResult {
 }
 
 export const useGroceryList = ({
-  isGuest,
-  userId,
   selectedIds,
   planIds,
   recipeIds,
   pantryItems,
 }: UseGroceryListProps) => {
+  // Identity comes from the session, never from a caller-supplied id.
+  const { session } = useAuth();
+  const accessToken = session?.access_token;
+  const isGuest = !session;
   const [data, setData] = useState<GroceryListResult | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +38,6 @@ export const useGroceryList = ({
   const fetchGroceryList = useCallback(async () => {
     const now = Date.now();
     if (fetchInProgress.current || now - lastFetchTime.current < 500) return;
-    if (!isGuest && !userId) return;
 
     fetchInProgress.current = true;
     setLoading(true);
@@ -48,9 +48,10 @@ export const useGroceryList = ({
 
     const recipeIdsArray = Array.isArray(recipeIds) ? recipeIds : [];
 
+    // No user_id here on purpose: the backend derives identity from the bearer
+    // token, so a caller cannot ask for someone else's pantry or plans.
     const requestBody = {
       is_guest: isGuest,
-      user_id: userId,
       selected_ids: selectedIdsArray,
       plan_ids: planIdsArray,
       recipe_ids: recipeIdsArray,
@@ -62,6 +63,7 @@ export const useGroceryList = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
         body: JSON.stringify(requestBody),
       });
@@ -88,7 +90,7 @@ export const useGroceryList = ({
       setLoading(false);
       fetchInProgress.current = false;
     }
-  }, [isGuest, userId, selectedIds, planIds, recipeIds, pantryItems]);
+  }, [isGuest, accessToken, selectedIds, planIds, recipeIds, pantryItems]);
 
   useEffect(() => {
     const handlePantryUpdate = () => {

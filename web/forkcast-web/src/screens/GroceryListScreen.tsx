@@ -48,8 +48,6 @@ export default function GroceryListScreen() {
   }, [viewMode, selectedPlanId, plans]);
 
   const { groceryList, loading, error } = useGroceryList({
-    isGuest: true,
-    userId: undefined, // we’re in guest mode
     recipeIds,
     pantryItems,
   });
