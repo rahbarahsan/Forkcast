@@ -10,6 +10,10 @@ The interesting part is not the meal planning. It is that "2 cloves garlic,
 minced", "1 tbsp garlic paste" and "3 garlic cloves" all have to become one
 line on your shopping list.
 
+![Forkcast: picking two recipes and generating a combined grocery list](docs/forkcast-demo.gif)
+
+*Two recipes in, one deduplicated 25-item list out, grouped into 6 aisles.*
+
 ---
 
 ## The problem this actually solves
@@ -148,7 +152,8 @@ Being honest about the rough edges, since they are visible in the code:
 - **Some pre-parsed data is imperfect.** `1L vegetable or chicken stock`
   yields an ingredient called "vegetable", and stock is filed under Meat &
   Seafood.
-- **No live demo yet.** The backend is being moved off its old host.
+- **No live demo yet.** The backend is being moved off its old host, so the
+  GIF above is the closest thing for now.
 - Three tables (`ingredient_weights`, `ingredient_exceptions`, `features`) are
   present but unused; equivalent data is currently hardcoded.
 
