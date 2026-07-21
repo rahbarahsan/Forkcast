@@ -1,6 +1,7 @@
 import csv
 import os
 import re
+import shutil
 import openai
 import time
 import json
@@ -31,40 +32,45 @@ except ImportError:
     CACHE_AVAILABLE = False
     print("⚠️ Cache and logging utilities not available")
 
-# Force custom NLTK path
-NLTK_DATA_PATH = os.path.join(os.path.dirname(__file__), "../nltk_data")
-nltk.data.path.clear()
-nltk.data.path.append(os.path.abspath(NLTK_DATA_PATH))
+# NLTK corpora live in a local cache directory that is downloaded on first run
+# and git-ignored. They used to be committed to the repository -- roughly 66MB
+# across three copies, for the sake of this one script.
+NLTK_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "nltk_data"))
+os.makedirs(NLTK_DATA_PATH, exist_ok=True)
 
+# Search our cache first, but keep NLTK's default locations so a system-wide
+# install is still picked up.
+if NLTK_DATA_PATH not in nltk.data.path:
+    nltk.data.path.insert(0, NLTK_DATA_PATH)
 
-# Don't re-download every time
-try:
-    nltk.data.find("tokenizers/punkt")
-except LookupError:
-    nltk.download("punkt", download_dir="./nltk_data")
+# Downloads must land in the same directory we search. Previously the search
+# path was absolute while download_dir was "./nltk_data", relative to the
+# working directory, so a download could land somewhere nltk.data.find() would
+# never look and the corpus was re-fetched on every run.
+REQUIRED_NLTK_DATA = [
+    ("tokenizers/punkt", "punkt"),
+    ("taggers/averaged_perceptron_tagger", "averaged_perceptron_tagger"),
+    ("taggers/universal_tagset", "universal_tagset"),
+]
 
-try:
-    nltk.data.find("taggers/averaged_perceptron_tagger")
-except LookupError:
-    nltk.download("averaged_perceptron_tagger", download_dir="./nltk_data")
+for resource_path, package in REQUIRED_NLTK_DATA:
+    try:
+        nltk.data.find(resource_path)
+    except LookupError:
+        print(f"Downloading NLTK data: {package} -> {NLTK_DATA_PATH}")
+        nltk.download(package, download_dir=NLTK_DATA_PATH)
 
-try:
-    nltk.data.find("taggers/universal_tagset")
-except LookupError:
-    nltk.download("universal_tagset", download_dir="./nltk_data")
-
+# Newer NLTK looks for the tagger under an "_eng" suffix. If only the unsuffixed
+# copy exists, duplicate it rather than downloading the same model twice.
 try:
     nltk.data.find("taggers/averaged_perceptron_tagger_eng")
 except LookupError:
-    # This is a workaround for a specific NLTK version issue
-    # Create a symlink or copy from averaged_perceptron_tagger to averaged_perceptron_tagger_eng
     source_dir = os.path.join(NLTK_DATA_PATH, "taggers", "averaged_perceptron_tagger")
     target_dir = os.path.join(NLTK_DATA_PATH, "taggers", "averaged_perceptron_tagger_eng")
     if os.path.exists(source_dir) and not os.path.exists(target_dir):
-        os.makedirs(os.path.dirname(target_dir), exist_ok=True)
-        # Copy the directory contents
-        import shutil
         shutil.copytree(source_dir, target_dir)
+    else:
+        nltk.download("averaged_perceptron_tagger_eng", download_dir=NLTK_DATA_PATH)
 
 # Load environment variables
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", "config", ".env"))

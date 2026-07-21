@@ -67,6 +67,13 @@ ENV/
 *.egg-info/
 .installed.cfg
 *.egg
+# Virtualenvs under any name (venv_admin/, .venv-3.11/, ...)
+**/venv*/
+**/.venv*/
+
+# NLTK corpora are downloaded on first run of the ingredient pipeline, not
+# committed. They were previously vendored three times over, ~66MB in total.
+**/nltk_data/
 
 # Files ending with config
 **/*config.*
