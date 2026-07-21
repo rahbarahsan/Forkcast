@@ -4,7 +4,7 @@ import json
 from pprint import pprint
 
 # Add the parent directory to the path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from smart_grocery_aggregator.smart_grocery_aggregator import SmartGroceryAggregator
 from supabase_client import supabase
