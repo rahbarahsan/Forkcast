@@ -1,17 +1,38 @@
 # main.py
 
-from fastapi import FastAPI, HTTPException
+import sys
+from typing import Optional
+
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
+# Windows consoles default to cp1252, which cannot encode the emoji used in the
+# debug logging below. Without this, a print() raises UnicodeEncodeError, the
+# handler re-prints the same characters via format_exc(), and the request dies
+# as a 500 that looks nothing like an encoding problem.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
 
 # Handle imports for both direct execution and module import
 try:
     from .models import GroceryRequest, GroceryResponse, Recipe, PantryItem
-    from .supabase_client import supabase
+    from .supabase_client import supabase, client_for_token, user_id_from_token
     from .smart_grocery_aggregator.smart_grocery_aggregator import SmartGroceryAggregator
 except ImportError:
     from models import GroceryRequest, GroceryResponse, Recipe, PantryItem
-    from supabase_client import supabase
+    from supabase_client import supabase, client_for_token, user_id_from_token
     from smart_grocery_aggregator.smart_grocery_aggregator import SmartGroceryAggregator
+
+
+def _bearer_token(authorization: Optional[str]) -> Optional[str]:
+    """Pull the raw JWT out of an `Authorization: Bearer <token>` header."""
+    if not authorization:
+        return None
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token.strip():
+        return None
+    return token.strip()
 
 app = FastAPI()
 
@@ -24,30 +45,53 @@ app.add_middleware(
 )
 
 @app.post("/api/grocery-list", response_model=GroceryResponse)
-async def generate_grocery_list(req: GroceryRequest):
+async def generate_grocery_list(
+    req: GroceryRequest,
+    authorization: Optional[str] = Header(default=None),
+):
     try:
         recipes = []
         pantry_items = req.pantry_items or []
 
         print(f"DEBUG: Request: {req}")
 
-        if not req.is_guest:
-            if not req.user_id:
-                raise HTTPException(status_code=400, detail="User ID is required for signed-in users")
+        token = _bearer_token(authorization)
+        user_id = user_id_from_token(token) if token else None
 
-            plan_response = supabase.table("plans").select("*").eq("user_id", req.user_id).execute()
+        # A request claiming to be signed in must prove it. Note the check is on
+        # the verified token, not on req.is_guest, which any caller can set.
+        if not req.is_guest and user_id is None:
+            raise HTTPException(
+                status_code=401,
+                detail="A valid Authorization bearer token is required for signed-in requests",
+            )
+
+        if user_id is not None:
+            # Query as the user so RLS returns only their rows. Nothing here
+            # filters by a client-supplied id.
+            user_db = client_for_token(token)
+
+            plan_response = user_db.table("plans").select("*").execute()
             plan_data = plan_response.data or []
             plan_recipe_ids = set()
             for plan in plan_data:
-                plan_recipe_ids.update(plan.get("recipe_ids", []))
+                plan_recipe_ids.update(plan.get("recipe_ids") or [])
 
-            pantry_response = supabase.table("pantry").select("*").eq("user_id", req.user_id).execute()
+            pantry_response = user_db.table("pantry").select("*").execute()
             pantry_data = pantry_response.data or []
-            pantry_items = [PantryItem(**item) for item in pantry_data]
+            pantry_items = [
+                PantryItem(id=item.get("id"), name=item["name"], quantity=item.get("quantity"))
+                for item in pantry_data
+            ]
+
+            # Recipes the client explicitly asked for take precedence, so a
+            # signed-in user can still build a list from an ad-hoc selection.
+            requested_ids = set(req.recipe_ids or []) | set(req.selected_ids or [])
+            wanted_ids = requested_ids or plan_recipe_ids
 
             recipe_response = supabase.table("recipes").select("*").execute()
             all_recipes = recipe_response.data or []
-            recipes = [Recipe(**r) for r in all_recipes if r["id"] in plan_recipe_ids]
+            recipes = [Recipe(**r) for r in all_recipes if r["id"] in wanted_ids]
 
         else:
             selected_ids = set(req.selected_ids or [])
@@ -100,6 +144,10 @@ async def generate_grocery_list(req: GroceryRequest):
         raw_dict = raw if isinstance(raw, dict) else {ingredient: {"kg": 1.0} for ingredient in raw}
         return GroceryResponse(categorized=categorized, raw=raw_dict)
 
+    except HTTPException:
+        # Deliberate responses (e.g. the 401 above) must not be rewritten as 500s
+        # by the catch-all below.
+        raise
     except Exception as e:
         import traceback
         print(f"DEBUG: Error in generate_grocery_list: {str(e)}")

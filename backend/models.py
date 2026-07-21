@@ -30,8 +30,11 @@ class GroceryItemPerRecipe(BaseModel):
     synonym_of: Optional[str] = None
 
 class GroceryRequest(BaseModel):
+    # NOTE: there is deliberately no user_id field. Identity is taken from the
+    # Authorization bearer token, which is signature-verified. Accepting a
+    # user_id from the request body would let any caller read another user's
+    # pantry and plans simply by guessing their id.
     is_guest: bool
-    user_id: Optional[str] = None
     plan_ids: Optional[List[str]] = []
     selected_ids: Optional[List[str]] = []
     recipe_ids: Optional[List[str]] = []  # Add recipe_ids field
