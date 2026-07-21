@@ -6,14 +6,14 @@ from difflib import SequenceMatcher
 # Handle imports for both direct execution and module import
 try:
     # Try relative imports (for when the file is imported as part of a package)
-    from ..grocery_rules.unit_threshold_rules import estimate_weight
+    from ..grocery_rules.unit_threshold_rules import estimate_weight, UNIT_THRESHOLD_RULES
     from ..grocery_rules.synonym_resolver import get_canonical_name
     from ..grocery_rules.category_resolver import get_category
     from ..grocery_rules.plural_resolver import normalize_plural
     from ..supabase_client import supabase
 except ImportError:
     # Fall back to absolute imports (for when the file is run directly)
-    from grocery_rules.unit_threshold_rules import estimate_weight
+    from grocery_rules.unit_threshold_rules import estimate_weight, UNIT_THRESHOLD_RULES
     from grocery_rules.synonym_resolver import get_canonical_name
     from grocery_rules.category_resolver import get_category
     from grocery_rules.plural_resolver import normalize_plural
@@ -143,43 +143,102 @@ class SmartGroceryAggregator:
             raise
 
 
+# Units the weight estimator understands, plus their plural forms. Matching
+# against this vocabulary is what separates a unit from the ingredient itself:
+# a length-based guess mistakes "cloves" for part of the name and "eggs" for a
+# unit.
+UNIT_ALIASES = {
+    "l": "litre", "liter": "litre", "liters": "litre", "litres": "litre",
+    "gram": "g", "grams": "g", "gm": "g",
+    "kilogram": "kg", "kilograms": "kg",
+    "millilitre": "ml", "millilitres": "ml", "milliliter": "ml", "milliliters": "ml",
+    "clove": "cloves",
+    "piece": "pcs", "pieces": "pcs", "pc": "pcs",
+    "cups": "cup", "tablespoon": "tbsp", "tablespoons": "tbsp", "tbsps": "tbsp",
+    "teaspoon": "tsp", "teaspoons": "tsp", "tsps": "tsp",
+    # Container and portion words. They are not measures, but they occupy the
+    # unit slot in recipe text ("1 jar mystery mix"), so treat them as pieces
+    # rather than letting them leak into the ingredient name.
+    "jar": "pcs", "jars": "pcs", "can": "pcs", "cans": "pcs",
+    "tin": "pcs", "tins": "pcs", "bottle": "pcs", "bottles": "pcs",
+    "packet": "pcs", "packets": "pcs", "pack": "pcs", "packs": "pcs",
+    "bunch": "pcs", "bunches": "pcs", "head": "pcs", "heads": "pcs",
+    "handful": "pcs", "handfuls": "pcs", "pinch": "pcs", "pinches": "pcs",
+    "slice": "pcs", "slices": "pcs", "sprig": "pcs", "sprigs": "pcs",
+    "stalk": "pcs", "stalks": "pcs",
+}
+
+KNOWN_UNITS = set(UNIT_THRESHOLD_RULES) | set(UNIT_ALIASES)
+
+
+def _canonical_unit(token: str) -> str:
+    """Map a unit token onto the spelling estimate_weight expects."""
+    return UNIT_ALIASES.get(token, token)
+
+_NUMBER_RE = re.compile(r"^(\d+(?:\.\d+)?)$")
+_FRACTION_RE = re.compile(r"^(\d+)/(\d+)$")
+# "320g", "150ml" -- quantity and unit written without a space
+_GLUED_RE = re.compile(r"^(\d+(?:\.\d+)?)([a-z]+)$")
+
+
+def _to_float(token: str) -> Optional[float]:
+    """Parse '2', '1.5' or '1/2'. Returns None if the token is not numeric."""
+    match = _NUMBER_RE.match(token)
+    if match:
+        return float(match.group(1))
+    match = _FRACTION_RE.match(token)
+    if match and float(match.group(2)) != 0:
+        return float(match.group(1)) / float(match.group(2))
+    return None
+
+
 def parse_ingredient_string(ingredient_string: str) -> Tuple[float, str, str]:
     """
     Parses an ingredient string to extract quantity, unit, and ingredient name.
-    Assumes format like 'quantity unit ingredient_name' or 'quantity ingredient_name'.
-    Returns quantity as float, unit as string, and ingredient name as string.
-    Returns 0.0, "", original_string if parsing fails or only name is present.
+
+    Handles 'quantity unit name' ("2 cloves garlic"), 'quantity name'
+    ("3 eggs"), glued forms ("320g Arborio rice") and a bare name ("salt").
+    Preparation notes are dropped, so "2 cloves garlic, minced" yields the
+    ingredient "garlic" rather than "cloves garlic, minced".
+
+    Returns (quantity, unit, name); quantity is 0.0 and unit "" when absent.
     """
-    parts = ingredient_string.strip().lower().split(maxsplit=2)
+    text = ingredient_string.strip().lower()
+
+    # "1L stock (warm), heated" -> "1l stock": everything after a comma and
+    # anything parenthesised is preparation detail, not part of the ingredient.
+    text = re.sub(r"\(.*?\)", " ", text)
+    text = text.split(",")[0].strip()
+
+    parts = text.split()
     quantity = 0.0
     unit = ""
-    name = ingredient_string.strip().lower()
 
-    if len(parts) > 0:
-        try:
-            quantity = float(parts[0])
-            if len(parts) > 1:
-                # Check if the second part looks like a unit (short and no digits)
-                if len(parts[1]) <= 5 and not re.search(r'\d', parts[1]):
-                    unit = parts[1]
-                    if len(parts) > 2:
-                        name = parts[2]
-                    else:
-                        # Quantity and unit, but no name part - assume the rest is the name
-                        name = " ".join(parts[1:]) # Corrected: if no third part, the second part might be the start of the name
-                else:
-                    # Second part is not a unit, assume it's part of the name
-                    name = " ".join(parts[1:])
-            else:
-                # Only quantity provided, the rest is the name
-                name = " ".join(parts[1:]) if len(parts) > 1 else "" # Corrected: if only one part, name is empty
-        except ValueError:
-            # First part is not a number, assume no quantity or unit provided, the whole string is the name
-            quantity = 0.0
-            unit = ""
-            name = ingredient_string.strip().lower()
+    if parts:
+        value = _to_float(parts[0])
+        if value is not None:
+            quantity = value
+            parts = parts[1:]
+            if parts and parts[0] in KNOWN_UNITS:
+                unit = _canonical_unit(parts[0])
+                parts = parts[1:]
+        else:
+            glued = _GLUED_RE.match(parts[0])
+            if glued and glued.group(2) in KNOWN_UNITS:
+                quantity = float(glued.group(1))
+                unit = _canonical_unit(glued.group(2))
+                parts = parts[1:]
 
-    # If name is still empty after parsing, use the original string as the name
+    name = " ".join(parts).strip()
+
+    # "3 eggs" and "12 corn tortillas" are counts, not unitless amounts. Without
+    # this, estimate_weight falls back to a fixed default and the quantity is
+    # ignored entirely, so three eggs weigh the same as one.
+    if quantity and not unit:
+        unit = "pcs"
+
+    # A string that is only a quantity and unit has no ingredient to speak of;
+    # fall back to the original text rather than returning an empty name.
     if not name:
         name = ingredient_string.strip().lower()
 

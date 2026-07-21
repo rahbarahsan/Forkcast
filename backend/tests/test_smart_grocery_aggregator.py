@@ -24,15 +24,33 @@ def test_simple_exclusion_from_pantry():
     assert "chicken" in ingredients
 
 def test_plural_handling():
+    """"3 eggs" and "1 egg" are the same ingredient and must aggregate into one."""
     recipes = [
         {"id": "1", "ingredients": ["3 eggs", "1 egg"]}
     ]
-    pantry = [{"name": "egg", "quantity": "2"}]
-    needed_ingredients, categorized_ingredients = smart_grocery_aggregation(recipes, pantry)
+    needed_ingredients, categorized_ingredients = smart_grocery_aggregation(recipes, [])
 
     names = list(needed_ingredients.keys())
     assert "egg" in names
     assert len(needed_ingredients) == 1
+
+
+def test_pantry_match_removes_ingredient_entirely():
+    """Owning an ingredient drops it from the list; the amount is not subtracted.
+
+    This is deliberate. Pantry quantities and recipe quantities are rarely in
+    comparable units -- 2kg of flour in the cupboard against 2 tablespoons in a
+    recipe -- so subtracting one from the other produces confident nonsense.
+    Treating "it is in the pantry" as "I do not need to buy it" is coarser but
+    is right far more often than a bad unit conversion would be.
+    """
+    recipes = [
+        {"id": "1", "ingredients": ["3 eggs", "1 egg"]}
+    ]
+    pantry = [{"name": "egg", "quantity": "2"}]
+    needed_ingredients, _ = smart_grocery_aggregation(recipes, pantry)
+
+    assert "egg" not in needed_ingredients
 
     def test_synonym_resolution():
         recipes = [
@@ -155,7 +173,7 @@ def test_preprocessed_ingredients(mock_supabase):
     
     # Set up the mock to use the side effect
     mock_supabase.table.return_value.select.return_value.limit.return_value.execute.side_effect = side_effect
-    mock_supabase.table.return_value.select.return_value.filter.return_value.execute.side_effect = side_effect
+    mock_supabase.table.return_value.select.return_value.in_.return_value.execute.side_effect = side_effect
     
     # Create test data
     recipes = [
@@ -169,17 +187,20 @@ def test_preprocessed_ingredients(mock_supabase):
     
     # Verify that the pre-processed ingredients were used
     assert "garlic" in raw
-    assert "olive oil" in raw
+    # ingredient_lookup lists "olive oil" as a synonym of the canonical "oil",
+    # so aggregation is expected to collapse it -- that is the whole point of
+    # the synonym resolver.
+    assert "oil" in raw
     assert "Vegetables" in categorized
     assert "garlic" in categorized["Vegetables"]
     assert "Condiments & Spices" in categorized
-    assert "olive oil" in categorized["Condiments & Spices"]
+    assert "oil" in categorized["Condiments & Spices"]
     
     # Verify that Supabase was called with the correct parameters
     mock_supabase.table.assert_called_with("grocery_items_per_recipe")
     mock_supabase.table.return_value.select.assert_called_with("*")
-    # We're now using filter instead of in_
-    mock_supabase.table.return_value.select.return_value.filter.assert_called()
+    # The aggregator batches the lookup with .in_("recipe_id", [...])
+    mock_supabase.table.return_value.select.return_value.in_.assert_called()
 
 @patch('smart_grocery_aggregator.smart_grocery_aggregator.supabase')
 def test_fallback_to_original_implementation(mock_supabase):
@@ -202,7 +223,7 @@ def test_fallback_to_original_implementation(mock_supabase):
     
     # Set up the mock to use the side effect
     mock_supabase.table.return_value.select.return_value.limit.return_value.execute.side_effect = side_effect
-    mock_supabase.table.return_value.select.return_value.filter.return_value.execute.side_effect = side_effect
+    mock_supabase.table.return_value.select.return_value.in_.return_value.execute.side_effect = side_effect
     
     # Create test data
     recipes = [
@@ -216,13 +237,16 @@ def test_fallback_to_original_implementation(mock_supabase):
     
     # Verify that the original implementation was used
     assert "garlic" in raw
-    assert "olive oil" in raw
+    # ingredient_lookup lists "olive oil" as a synonym of the canonical "oil",
+    # so aggregation is expected to collapse it -- that is the whole point of
+    # the synonym resolver.
+    assert "oil" in raw
     
     # Verify that Supabase was called with the correct parameters
     mock_supabase.table.assert_called_with("grocery_items_per_recipe")
     mock_supabase.table.return_value.select.assert_called_with("*")
-    # We're now using filter instead of in_
-    mock_supabase.table.return_value.select.return_value.filter.assert_called()
+    # The aggregator batches the lookup with .in_("recipe_id", [...])
+    mock_supabase.table.return_value.select.return_value.in_.assert_called()
 
 @patch('smart_grocery_aggregator.smart_grocery_aggregator.supabase')
 def test_pantry_deduction_with_plural_forms(mock_supabase):
@@ -256,7 +280,7 @@ def test_pantry_deduction_with_plural_forms(mock_supabase):
     
     # Set up the mock to use the side effect
     mock_supabase.table.return_value.select.return_value.limit.return_value.execute.side_effect = side_effect
-    mock_supabase.table.return_value.select.return_value.filter.return_value.execute.side_effect = side_effect
+    mock_supabase.table.return_value.select.return_value.in_.return_value.execute.side_effect = side_effect
     
     # Create test data
     recipes = [
@@ -276,5 +300,5 @@ def test_pantry_deduction_with_plural_forms(mock_supabase):
     # Verify that Supabase was called with the correct parameters
     mock_supabase.table.assert_called_with("grocery_items_per_recipe")
     mock_supabase.table.return_value.select.assert_called_with("*")
-    # We're now using filter instead of in_
-    mock_supabase.table.return_value.select.return_value.filter.assert_called()
+    # The aggregator batches the lookup with .in_("recipe_id", [...])
+    mock_supabase.table.return_value.select.return_value.in_.assert_called()
