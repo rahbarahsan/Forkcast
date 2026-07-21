@@ -15,6 +15,7 @@ import GroceryListScreen from '../screens/GroceryListScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import DiscoverRecipesScreen from '../screens/DiscoverRecipesScreen';
 import SignInScreen from '../screens/SignInScreen.web';
+import { useAuth } from '../context/AuthContext';
 import { useResponsive } from '../hooks/useResponsive';
 
 // Define the root tab param list
@@ -34,6 +35,7 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 function TabNavigator() {
   const isWeb = Platform.OS === 'web';
   const { isSmallWeb } = useResponsive();
+  const { user } = useAuth();
 
   return (
     <View style={{ flex: 1 }}>
@@ -120,9 +122,11 @@ function TabNavigator() {
           name="SignIn"
           component={isWeb ? WebScreenWrapper(SignInScreen) : SignInScreen}
           options={{
-            tabBarLabel: 'Sign In',
+            tabBarLabel: user ? 'Account' : 'Sign In',
             tabBarIcon: ({ color, size }) =>
-              isWeb ? null : <Ionicons name="person-outline" size={size} color={color} />,
+              isWeb ? null : (
+                <Ionicons name={user ? 'person' : 'person-outline'} size={size} color={color} />
+              ),
           }}
         />
       </Tab.Navigator>
