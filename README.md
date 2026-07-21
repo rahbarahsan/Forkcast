@@ -157,6 +157,9 @@ Being honest about the rough edges, since they are visible in the code:
 - Three tables (`ingredient_weights`, `ingredient_exceptions`, `features`) are
   present but unused; equivalent data is currently hardcoded.
 
+For how the pieces fit together, the security model, and the reasoning behind
+the design decisions, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## Project layout
 
 ```
