@@ -48,10 +48,10 @@ coverage/
 !**/.env.example
 
 # Ignore pipeline_config.json
-backend/admin_utils/config/pipeline_config.json
-backend/admin_utils/logs/
-backend/admin_utils/csv/*
-backend/admin_utils/cache/
+backend/ingredient_pipeline/config/pipeline_config.json
+backend/ingredient_pipeline/logs/
+backend/ingredient_pipeline/csv/*
+backend/ingredient_pipeline/cache/
 
 # Python
 # Ignore __pycache__ in any directory
@@ -81,9 +81,9 @@ ENV/
 # Git cannot re-include a file whose parent directory is excluded, so the
 # directory itself has to be un-ignored before the example files below take
 # effect. (Without this line the negations silently do nothing.)
-!backend/admin_utils/config/
-!backend/admin_utils/config/pipeline_config_example.json
-!backend/admin_utils/config/.env.example
+!backend/ingredient_pipeline/config/
+!backend/ingredient_pipeline/config/pipeline_config_example.json
+!backend/ingredient_pipeline/config/.env.example
 
 # Build artifacts
 dist/

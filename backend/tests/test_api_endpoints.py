@@ -64,7 +64,7 @@ def test_grocery_list_endpoint_with_recipe_ids():
     assert "raw" in response.json()
 
 @patch('main.supabase')
-@patch('smart_grocery_aggregator.smart_grocery_aggregator.supabase')
+@patch('aggregator.supabase')
 def test_grocery_list_with_preprocessed_ingredients(mock_supabase, mock_main_supabase):
     """Test the /api/grocery-list endpoint with pre-processed ingredients."""
     # Mock the Supabase response for recipes

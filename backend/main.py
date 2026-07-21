@@ -18,11 +18,11 @@ for _stream in (sys.stdout, sys.stderr):
 try:
     from .models import GroceryRequest, GroceryResponse, Recipe, PantryItem
     from .supabase_client import supabase, client_for_token, user_id_from_token
-    from .smart_grocery_aggregator.smart_grocery_aggregator import SmartGroceryAggregator
+    from .aggregator import SmartGroceryAggregator
 except ImportError:
     from models import GroceryRequest, GroceryResponse, Recipe, PantryItem
     from supabase_client import supabase, client_for_token, user_id_from_token
-    from smart_grocery_aggregator.smart_grocery_aggregator import SmartGroceryAggregator
+    from aggregator import SmartGroceryAggregator
 
 
 def _bearer_token(authorization: Optional[str]) -> Optional[str]:
