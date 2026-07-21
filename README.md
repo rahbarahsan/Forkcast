@@ -59,7 +59,7 @@ recipe — so subtracting one from the other produces a confident-looking number
 that is simply wrong. "It is in the pantry, so I do not need to buy it" is
 coarser, but it is right far more often than a bad unit conversion would be.
 
-Stages 1 and 2 also run offline as a batch pipeline (`backend/admin_utils/`)
+Stages 1 and 2 also run offline as a batch pipeline (`backend/ingredient_pipeline/`)
 that pre-parses recipes with LLM assistance and writes the structured result
 to the database, so the request path stays fast and deterministic. The
 runtime parser is the fallback for anything not yet pre-processed.
@@ -121,7 +121,7 @@ token so RLS applies.
 **3. Frontend**
 
 ```bash
-cd web/forkcast-web
+cd app
 npm install
 cp .env.example .env                             # set API URL + Supabase URL/anon key
 npm run web
@@ -139,8 +139,8 @@ rate limited to a few messages per hour and will reject most sign-ups.
 ## Tests
 
 ```bash
-cd backend && pytest tests/ -q        # 13 passed, 1 xfailed
-cd web/forkcast-web && npx tsc --noEmit
+cd backend && pytest tests/ -q    # 16 passed
+cd app && npx tsc --noEmit
 ```
 
 ## Known limitations
@@ -161,16 +161,22 @@ Being honest about the rough edges, since they are visible in the code:
 
 ```
 backend/
-  main.py                     FastAPI app: /api/recipes, /api/grocery-list
-  smart_grocery_aggregator/   parsing, aggregation, pantry deduction
-  grocery_rules/              units, plurals, synonyms, categories
-  admin_utils/                offline LLM-assisted parsing pipeline
+  main.py                FastAPI app: /api/recipes, /api/grocery-list
+  models.py              request/response schemas
+  supabase_client.py     clients: anon, and per-request with the user's JWT
+  aggregator.py          parsing, aggregation, pantry deduction
+  grocery_rules/         units, plurals, synonyms, categories
+  ingredient_pipeline/   offline LLM-assisted pre-parsing (not on the request path)
+  tests/
 supabase/
-  migrations/                 schema + RLS policies
-  seed.sql                    reference data
-web/forkcast-web/
-  src/screens/                Home, Discover, Planner, Pantry, Groceries, Auth
-  src/context/                auth, pantry, planner, recipes
+  migrations/            schema + RLS policies
+  seed.sql               reference data
+app/
+  src/screens/           Home, Discover, Planner, Pantry, Groceries, Auth
+  src/context/           auth, pantry, planner, recipes
+  src/types/             shared data models (single source of truth)
+docs/
+  forkcast-demo.gif
 ```
 
 ## License
