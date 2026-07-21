@@ -63,8 +63,9 @@ def test_grocery_list_endpoint_with_recipe_ids():
     assert "categorized" in response.json()
     assert "raw" in response.json()
 
+@patch('main.supabase')
 @patch('smart_grocery_aggregator.smart_grocery_aggregator.supabase')
-def test_grocery_list_with_preprocessed_ingredients(mock_supabase):
+def test_grocery_list_with_preprocessed_ingredients(mock_supabase, mock_main_supabase):
     """Test the /api/grocery-list endpoint with pre-processed ingredients."""
     # Mock the Supabase response for recipes
     mock_recipes_response = MagicMock()
@@ -118,11 +119,14 @@ def test_grocery_list_with_preprocessed_ingredients(mock_supabase):
             mock_table_check.data = [{"count": 2}]
             mock.select.return_value.limit.return_value.execute.return_value = mock_table_check
             
-            # For recipe ingredients
-            mock.select.return_value.filter.return_value.execute.return_value = mock_grocery_response
+            # For recipe ingredients -- the aggregator batches these with .in_()
+            mock.select.return_value.in_.return_value.execute.return_value = mock_grocery_response
         return mock
-    
+
     mock_supabase.table.side_effect = side_effect
+    # main.py holds its own reference to the Supabase client, so patching only
+    # the aggregator's would let the recipe lookup hit the real database.
+    mock_main_supabase.table.side_effect = side_effect
     
     # Test data
     test_data = {
@@ -144,4 +148,7 @@ def test_grocery_list_with_preprocessed_ingredients(mock_supabase):
     assert "Vegetables" in response_data["categorized"]
     assert "garlic" in response_data["categorized"]["Vegetables"]
     assert "Condiments & Spices" in response_data["categorized"]
+    # Supabase is fully mocked here, so ingredient_lookup returns nothing and the
+    # synonym resolver leaves the pre-processed name as-is. (The aggregator unit
+    # tests query the real lookup table and do see "olive oil" collapse to "oil".)
     assert "olive oil" in response_data["categorized"]["Condiments & Spices"]
