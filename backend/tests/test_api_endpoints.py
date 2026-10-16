@@ -1,154 +1,79 @@
-import json
-import sys
-import os
-import pytest
-from unittest.mock import patch, MagicMock
-
-# Add the parent directory to the path so we can import from backend
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 from fastapi.testclient import TestClient
-from main import app
+from main import create_app
 
-client = TestClient(app)
+RECIPE = {'title': 'Family rice', 'ingredients': ['1 kg rice', '2 onions'], 'instructions': 'Cook everything.'}
 
-def test_grocery_list_endpoint_guest():
-    """Test the /api/grocery-list endpoint with guest user data."""
-    # Test data for a guest user
-    test_data = {
-        "is_guest": True,
-        "selected_ids": ["1"],  # Assuming recipe ID 1 exists
-        "pantry_items": [
-            {"id": "1", "name": "onion", "quantity": "2 pcs"}
-        ]
-    }
-    
-    response = client.post("/api/grocery-list", json=test_data)
-    print(f"Status code: {response.status_code}")
-    print(f"Response: {json.dumps(response.json(), indent=2)}")
-    
-    assert response.status_code == 200
-    assert "categorized" in response.json()
-    assert "raw" in response.json()
+def test_local_household_workflow_survives_restart(tmp_path):
+    path = tmp_path / 'household.sqlite3'
+    with TestClient(create_app(path)) as client:
+        assert client.get('/api/health').json()['storage'] == 'sqlite'
+        assert len(client.get('/api/recipes').json()) == 6
+        response = client.post('/api/recipes', json=RECIPE)
+        assert response.status_code == 201
+        recipe = response.json()
+        pantry = client.post('/api/pantry', json={'name': 'onion', 'quantity': '1'}).json()
+        plan = client.post('/api/plans', json={'name': 'This week', 'recipeIds': [recipe['id']]}).json()
+        assert plan['isActive']
+        grocery = client.post('/api/grocery-list', json={'plan_ids': [plan['id']]}).json()
+        assert grocery['raw'] == {'rice': {'g': 1000.0}}
+        saved = client.post('/api/history', json={'name':'Weekly shop','grocery_list':grocery,'recipe_ids':[recipe['id']],'checked':['rice']})
+        assert saved.status_code == 201
+    with TestClient(create_app(path)) as client:
+        assert len(client.get('/api/recipes').json()) == 7
+        assert client.get('/api/pantry').json()[0]['id'] == pantry['id']
+        assert client.get('/api/plans').json()[0]['id'] == plan['id']
+        assert client.get('/api/history').json()[0]['checked'] == ['rice']
+        assert client.delete('/api/recipes/' + recipe['id']).status_code == 204
+        assert client.get('/api/plans').json()[0]['recipeIds'] == []
 
-def test_grocery_list_endpoint_empty():
-    """Test the /api/grocery-list endpoint with an empty request."""
-    test_data = {
-        "is_guest": True,
-        "selected_ids": [],
-        "pantry_items": []
-    }
-    
-    response = client.post("/api/grocery-list", json=test_data)
-    assert response.status_code == 200
-    assert "categorized" in response.json()
-    assert "raw" in response.json()
-    # Empty request should return empty results
-    assert len(response.json()["raw"]) == 0
-    assert len(response.json()["categorized"]) == 0
+def test_validation_and_browser_origin_boundary(client):
+    assert client.post('/api/recipes', json={**RECIPE, 'title':' '}).status_code == 422
+    assert client.post('/api/plans', json={'recipeIds':['unknown']}).status_code == 422
+    assert client.post('/api/plans', json={'startDate':'2026-10-20','endDate':'2026-10-01'}).status_code == 422
+    assert client.post('/api/pantry', json={'name':'rice'}, headers={'Origin':'https://untrusted.example'}).status_code == 403
+    assert client.post('/api/grocery-list', json={'recipe_ids':[]}).json() == {'categorized':{},'raw':{}}
 
-def test_grocery_list_endpoint_with_recipe_ids():
-    """Test the /api/grocery-list endpoint with recipe_ids parameter."""
-    test_data = {
-        "is_guest": True,
-        "recipe_ids": ["1"],  # Assuming recipe ID 1 exists
-        "pantry_items": []
-    }
-    
-    response = client.post("/api/grocery-list", json=test_data)
-    print(f"Status code: {response.status_code}")
-    print(f"Response: {json.dumps(response.json(), indent=2)}")
-    
-    assert response.status_code == 200
-    assert "categorized" in response.json()
-    assert "raw" in response.json()
+def test_activating_plan_is_exclusive(client):
+    first = client.post('/api/plans', json={'name':'First'}).json()
+    second = client.post('/api/plans', json={'name':'Second'}).json()
+    plans = client.put('/api/plans/active', json={'id': second['id']}).json()
+    assert [p['id'] for p in plans if p['isActive']] == [second['id']]
+    assert client.get('/api/plans').json()[0]['id'] == first['id']
 
-@patch('main.supabase')
-@patch('aggregator.supabase')
-def test_grocery_list_with_preprocessed_ingredients(mock_supabase, mock_main_supabase):
-    """Test the /api/grocery-list endpoint with pre-processed ingredients."""
-    # Mock the Supabase response for recipes
-    mock_recipes_response = MagicMock()
-    mock_recipes_response.data = [
-        {
-            "id": "1",
-            "title": "Test Recipe",
-            "cuisine": "Test",
-            "image": "test.jpg",
-            "ingredients": ["2 cloves garlic, minced", "1 tbsp olive oil"],
-            "instructions": "Test instructions",
-            "prep_time": "10 min",
-            "cook_time": "20 min"
-        }
-    ]
-    
-    # Mock the Supabase response for grocery_items_per_recipe
-    mock_grocery_response = MagicMock()
-    mock_grocery_response.data = [
-        {
-            "recipe_id": "1",
-            "raw_text": "2 cloves garlic, minced",
-            "quantity": "2",
-            "unit": "cloves",
-            "name": "garlic",
-            "modifiers": "minced",
-            "category": "Vegetables",
-            "plural": "garlics"
-        },
-        {
-            "recipe_id": "1",
-            "raw_text": "1 tbsp olive oil",
-            "quantity": "1",
-            "unit": "tbsp",
-            "name": "olive oil",
-            "modifiers": "",
-            "category": "Condiments & Spices",
-            "plural": ""
-        }
-    ]
-    
-    # Configure the mock to return different responses based on the table being queried
-    def side_effect(*args, **kwargs):
-        mock = MagicMock()
-        if args[0] == "recipes":
-            mock.select.return_value.execute.return_value = mock_recipes_response
-            mock.select.return_value.eq.return_value.execute.return_value = mock_recipes_response
-        elif args[0] == "grocery_items_per_recipe":
-            # For table check
-            mock_table_check = MagicMock()
-            mock_table_check.data = [{"count": 2}]
-            mock.select.return_value.limit.return_value.execute.return_value = mock_table_check
-            
-            # For recipe ingredients -- the aggregator batches these with .in_()
-            mock.select.return_value.in_.return_value.execute.return_value = mock_grocery_response
-        return mock
+def test_catalog_edits_are_personal_overrides(client):
+    original = client.get('/api/recipes').json()[0]
+    updated = client.put('/api/recipes/' + original['id'], json=RECIPE)
+    assert updated.status_code == 200
+    grocery = client.post('/api/grocery-list', json={'recipe_ids':[original['id']]}).json()
+    assert grocery['raw']['rice']['g'] == 1000
+    assert client.delete('/api/recipes/' + original['id']).status_code == 204
+    assert client.get('/api/recipes').json()[0]['title'] == original['title']
 
-    mock_supabase.table.side_effect = side_effect
-    # main.py holds its own reference to the Supabase client, so patching only
-    # the aggregator's would let the recipe lookup hit the real database.
-    mock_main_supabase.table.side_effect = side_effect
-    
-    # Test data
-    test_data = {
-        "is_guest": True,
-        "recipe_ids": ["1"],
-        "pantry_items": []
-    }
-    
-    response = client.post("/api/grocery-list", json=test_data)
-    print(f"Status code: {response.status_code}")
-    print(f"Response: {json.dumps(response.json(), indent=2)}")
-    
-    assert response.status_code == 200
-    assert "categorized" in response.json()
-    assert "raw" in response.json()
-    
-    # Verify that the pre-processed ingredients were used
-    response_data = response.json()
-    assert "Vegetables" in response_data["categorized"]
-    assert "garlic" in response_data["categorized"]["Vegetables"]
-    assert "Condiments & Spices" in response_data["categorized"]
-    # Supabase is fully mocked here, so ingredient_lookup returns nothing and the
-    # synonym resolver leaves the pre-processed name as-is. (The aggregator unit
-    # tests query the real lookup table and do see "olive oil" collapse to "oil".)
-    assert "olive oil" in response_data["categorized"]["Condiments & Spices"]
+
+def test_import_preview_never_persists_until_saved(client):
+    text = 'Lemon rice\nIngredients\n1 cup rice\n1 lemon\nInstructions\nCook rice, then stir in lemon.'
+    preview = client.post('/api/import/recipe', json={'text':text})
+    assert preview.status_code == 200
+    assert preview.json()['ingredients'] == ['1 cup rice','1 lemon']
+    assert len(client.get('/api/recipes').json()) == 6
+    assert client.post('/api/recipes', json=preview.json()).status_code == 201
+    assert len(client.get('/api/recipes').json()) == 7
+    assert client.post('/api/import/recipe', json={'text':'not a recipe'}).status_code == 422
+
+
+def test_pantry_scan_review_coverage_and_offer_comparison(client):
+    preview = client.post('/api/import/pantry', json={'text':'2 kg rice\n3 tomatoes'}).json()
+    assert preview['items'][0] == {'name':'rice','quantity':'2 kg'}
+    assert client.get('/api/pantry').json() == []
+    assert client.post('/api/pantry/batch', json=preview).status_code == 201
+    assert any(r['coverage'] > 0 for r in client.get('/api/suggestions').json())
+    recipe = client.post('/api/recipes', json={'title':'Garlic','ingredients':['5 cloves garlic'],'instructions':'Roast.'}).json()
+    offer = {'name':'garlic','store':'Market','price':2.50,'quantity':3,'unit':'clove','currency':'CAD'}
+    assert client.post('/api/offers', json=offer).status_code == 201
+    assert client.post('/api/offers', json={**offer,'store':'Old deal','price':.5,'valid_until':'2000-01-01'}).status_code == 201
+    assert client.post('/api/offers', json={**offer,'currency':'USD','price':.1}).status_code == 201
+    result = client.post('/api/optimize', json={'recipe_ids':[recipe['id']],'currency':'CAD'}).json()
+    assert result['total'] == 5
+    assert result['items'][0]['packs'] == 2
+    assert result['unpriced'] == []
+    assert client.post('/api/offers', json={**offer,'quantity':0}).status_code == 422

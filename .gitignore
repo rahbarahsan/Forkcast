@@ -75,9 +75,7 @@ ENV/
 # committed. They were previously vendored three times over, ~66MB in total.
 **/nltk_data/
 
-# Files ending with config
-**/*config.*
-**/*config
+# Local pipeline credentials
 # Git cannot re-include a file whose parent directory is excluded, so the
 # directory itself has to be un-ignored before the example files below take
 # effect. (Without this line the negations silently do nothing.)
@@ -92,3 +90,15 @@ web-build/
 
 # Metro
 metro-cache/
+
+# Python tooling
+.pytest_cache/
+.ruff_cache/
+
+# Local collaboration and application data
+/requirements.md
+/questions.md
+/data/local/
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
