@@ -1,11 +1,11 @@
 """Deterministic ingredient parsing and aggregation; no network or model required."""
-from collections import defaultdict
-from fractions import Fraction
+
 import json
 import math
-from pathlib import Path
 import re
-from typing import Optional, Tuple
+from collections import defaultdict
+from fractions import Fraction
+from pathlib import Path
 
 try:
     from .grocery_rules.plural_resolver import normalize_plural
@@ -13,24 +13,59 @@ except ImportError:
     from grocery_rules.plural_resolver import normalize_plural
 
 UNIT_ALIASES = {
-    "liter": "l", "liters": "l", "litre": "l", "litres": "l",
-    "gram": "g", "grams": "g", "gm": "g",
-    "kilogram": "kg", "kilograms": "kg",
-    "millilitre": "ml", "millilitres": "ml", "milliliter": "ml", "milliliters": "ml",
+    "liter": "l",
+    "liters": "l",
+    "litre": "l",
+    "litres": "l",
+    "gram": "g",
+    "grams": "g",
+    "gm": "g",
+    "kilogram": "kg",
+    "kilograms": "kg",
+    "millilitre": "ml",
+    "millilitres": "ml",
+    "milliliter": "ml",
+    "milliliters": "ml",
     "cloves": "clove",
-    "piece": "pcs", "pieces": "pcs", "pc": "pcs",
-    "cups": "cup", "tablespoon": "tbsp", "tablespoons": "tbsp", "tbsps": "tbsp",
-    "teaspoon": "tsp", "teaspoons": "tsp", "tsps": "tsp",
+    "piece": "pcs",
+    "pieces": "pcs",
+    "pc": "pcs",
+    "cups": "cup",
+    "tablespoon": "tbsp",
+    "tablespoons": "tbsp",
+    "tbsps": "tbsp",
+    "teaspoon": "tsp",
+    "teaspoons": "tsp",
+    "tsps": "tsp",
     # Container and portion words. They are not measures, but they occupy the
     # unit slot in recipe text ("1 jar mystery mix"), so treat them as pieces
     # rather than letting them leak into the ingredient name.
-    "jar": "pcs", "jars": "pcs", "can": "pcs", "cans": "pcs",
-    "tin": "pcs", "tins": "pcs", "bottle": "pcs", "bottles": "pcs",
-    "packet": "pcs", "packets": "pcs", "pack": "pcs", "packs": "pcs",
-    "bunch": "pcs", "bunches": "pcs", "head": "pcs", "heads": "pcs",
-    "handful": "pcs", "handfuls": "pcs", "pinch": "pcs", "pinches": "pcs",
-    "slice": "pcs", "slices": "pcs", "sprig": "pcs", "sprigs": "pcs",
-    "stalk": "pcs", "stalks": "pcs",
+    "jar": "pcs",
+    "jars": "pcs",
+    "can": "pcs",
+    "cans": "pcs",
+    "tin": "pcs",
+    "tins": "pcs",
+    "bottle": "pcs",
+    "bottles": "pcs",
+    "packet": "pcs",
+    "packets": "pcs",
+    "pack": "pcs",
+    "packs": "pcs",
+    "bunch": "pcs",
+    "bunches": "pcs",
+    "head": "pcs",
+    "heads": "pcs",
+    "handful": "pcs",
+    "handfuls": "pcs",
+    "pinch": "pcs",
+    "pinches": "pcs",
+    "slice": "pcs",
+    "slices": "pcs",
+    "sprig": "pcs",
+    "sprigs": "pcs",
+    "stalk": "pcs",
+    "stalks": "pcs",
 }
 
 KNOWN_UNITS = {"g", "kg", "ml", "l", "cup", "tbsp", "tsp", "pcs", "clove"} | set(UNIT_ALIASES)
@@ -40,13 +75,14 @@ def _canonical_unit(token: str) -> str:
     """Map a unit token onto the spelling estimate_weight expects."""
     return UNIT_ALIASES.get(token, token)
 
+
 _NUMBER_RE = re.compile(r"^(\d+(?:\.\d+)?)$")
 _FRACTION_RE = re.compile(r"^(\d+)/(\d+)$")
 # "320g", "150ml" -- quantity and unit written without a space
 _GLUED_RE = re.compile(r"^(\d+(?:\.\d+)?)([a-z]+)$")
 
 
-def _to_float(token: str) -> Optional[float]:
+def _to_float(token: str) -> float | None:
     """Parse '2', '1.5' or '1/2'. Returns None if the token is not numeric."""
     match = _NUMBER_RE.match(token)
     if match:
@@ -57,7 +93,7 @@ def _to_float(token: str) -> Optional[float]:
     return None
 
 
-def parse_ingredient_string(ingredient_string: str) -> Tuple[float, str, str]:
+def parse_ingredient_string(ingredient_string: str) -> tuple[float, str, str]:
     """
     Parses an ingredient string to extract quantity, unit, and ingredient name.
 
@@ -113,23 +149,29 @@ def parse_ingredient_string(ingredient_string: str) -> Tuple[float, str, str]:
 class IngredientCatalog:
     def __init__(self, lookup=None):
         if lookup is None:
-            source = Path(__file__).resolve().parents[1] / 'datasets' / 'catalog.json'
-            lookup = json.loads(source.read_text(encoding='utf-8'))['ingredient_lookup']
+            source = Path(__file__).resolve().parents[1] / "datasets" / "catalog.json"
+            lookup = json.loads(source.read_text(encoding="utf-8"))["ingredient_lookup"]
         self.names = {}
         self.categories = {}
         for row in lookup:
-            canonical = row['canonical'].strip().lower()
-            self.categories[canonical] = row.get('category') or 'Other'
-            for name in [canonical, *row.get('synonyms', '').split(','), *(row.get('plurals') or '').split(',')]:
+            canonical = row["canonical"].strip().lower()
+            self.categories[canonical] = row.get("category") or "Other"
+            for name in [
+                canonical,
+                *row.get("synonyms", "").split(","),
+                *(row.get("plurals") or "").split(","),
+            ]:
                 if name.strip():
                     self.names[name.strip().lower()] = canonical
 
     def canonical(self, name):
-        name = re.sub(r'\b(to taste|for garnish|for serving)\b', '', name.lower()).strip()
-        return self.names.get(name) or self.names.get(normalize_plural(name)) or normalize_plural(name)
+        name = re.sub(r"\b(to taste|for garnish|for serving)\b", "", name.lower()).strip()
+        return (
+            self.names.get(name) or self.names.get(normalize_plural(name)) or normalize_plural(name)
+        )
 
     def category(self, name):
-        return self.categories.get(self.canonical(name), 'Other')
+        return self.categories.get(self.canonical(name), "Other")
 
 
 def normalize_ingredient_name(name):
@@ -137,35 +179,45 @@ def normalize_ingredient_name(name):
 
 
 def _amount(quantity, unit):
-    conversions = {'kg': (1000, 'g'), 'l': (1000, 'ml'), 'tbsp': (15, 'ml'), 'tsp': (5, 'ml'), 'cup': (240, 'ml')}
-    factor, unit = conversions.get(unit, (1, unit or 'unspecified'))
+    conversions = {
+        "kg": (1000, "g"),
+        "l": (1000, "ml"),
+        "tbsp": (15, "ml"),
+        "tsp": (5, "ml"),
+        "cup": (240, "ml"),
+    }
+    factor, unit = conversions.get(unit, (1, unit or "unspecified"))
     return quantity * factor, unit
 
 
 class SmartGroceryAggregator:
     def __init__(self, recipes, pantry_items, lookup=None, preprocessed=None):
-        self.recipes = [r.model_dump() if hasattr(r, 'model_dump') else r for r in recipes]
-        self.pantry = [p.model_dump() if hasattr(p, 'model_dump') else p for p in pantry_items]
+        self.recipes = [r.model_dump() if hasattr(r, "model_dump") else r for r in recipes]
+        self.pantry = [p.model_dump() if hasattr(p, "model_dump") else p for p in pantry_items]
         self.catalog = IngredientCatalog(lookup)
         self.preprocessed = preprocessed or {}
 
     def generate(self):
-        owned = {self.catalog.canonical(parse_ingredient_string(p['name'])[2]) for p in self.pantry}
+        owned = {self.catalog.canonical(parse_ingredient_string(p["name"])[2]) for p in self.pantry}
         totals = defaultdict(lambda: defaultdict(float))
         for recipe in self.recipes:
-            if not isinstance(recipe.get('ingredients'), list):
-                raise ValueError('Recipe ingredients must be a list')
-            prepared = self.preprocessed.get(recipe['id'], [])
-            by_line = {row.get('raw_text', '').strip().lower(): row for row in prepared}
-            for line in recipe['ingredients']:
+            if not isinstance(recipe.get("ingredients"), list):
+                raise ValueError("Recipe ingredients must be a list")
+            prepared = self.preprocessed.get(recipe["id"], [])
+            by_line = {row.get("raw_text", "").strip().lower(): row for row in prepared}
+            for line in recipe["ingredients"]:
                 quantity, unit, name = parse_ingredient_string(line)
                 row = by_line.get(line.strip().lower())
                 if row:
                     try:
-                        parsed_quantity = float(Fraction(str(row.get('quantity') or '0')))
+                        parsed_quantity = float(Fraction(str(row.get("quantity") or "0")))
                         if not math.isfinite(parsed_quantity) or parsed_quantity < 0:
-                            raise ValueError('Invalid quantity')
-                        quantity, unit, name = parsed_quantity, _canonical_unit(row.get('unit') or ''), row['name']
+                            raise ValueError("Invalid quantity")
+                        quantity, unit, name = (
+                            parsed_quantity,
+                            _canonical_unit(row.get("unit") or ""),
+                            row["name"],
+                        )
                     except (ValueError, ZeroDivisionError):
                         pass
                 name = self.catalog.canonical(name)
@@ -173,7 +225,10 @@ class SmartGroceryAggregator:
                     continue
                 quantity, unit = _amount(quantity, unit)
                 totals[name][unit] += quantity
-        raw = {name: {u: round(q, 4) for u, q in sorted(amounts.items())} for name, amounts in sorted(totals.items())}
+        raw = {
+            name: {u: round(q, 4) for u, q in sorted(amounts.items())}
+            for name, amounts in sorted(totals.items())
+        }
         categorized = defaultdict(list)
         for name in raw:
             categorized[self.catalog.category(name)].append(name)

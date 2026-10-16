@@ -5,16 +5,13 @@ Unit estimation logic for Smart Grocery Aggregator
 This module maps quantity-unit combinations to approximate weights (in kg)
 """
 
-from typing import List, Tuple
-
-
 # Each rule defines (quantity_range, approx_weight_in_kg)
 UNIT_THRESHOLD_RULES = {
     "pcs": [
-        (range(1, 3), 0.25),     # 1-2 pcs ≈ 250g
-        (range(3, 6), 0.5),      # 3-5 pcs ≈ 500g
-        (range(6, 9), 0.75),     # 6-8 pcs ≈ 750g
-        (range(9, 100), 1.0),    # 9+ pcs ≈ 1kg
+        (range(1, 3), 0.25),  # 1-2 pcs ≈ 250g
+        (range(3, 6), 0.5),  # 3-5 pcs ≈ 500g
+        (range(6, 9), 0.75),  # 6-8 pcs ≈ 750g
+        (range(9, 100), 1.0),  # 9+ pcs ≈ 1kg
     ],
     "cup": [
         (range(1, 2), 0.25),
@@ -23,7 +20,7 @@ UNIT_THRESHOLD_RULES = {
         (range(5, 100), 1.0),
     ],
     "tbsp": [
-        (range(1, 4), 0.05),     # 1–3 tbsp ≈ 50g
+        (range(1, 4), 0.05),  # 1–3 tbsp ≈ 50g
         (range(4, 7), 0.1),
         (range(7, 100), 0.2),
     ],
@@ -72,7 +69,7 @@ def estimate_weight(quantity: float, unit: str) -> float:
         float: estimated weight in kg
     """
     unit = unit.lower()
-    rules: List[Tuple[range, float]] = UNIT_THRESHOLD_RULES.get(unit, [])
+    rules: list[tuple[range, float]] = UNIT_THRESHOLD_RULES.get(unit, [])
 
     for q_range, weight in rules:
         if int(quantity) in q_range:

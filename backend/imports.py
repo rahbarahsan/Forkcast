@@ -1,7 +1,8 @@
 """Parse portable recipe files and structured pasted text without fetching URLs."""
-from html import unescape
+
 import json
 import re
+from html import unescape
 
 try:
     from .models import RecipeInput
@@ -20,11 +21,16 @@ def recipe_preview(text: str):
         if "recipeIngredient" in data:
             steps = data.get("recipeInstructions", "")
             if isinstance(steps, list):
-                steps = "\n".join(step if isinstance(step, str) else step.get("text", "") for step in steps)
+                steps = "\n".join(
+                    step if isinstance(step, str) else step.get("text", "") for step in steps
+                )
             data = {
-                "title": data.get("name", "Imported recipe"), "ingredients": data["recipeIngredient"],
-                "instructions": unescape(steps), "cuisine": data.get("recipeCuisine", "Home cooking"),
-                "prep_time": data.get("prepTime", ""), "cook_time": data.get("cookTime", ""),
+                "title": data.get("name", "Imported recipe"),
+                "ingredients": data["recipeIngredient"],
+                "instructions": unescape(steps),
+                "cuisine": data.get("recipeCuisine", "Home cooking"),
+                "prep_time": data.get("prepTime", ""),
+                "cook_time": data.get("cookTime", ""),
             }
         else:
             data = {key: value for key, value in data.items() if key in RecipeInput.model_fields}
@@ -32,7 +38,9 @@ def recipe_preview(text: str):
 
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     if len(lines) < 3:
-        raise ValueError("Paste a recipe with a title, Ingredients heading, and Instructions heading, or a recipe JSON file")
+        raise ValueError(
+            "Paste a recipe with a title, Ingredients heading, and Instructions heading, or a recipe JSON file"
+        )
     title = lines.pop(0).removeprefix("Title:").strip()
     ingredients, instructions = [], []
     section = "ingredients"
@@ -47,5 +55,7 @@ def recipe_preview(text: str):
         else:
             instructions.append(line)
     if not instructions:
-        raise ValueError("An Instructions or Method heading is required for text import; use model extraction for a transcript")
+        raise ValueError(
+            "An Instructions or Method heading is required for text import; use model extraction for a transcript"
+        )
     return RecipeInput(title=title, ingredients=ingredients, instructions="\n".join(instructions))

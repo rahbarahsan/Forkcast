@@ -42,6 +42,7 @@ IRREGULAR_PLURALS = {
     "poultry": "poultry",
 }
 
+
 def normalize_plural(word: str) -> str:
     """
     Converts plural to singular using basic English rules and known exceptions.
@@ -53,7 +54,7 @@ def normalize_plural(word: str) -> str:
         return IRREGULAR_PLURALS[word]
 
     # Strip trailing 'es' where applicable
-    if re.search(r'(ches|shes|xes|sses|zes)$', word):
+    if re.search(r"(ches|shes|xes|sses|zes)$", word):
         return word[:-2]
 
     # 'ies' → 'y'
