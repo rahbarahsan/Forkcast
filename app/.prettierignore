@@ -1,3 +1,7 @@
 node_modules
 build
 dist
+.expo/
+.vscode/
+test-results/
+playwright-report/

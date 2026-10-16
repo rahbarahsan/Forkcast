@@ -23,7 +23,7 @@ software, these features work without an internet connection.
 
 ## Start locally
 
-Use Python 3.11+ and Node 22+. Open two terminals.
+Use Python 3.11+ and Node 22.13+ (or a supported newer LTS). Open two terminals.
 
 Backend:
 
@@ -114,6 +114,7 @@ and [Claude programmatic interface](https://code.claude.com/docs/en/headless).
 ```sh
 cd backend
 python -m pip install -r requirements-dev.txt
+python -m ruff check . ../scripts
 python -m pytest -q
 
 cd ../app
@@ -130,6 +131,10 @@ tests cover desktop and phone layouts, persistent household flows, imports,
 exports, and offer comparisons. They create ignored test databases and use ports
 8000 and 8081, which must be free. Set `FORKCAST_TEST_PYTHON` if your Python
 interpreter differs from the active shell's `python`.
+
+The app uses Expo SDK 58, React 19.3, and React Native 0.88. Dependency
+constraints and the npm lockfile record the verified versions. See
+[dependency notes](docs/DEPENDENCIES.md) for the remaining upstream advisories.
 
 ## Behavior and limits
 

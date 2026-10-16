@@ -37,42 +37,40 @@ UNIT_ALIASES = {
     "teaspoon": "tsp",
     "teaspoons": "tsp",
     "tsps": "tsp",
-    # Container and portion words. They are not measures, but they occupy the
-    # unit slot in recipe text ("1 jar mystery mix"), so treat them as pieces
-    # rather than letting them leak into the ingredient name.
-    "jar": "pcs",
-    "jars": "pcs",
-    "can": "pcs",
-    "cans": "pcs",
-    "tin": "pcs",
-    "tins": "pcs",
-    "bottle": "pcs",
-    "bottles": "pcs",
-    "packet": "pcs",
-    "packets": "pcs",
-    "pack": "pcs",
-    "packs": "pcs",
-    "bunch": "pcs",
-    "bunches": "pcs",
-    "head": "pcs",
-    "heads": "pcs",
-    "handful": "pcs",
-    "handfuls": "pcs",
-    "pinch": "pcs",
-    "pinches": "pcs",
-    "slice": "pcs",
-    "slices": "pcs",
-    "sprig": "pcs",
-    "sprigs": "pcs",
-    "stalk": "pcs",
-    "stalks": "pcs",
+    # Containers remain distinct from individual pieces.
+    "jar": "jar",
+    "jars": "jar",
+    "can": "can",
+    "cans": "can",
+    "tin": "tin",
+    "tins": "tin",
+    "bottle": "bottle",
+    "bottles": "bottle",
+    "packet": "packet",
+    "packets": "packet",
+    "pack": "pack",
+    "packs": "pack",
+    "bunch": "bunch",
+    "bunches": "bunch",
+    "head": "head",
+    "heads": "head",
+    "handful": "handful",
+    "handfuls": "handful",
+    "pinch": "pinch",
+    "pinches": "pinch",
+    "slice": "slice",
+    "slices": "slice",
+    "sprig": "sprig",
+    "sprigs": "sprig",
+    "stalk": "stalk",
+    "stalks": "stalk",
 }
 
 KNOWN_UNITS = {"g", "kg", "ml", "l", "cup", "tbsp", "tsp", "pcs", "clove"} | set(UNIT_ALIASES)
 
 
 def _canonical_unit(token: str) -> str:
-    """Map a unit token onto the spelling estimate_weight expects."""
+    """Normalize unit spelling while preserving the kind of measure."""
     return UNIT_ALIASES.get(token, token)
 
 
@@ -105,6 +103,15 @@ def parse_ingredient_string(ingredient_string: str) -> tuple[float, str, str]:
     Returns (quantity, unit, name); quantity is 0.0 and unit "" when absent.
     """
     text = ingredient_string.strip().lower()
+    for glyph, fraction in {
+        "½": "1/2",
+        "¼": "1/4",
+        "¾": "3/4",
+        "⅓": "1/3",
+        "⅔": "2/3",
+        "⅛": "1/8",
+    }.items():
+        text = text.replace(glyph, " " + fraction + " ")
 
     # "1L stock (warm), heated" -> "1l stock": everything after a comma and
     # anything parenthesised is preparation detail, not part of the ingredient.
@@ -120,6 +127,11 @@ def parse_ingredient_string(ingredient_string: str) -> tuple[float, str, str]:
         if value is not None:
             quantity = value
             parts = parts[1:]
+            if parts and _FRACTION_RE.match(parts[0]):
+                fraction = _to_float(parts[0])
+                if fraction is not None:
+                    quantity += fraction
+                    parts = parts[1:]
             if parts and parts[0] in KNOWN_UNITS:
                 unit = _canonical_unit(parts[0])
                 parts = parts[1:]
@@ -132,9 +144,7 @@ def parse_ingredient_string(ingredient_string: str) -> tuple[float, str, str]:
 
     name = " ".join(parts).strip()
 
-    # "3 eggs" and "12 corn tortillas" are counts, not unitless amounts. Without
-    # this, estimate_weight falls back to a fixed default and the quantity is
-    # ignored entirely, so three eggs weigh the same as one.
+    # A numeric quantity without a measure is a count.
     if quantity and not unit:
         unit = "pcs"
 

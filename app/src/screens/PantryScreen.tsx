@@ -10,23 +10,51 @@ export default function PantryScreen() {
   const [preview, setPreview] = useState<{ name: string; quantity: string }[]>([]);
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [editing, setEditing] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   return (
     <Page
       title="Start with your pantry"
       description="Ingredients here are excluded from your shopping list. Amounts are a reminder; they are not subtracted from recipe quantities."
     >
       <View style={ui.card}>
-        <Field label="Ingredient name" value={name} onChangeText={setName} />
-        <Field label="Quantity and unit" value={quantity} onChangeText={setQuantity} />
+        <Field label="Ingredient name" value={name} onChangeText={setName} disabled={saving} />
+        <Field
+          label="Quantity and unit"
+          value={quantity}
+          onChangeText={setQuantity}
+          disabled={saving}
+        />
         <Button
-          title="Add pantry item"
-          disabled={!name.trim()}
+          title={editing ? 'Save pantry changes' : 'Add pantry item'}
+          disabled={saving || !name.trim()}
           onPress={async () => {
-            await mutate('/pantry', 'POST', { name, quantity });
-            setName('');
-            setQuantity('');
+            setSaving(true);
+            try {
+              await mutate(editing ? '/pantry/' + editing : '/pantry', editing ? 'PUT' : 'POST', {
+                name,
+                quantity,
+              });
+              setEditing(null);
+              setName('');
+              setQuantity('');
+            } finally {
+              setSaving(false);
+            }
           }}
         />
+        {editing && (
+          <Button
+            title="Cancel pantry edit"
+            secondary
+            disabled={saving}
+            onPress={() => {
+              setEditing(null);
+              setName('');
+              setQuantity('');
+            }}
+          />
+        )}
       </View>
       <ExtractPanel
         task="pantry"
@@ -96,6 +124,16 @@ export default function PantryScreen() {
         <View key={item.id} style={ui.card}>
           <Text style={ui.heading}>{item.name}</Text>
           <Text style={ui.text}>{item.quantity}</Text>
+          <Button
+            title="Edit pantry item"
+            secondary
+            disabled={saving}
+            onPress={() => {
+              setEditing(item.id);
+              setName(item.name);
+              setQuantity(item.quantity);
+            }}
+          />
           <DeleteButton
             title="Remove item"
             onDelete={() => mutate('/pantry/' + item.id, 'DELETE')}

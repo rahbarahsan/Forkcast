@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useBusy } from '../lib/BusyContext';
 import {
   ActivityIndicator,
   Modal,
@@ -90,14 +91,15 @@ export function Button({
   disabled?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
+  const writing = useBusy();
   const [error, setError] = useState<string | null>(null);
   return (
     <View>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={title}
-        accessibilityState={{ disabled: disabled || busy }}
-        disabled={disabled || busy}
+        accessibilityState={{ disabled: disabled || busy || writing }}
+        disabled={disabled || busy || writing}
         onPress={async () => {
           setBusy(true);
           setError(null);
@@ -140,19 +142,24 @@ export function Field({
   value,
   onChangeText,
   multiline = false,
+  disabled = false,
   placeholder,
 }: {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
   multiline?: boolean;
+  disabled?: boolean;
   placeholder?: string;
 }) {
+  const writing = useBusy();
   return (
     <View>
       <Text style={ui.label}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
+        editable={!disabled && !writing}
+        accessibilityState={{ disabled: disabled || writing }}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}

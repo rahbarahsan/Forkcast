@@ -4,10 +4,11 @@ import { Text, View } from 'react-native';
 import { useHousehold } from '../context/HouseholdContext';
 import { Button, DeleteButton, Field, Page, ui } from '../components/ui';
 export function PlannerScreen() {
-  const { plans, recipes, selected, mutate } = useHousehold();
+  const { plans, recipes, selected, setSelected, mutate } = useHousehold();
   const [name, setName] = useState('This week');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
+  const [editing, setEditing] = useState<string | null>(null);
   return (
     <Page
       title="A plan for your week"
@@ -19,17 +20,31 @@ export function PlannerScreen() {
         <Field label="End date (YYYY-MM-DD, optional)" value={end} onChangeText={setEnd} />
         <Text style={ui.text}>{selected.length} selected recipes</Text>
         <Button
-          title="Save meal plan"
+          title={editing ? 'Save plan changes' : 'Save meal plan'}
           disabled={!selected.length || !name.trim()}
-          onPress={() =>
-            mutate('/plans', 'POST', {
+          onPress={async () => {
+            await mutate(editing ? '/plans/' + editing : '/plans', editing ? 'PUT' : 'POST', {
               name,
               recipeIds: selected,
               startDate: start || null,
               endDate: end || null,
-            })
-          }
+              isActive: editing ? Boolean(plans.find((p) => p.id === editing)?.isActive) : false,
+            });
+            setEditing(null);
+          }}
         />
+        {editing && (
+          <Button
+            title="Cancel plan edit"
+            secondary
+            onPress={() => {
+              setEditing(null);
+              setName('This week');
+              setStart('');
+              setEnd('');
+            }}
+          />
+        )}
       </View>
       {!plans.length && (
         <Text style={ui.subtitle}>No plans yet. Choose recipes to get started.</Text>
@@ -50,6 +65,17 @@ export function PlannerScreen() {
           ))}
           <View style={ui.row}>
             <Button
+              title="Edit plan"
+              secondary
+              onPress={() => {
+                setEditing(plan.id);
+                setName(plan.name || 'Meal plan');
+                setStart(plan.startDate || '');
+                setEnd(plan.endDate || '');
+                setSelected(plan.recipeIds);
+              }}
+            />
+            <Button
               title="Use this plan"
               secondary
               disabled={plan.isActive}
@@ -62,7 +88,12 @@ export function PlannerScreen() {
                 await shareText(
                   plan.name || 'Meal plan',
                   `${plan.name}\n${plan.recipeIds
-                    .map((id) => recipes.find((r) => r.id === id)?.title)
+                    .map((id) => {
+                      const recipe = recipes.find((r) => r.id === id);
+                      return recipe
+                        ? `${recipe.title}\nIngredients\n${recipe.ingredients.join('\n')}\nInstructions\n${recipe.instructions}`
+                        : null;
+                    })
                     .filter(Boolean)
                     .join('\n')}`,
                 );

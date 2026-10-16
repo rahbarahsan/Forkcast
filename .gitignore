@@ -47,11 +47,8 @@ coverage/
 # ...but the templates must be committed so others can set the project up.
 !**/.env.example
 
-# Ignore pipeline_config.json
-backend/ingredient_pipeline/config/pipeline_config.json
-backend/ingredient_pipeline/logs/
-backend/ingredient_pipeline/csv/*
-backend/ingredient_pipeline/cache/
+# Retired local pipeline output
+/backend/ingredient_pipeline/
 
 # Python
 # Ignore __pycache__ in any directory
@@ -71,17 +68,8 @@ ENV/
 **/venv*/
 **/.venv*/
 
-# NLTK corpora are downloaded on first run of the ingredient pipeline, not
-# committed. They were previously vendored three times over, ~66MB in total.
+# Retired local corpora
 **/nltk_data/
-
-# Local pipeline credentials
-# Git cannot re-include a file whose parent directory is excluded, so the
-# directory itself has to be un-ignored before the example files below take
-# effect. (Without this line the negations silently do nothing.)
-!backend/ingredient_pipeline/config/
-!backend/ingredient_pipeline/config/pipeline_config_example.json
-!backend/ingredient_pipeline/config/.env.example
 
 # Build artifacts
 dist/
@@ -98,7 +86,15 @@ metro-cache/
 # Local collaboration and application data
 /requirements.md
 /questions.md
+/AGENTS.md
 /data/local/
 *.sqlite3
 *.sqlite3-shm
 *.sqlite3-wal
+*.sqlite
+*.sqlite-journal
+*.sqlite3-journal
+*.db
+*.db-shm
+*.db-wal
+*.db-journal

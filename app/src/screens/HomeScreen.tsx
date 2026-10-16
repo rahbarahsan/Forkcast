@@ -1,4 +1,5 @@
 import React from 'react';
+import heroImage from '../../assets/images/classic_french_coq_au_vin.jpg';
 import {
   Image,
   Pressable,
@@ -95,7 +96,7 @@ export default function HomeScreen() {
         </View>
         <View style={[styles.heroVisual, compact && styles.heroVisualCompact]}>
           <Image
-            source={require('../../assets/images/classic_french_coq_au_vin.jpg')}
+            source={heroImage}
             accessibilityLabel="A bowl of chicken stew, ready to serve"
             style={styles.heroImage}
             resizeMode="cover"
@@ -216,7 +217,15 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.75 },
   heroVisual: { flex: 1, minHeight: 430, backgroundColor: '#d9dfcf' },
   heroVisualCompact: { flex: undefined, minHeight: 280 },
-  heroImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
+  heroImage: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: '100%',
+    height: '100%',
+  },
   imageCaption: {
     flexDirection: 'row',
     alignItems: 'center',

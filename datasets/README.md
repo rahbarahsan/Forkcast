@@ -1,7 +1,7 @@
 # Reference catalog
 
-`catalog.json` is the portable application dataset recovered from the checked-in
-SQL seed. It contains six recipes, 90 parsed ingredient rows, and 45 ingredient
+`catalog.json` is the portable application dataset recovered from
+`supabase/seed.sql` at commit `8c799d0`. It contains six recipes, 90 parsed ingredient rows, and 45 ingredient
 lookup entries. Images refer to bundled app assets, so the catalog has no hosted
 image dependency.
 

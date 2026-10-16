@@ -10,6 +10,9 @@ from aggregator import SmartGroceryAggregator, parse_ingredient_string
         ("1/2 tsp chili powder", (0.5, "tsp", "chili powder")),
         ("1L vegetable stock", (1, "l", "vegetable stock")),
         ("3 eggs", (3, "pcs", "eggs")),
+        ("1 1/2 cups flour", (1.5, "cup", "flour")),
+        ("1½ cups flour", (1.5, "cup", "flour")),
+        ("¼ tsp turmeric", (0.25, "tsp", "turmeric")),
     ],
 )
 def test_parse_ingredient(line, expected):
@@ -26,6 +29,7 @@ def test_units_merge_without_inventing_density_and_synonyms_deduct_pantry():
                 "1 cup rice",
                 "2 tbsp oil",
                 "2 tomatoes",
+                "1 can tomatoes",
                 "pyaz",
             ],
         }
@@ -33,7 +37,7 @@ def test_units_merge_without_inventing_density_and_synonyms_deduct_pantry():
     categories, raw = SmartGroceryAggregator(recipes, [{"name": "onions"}]).generate()
     assert raw["rice"] == {"g": 1500, "ml": 240}
     assert raw["oil"] == {"ml": 30}
-    assert raw["tomato"] == {"pcs": 2}
+    assert raw["tomato"] == {"can": 1, "pcs": 2}
     assert "onion" not in raw
     assert "tomato" in categories["Vegetables"]
 

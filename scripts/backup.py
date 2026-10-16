@@ -1,9 +1,9 @@
 """Create a consistent SQLite backup, including committed WAL transactions."""
 
 import argparse
-from contextlib import closing
 import os
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]

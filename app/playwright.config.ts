@@ -3,9 +3,15 @@ import { defineConfig, devices } from '@playwright/test';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
-const localPython = path.resolve('../backend/venv/Scripts/python.exe');
-const python =
-  process.env.FORKCAST_TEST_PYTHON || (existsSync(localPython) ? localPython : 'python');
+const localPython = [
+  'venv/Scripts/python.exe',
+  'venv/bin/python',
+  '.venv/Scripts/python.exe',
+  '.venv/bin/python',
+]
+  .map((candidate) => path.resolve('../backend', candidate))
+  .find(existsSync);
+const python = process.env.FORKCAST_TEST_PYTHON || localPython || 'python';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,

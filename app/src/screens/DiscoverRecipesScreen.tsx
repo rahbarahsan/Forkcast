@@ -1,4 +1,6 @@
 import { ExtractPanel } from '../components/ExtractPanel';
+import placeholderImage from '../../assets/images/placeholder.jpg';
+import stewImage from '../../assets/images/classic_french_coq_au_vin.jpg';
 import React, { useEffect, useState } from 'react';
 import { Image, Text, View } from 'react-native';
 import { RecipeRow, useHousehold } from '../context/HouseholdContext';
@@ -6,9 +8,9 @@ import { api, json } from '../lib/api';
 import { Button, DeleteButton, Field, Page, ui } from '../components/ui';
 
 const images: Record<string, number> = {
-  mexican_chicken_enchiladas: require('../../assets/images/placeholder.jpg'),
-  classic_french_coq_au_vin: require('../../assets/images/classic_french_coq_au_vin.jpg'),
-  placeholder: require('../../assets/images/placeholder.jpg'),
+  mexican_chicken_enchiladas: placeholderImage,
+  classic_french_coq_au_vin: stewImage,
+  placeholder: placeholderImage,
 };
 export default function DiscoverScreen() {
   const { recipes, pantry, selected, setSelected, mutate } = useHousehold();
@@ -47,7 +49,13 @@ export default function DiscoverScreen() {
       title="Your recipe collection"
       description="Pick a few favorites, then build a plan. Everything you add is saved locally."
     >
-      <ExtractPanel task="recipe" onPreview={(recipe:Partial<RecipeRow>)=>{setEditing(null);loadForm(recipe);}} />
+      <ExtractPanel
+        task="recipe"
+        onPreview={(recipe: Partial<RecipeRow>) => {
+          setEditing(null);
+          loadForm(recipe);
+        }}
+      />
       <View style={ui.row}>
         <Button
           title="Add recipe"

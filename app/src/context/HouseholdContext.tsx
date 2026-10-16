@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { api, json } from '../lib/api';
+import { BusyContext } from '../lib/BusyContext';
 import type { PantryItem, Plan } from '../types';
 
 export interface RecipeRow {
@@ -50,6 +51,7 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [writes, setWrites] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const refresh = useCallback(async () => {
     try {
@@ -77,9 +79,14 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
   }, [refresh]);
   const mutate = useCallback(
     async <T,>(path: string, method: string, body?: unknown) => {
-      const result = await api<T>(path, json(method, body));
-      await refresh();
-      return result;
+      setWrites((count) => count + 1);
+      try {
+        const result = await api<T>(path, json(method, body));
+        await refresh();
+        return result;
+      } finally {
+        setWrites((count) => count - 1);
+      }
     },
     [refresh],
   );
@@ -98,7 +105,7 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
         mutate,
       }}
     >
-      {children}
+      <BusyContext.Provider value={writes > 0}>{children}</BusyContext.Provider>
     </Context.Provider>
   );
 }

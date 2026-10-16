@@ -1,6 +1,7 @@
 import urllib.request
 
-import httpx
+import httpx2 as httpx
+import providers
 import pytest
 from fastapi.testclient import TestClient
 from main import create_app
@@ -14,6 +15,7 @@ def no_network(monkeypatch):
     monkeypatch.setattr(httpx.HTTPTransport, "handle_request", blocked)
     monkeypatch.setattr(httpx.AsyncHTTPTransport, "handle_async_request", blocked)
     monkeypatch.setattr(urllib.request, "urlopen", blocked)
+    monkeypatch.setattr(providers, "urlopen", blocked)
 
 
 @pytest.fixture

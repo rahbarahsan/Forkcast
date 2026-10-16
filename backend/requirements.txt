@@ -1,6 +1,6 @@
-fastapi>=0.115,<1
-uvicorn>=0.34,<1
-python-dotenv>=1,<2
-# 2.15.x rejects any key that is not JWT-shaped, which breaks Supabase's current
-# sb_publishable_ / sb_secret_ API keys with "Invalid API key" at startup.
+-c constraints.txt
+fastapi>=0.143.3,<0.144
+pydantic>=2.14,<2.15
+uvicorn>=0.54,<0.55
+python-dotenv>=1.2,<2
 

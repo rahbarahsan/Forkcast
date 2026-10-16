@@ -23,11 +23,27 @@ export type RootTabParamList = {
 const Tab = createBottomTabNavigator<RootTabParamList>();
 function focusVisibility(Screen: React.ComponentType) {
   return function FocusedScreen() {
-    const focused=useIsFocused();
-    return <View style={{flex:1,display:focused?'flex':'none'}} accessibilityElementsHidden={!focused} importantForAccessibility={focused?'auto':'no-hide-descendants'}><Screen /></View>;
+    const focused = useIsFocused();
+    return (
+      <View
+        style={{ flex: 1, display: focused ? 'flex' : 'none' }}
+        accessibilityElementsHidden={!focused}
+        importantForAccessibility={focused ? 'auto' : 'no-hide-descendants'}
+      >
+        <Screen />
+      </View>
+    );
   };
 }
-const screens={Home:focusVisibility(HomeScreen),Discover:focusVisibility(DiscoverScreen),Planner:focusVisibility(PlannerScreen),Pantry:focusVisibility(PantryScreen),Groceries:focusVisibility(GroceryScreen),Tools:focusVisibility(ToolsScreen),History:focusVisibility(HistoryScreen)};
+const screens = {
+  Home: focusVisibility(HomeScreen),
+  Discover: focusVisibility(DiscoverScreen),
+  Planner: focusVisibility(PlannerScreen),
+  Pantry: focusVisibility(PantryScreen),
+  Groceries: focusVisibility(GroceryScreen),
+  Tools: focusVisibility(ToolsScreen),
+  History: focusVisibility(HistoryScreen),
+};
 const icons: Record<keyof RootTabParamList, keyof typeof Ionicons.glyphMap> = {
   Home: 'leaf-outline',
   Discover: 'restaurant-outline',
@@ -43,7 +59,7 @@ export default function AppNavigator() {
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
-        tabBarAccessibilityLabel: route.name,
+          tabBarAccessibilityLabel: route.name,
           tabBarActiveTintColor: '#245544',
           tabBarInactiveTintColor: '#53665b',
           tabBarLabelStyle: { fontSize: 11 },
@@ -53,13 +69,13 @@ export default function AppNavigator() {
           ),
         })}
       >
-      <Tab.Screen name="Home" component={screens.Home} />
-      <Tab.Screen name="Discover" component={screens.Discover} options={{ title: 'Recipes' }} />
-      <Tab.Screen name="Planner" component={screens.Planner} />
-      <Tab.Screen name="Pantry" component={screens.Pantry} />
-      <Tab.Screen name="Groceries" component={screens.Groceries} />
-      <Tab.Screen name="Tools" component={screens.Tools} />
-      <Tab.Screen name="History" component={screens.History} />
+        <Tab.Screen name="Home" component={screens.Home} />
+        <Tab.Screen name="Discover" component={screens.Discover} options={{ title: 'Recipes' }} />
+        <Tab.Screen name="Planner" component={screens.Planner} />
+        <Tab.Screen name="Pantry" component={screens.Pantry} />
+        <Tab.Screen name="Groceries" component={screens.Groceries} options={{ title: 'Shop' }} />
+        <Tab.Screen name="Tools" component={screens.Tools} />
+        <Tab.Screen name="History" component={screens.History} />
       </Tab.Navigator>
     </NavigationContainer>
   );
