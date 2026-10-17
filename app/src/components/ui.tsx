@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,34 +13,54 @@ import {
 } from 'react-native';
 
 export const colors = {
-  ink: '#1e342a',
-  green: '#245544',
-  muted: '#53665b',
-  border: '#dce3d6',
-  paper: '#f7f8f2',
+  ink: '#1c3027',
+  green: '#234d3c',
+  muted: '#59685e',
+  border: '#e3e5da',
+  paper: '#f8f7f1',
+  lime: '#ddecaa',
+  clay: '#e6af96',
 };
+export const serif = Platform.select({
+  ios: 'Georgia',
+  android: 'serif',
+  default: 'Georgia, Times New Roman, serif',
+});
 export const ui = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   content: {
     width: '100%',
-    maxWidth: 1100,
+    maxWidth: 1240,
     alignSelf: 'center',
     padding: 24,
-    gap: 18,
+    gap: 22,
     paddingBottom: 60,
   },
-  title: { fontSize: 30, fontWeight: '700', color: colors.ink, letterSpacing: -0.8 },
+  title: {
+    fontSize: 40,
+    fontFamily: serif,
+    fontWeight: '500',
+    color: colors.ink,
+    letterSpacing: -1.4,
+    maxWidth: 800,
+  },
   subtitle: { color: colors.muted, fontSize: 15, lineHeight: 23 },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
   card: {
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 18,
-    padding: 20,
-    gap: 12,
+    borderRadius: 24,
+    padding: 22,
+    gap: 14,
   },
-  heading: { fontSize: 20, fontWeight: '600', color: colors.ink },
+  heading: {
+    fontSize: 24,
+    fontFamily: serif,
+    fontWeight: '500',
+    color: colors.ink,
+    letterSpacing: -0.4,
+  },
   label: { fontSize: 13, fontWeight: '600', color: colors.ink, marginBottom: 6 },
   input: {
     borderWidth: 1,
@@ -53,7 +74,15 @@ export const ui = StyleSheet.create({
   },
   text: { color: colors.ink, fontSize: 15, lineHeight: 23 },
   error: { color: '#9d2a1d', backgroundColor: '#fff0eb', padding: 12, borderRadius: 10 },
-  chip: { color: colors.green, backgroundColor: '#e9eddf', padding: 8, borderRadius: 8 },
+  chip: {
+    color: colors.green,
+    backgroundColor: '#eef1e5',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    fontSize: 12,
+    alignSelf: 'flex-start',
+  },
 });
 
 export function Page({
@@ -71,6 +100,12 @@ export function Page({
       contentContainerStyle={ui.content}
       keyboardShouldPersistTaps="handled"
     >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 12 }}>
+        <View style={{ width: 22, height: 1, backgroundColor: colors.green }} />
+        <Text style={{ fontSize: 10, letterSpacing: 2.5, color: colors.muted, fontWeight: '600' }}>
+          THE EVERYDAY KITCHEN
+        </Text>
+      </View>
       <Text accessibilityRole="header" style={ui.title}>
         {title}
       </Text>
@@ -112,10 +147,14 @@ export function Button({
           }
         }}
         style={({ pressed }) => ({
-          padding: 12,
+          paddingVertical: 13,
+          paddingHorizontal: 20,
           minHeight: 46,
-          borderRadius: 10,
-          backgroundColor: secondary ? '#e9eddf' : colors.green,
+          borderRadius: 28,
+          borderWidth: 1,
+          borderColor: secondary ? colors.border : colors.green,
+          backgroundColor: secondary ? '#f2f3e9' : colors.green,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
           opacity: disabled || busy || pressed ? 0.6 : 1,
           alignItems: 'center',
           justifyContent: 'center',
@@ -124,7 +163,9 @@ export function Button({
         {busy ? (
           <ActivityIndicator color={secondary ? colors.green : '#fff'} />
         ) : (
-          <Text style={{ color: secondary ? colors.green : '#fff', fontWeight: '600' }}>
+          <Text
+            style={{ color: secondary ? colors.green : '#fff', fontWeight: '600', fontSize: 13 }}
+          >
             {title}
           </Text>
         )}

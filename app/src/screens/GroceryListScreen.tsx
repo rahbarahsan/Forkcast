@@ -1,3 +1,4 @@
+import { quantities } from '../lib/quantities';
 import { shareText, downloadText } from '../lib/export';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
@@ -5,6 +6,7 @@ import { GroceryList, useHousehold } from '../context/HouseholdContext';
 import { api, json } from '../lib/api';
 import { Button, CheckItem, Page, ui } from '../components/ui';
 import { storage } from '../utils/storage';
+import { StorePanel } from '../components/StorePanel';
 
 interface Insight {
   name: string;
@@ -31,13 +33,16 @@ export default function GroceryScreen() {
   const [error, setError] = useState<string | null>(null);
   const [checked, setChecked] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [intelligence, setIntelligence] = useState('auto');
+  const [revision, setRevision] = useState(0);
+  const [evidence, setEvidence] = useState<string | null>(null);
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
     setList(null);
     api<GroceryList>('/grocery-list', {
-      ...json('POST', { recipe_ids: ids }),
+      ...json('POST', { recipe_ids: ids, intelligence }),
       signal: controller.signal,
     })
       .then(async (data) => {
@@ -54,7 +59,7 @@ export default function GroceryScreen() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [key, pantry]);
+  }, [key, pantry, intelligence, revision]);
   const text = list
     ? [
         'Forkcast shopping list',
@@ -63,9 +68,7 @@ export default function GroceryScreen() {
           category,
           ...names.map(
             (n) =>
-              `${checked.includes(n) ? '[x]' : '[ ]'} ${n} - ${Object.entries(list.raw[n])
-                .map(([u, q]) => (q ? `${q} ${u}` : 'to taste'))
-                .join(' + ')}`,
+              `${checked.includes(n) ? '[x]' : '[ ]'} ${n} - ${quantities(list.raw[n], category)}`,
           ),
         ]),
       ].join('\n')
@@ -76,6 +79,19 @@ export default function GroceryScreen() {
       description="Choose your active plan, all plans, or the recipes currently selected in your collection."
     >
       <View style={ui.row}>
+        <Button
+          title="Improve with my model"
+          disabled={!ids.length}
+          onPress={() => {
+            setIntelligence('model');
+            setRevision((n) => n + 1);
+          }}
+        />
+        <Button
+          title="Use offline interpretation"
+          secondary
+          onPress={() => setIntelligence('local')}
+        />
         {[
           ['active', 'Active plan'],
           ['all', 'All plans'],
@@ -112,6 +128,26 @@ export default function GroceryScreen() {
       {list && (
         <>
           <Text style={ui.subtitle}>
+            Interpretation: {list.method}. Compatible stock quantities are deducted; blank pantry
+            quantities mean you have enough.
+          </Text>
+          {list.warnings?.map((warning) => (
+            <Text key={warning} style={ui.error}>
+              {warning}
+            </Text>
+          ))}
+          {!!list.pantry_deductions?.length && (
+            <View style={ui.card}>
+              <Text style={ui.heading}>Already in your pantry</Text>
+              {list.pantry_deductions.map((item, index) => (
+                <Text key={index} style={ui.subtitle}>
+                  {item.name} ·{' '}
+                  {item.quantity ? `${item.quantity} ${item.unit} deducted` : item.note}
+                </Text>
+              ))}
+            </View>
+          )}
+          <Text style={ui.subtitle}>
             {checked.length}/{Object.keys(list.raw).length} collected - {ids.length} recipes
           </Text>
           {!Object.keys(list.raw).length && (
@@ -126,9 +162,7 @@ export default function GroceryScreen() {
               {names.map((name) => (
                 <View key={name} style={{ gap: 6 }}>
                   <CheckItem
-                    label={`${name} - ${Object.entries(list.raw[name])
-                      .map(([u, q]) => (q ? `${q} ${u}` : 'to taste'))
-                      .join(' + ')}`}
+                    label={`${name} - ${quantities(list.raw[name], category)}`}
                     checked={checked.includes(name)}
                     onToggle={async () => {
                       const next = checked.includes(name)
@@ -138,6 +172,29 @@ export default function GroceryScreen() {
                       setChecked(next);
                     }}
                   />
+                  <Button
+                    title={`Recipe evidence for ${name}`}
+                    secondary
+                    onPress={() => setEvidence(evidence === name ? null : name)}
+                  />
+                  {evidence === name && (
+                    <View style={{ gap: 6 }}>
+                      {list.items
+                        ?.find((item) => item.name === name)
+                        ?.sources.map((source, index) => (
+                          <Text key={index} style={ui.subtitle}>
+                            {source.recipe_title}: {source.line}
+                          </Text>
+                        ))}
+                      {list.items
+                        ?.find((item) => item.name === name)
+                        ?.notes.map((note) => (
+                          <Text key={note} style={ui.subtitle}>
+                            {note}
+                          </Text>
+                        ))}
+                    </View>
+                  )}
                   <Button
                     title={`Insights for ${name}`}
                     secondary
@@ -176,6 +233,7 @@ export default function GroceryScreen() {
               />
             </View>
           )}
+          <StorePanel recipeIds={ids} />
         </>
       )}
     </Page>

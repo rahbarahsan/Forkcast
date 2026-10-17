@@ -18,6 +18,10 @@ class RecipeInput(Input):
     instructions: str = Field(min_length=1, max_length=30000)
     prep_time: str = Field(default="", max_length=100)
     cook_time: str = Field(default="", max_length=100)
+    servings: int = Field(default=4, ge=1, le=100)
+    source_url: str = Field(default="", max_length=2000, pattern=r"^(https://[^\s]+)?$")
+    source_name: str = Field(default="", max_length=200)
+    halal_notes: str = Field(default="", max_length=2000)
 
 
 class PantryInput(Input):
@@ -50,11 +54,23 @@ class GroceryRequest(Input):
     plan_ids: list[str] = Field(default_factory=list, max_length=100)
     pantry_items: list[PantryItem] | None = None
     is_guest: bool = True
+    intelligence: Literal["auto", "local", "model"] = "auto"
+    scale: dict[str, float] = Field(default_factory=dict, max_length=100)
+
+    @model_validator(mode="after")
+    def valid_scale(self):
+        if any(not 0 < value <= 20 for value in self.scale.values()):
+            raise ValueError("Recipe multipliers must be above zero and at most 20")
+        return self
 
 
 class GroceryResponse(BaseModel):
     categorized: dict[str, list[str]]
     raw: dict[str, dict[str, float]]
+    items: list[dict] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    method: str = "local"
+    pantry_deductions: list[dict] = Field(default_factory=list)
 
 
 class HistoryInput(Input):
@@ -104,3 +120,22 @@ class ExtractInput(Input):
         if not self.text.strip() and not self.image:
             raise ValueError("Provide text or an image")
         return self
+
+
+class YouTubeInput(Input):
+    url: str = Field(min_length=1, max_length=2000)
+    pasted_text: str = Field(default="", max_length=90000)
+    use_model: bool = True
+    languages: list[str] = Field(
+        default_factory=lambda: ["en", "ur", "hi", "ar"], min_length=1, max_length=5
+    )
+
+
+class StoreSearch(Input):
+    location: str = Field(min_length=3, max_length=200)
+    radius: int = Field(default=5000, ge=500, le=15000)
+
+
+class ModelSettings(Input):
+    provider: Literal["none", "codex", "claude", "openai", "anthropic", "google"]
+    model: str = Field(default="", max_length=200, pattern=r"^[A-Za-z0-9._:/-]*$")

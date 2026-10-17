@@ -22,7 +22,7 @@ def test_local_household_workflow_survives_restart(tmp_path):
         ).json()
         assert plan["isActive"]
         grocery = client.post("/api/grocery-list", json={"plan_ids": [plan["id"]]}).json()
-        assert grocery["raw"] == {"rice": {"g": 1000.0}}
+        assert grocery["raw"] == {"onion": {"pcs": 1.0}, "rice": {"g": 1000.0}}
         saved = client.post(
             "/api/history",
             json={
@@ -57,10 +57,8 @@ def test_validation_and_browser_origin_boundary(client):
         ).status_code
         == 403
     )
-    assert client.post("/api/grocery-list", json={"recipe_ids": []}).json() == {
-        "categorized": {},
-        "raw": {},
-    }
+    empty = client.post("/api/grocery-list", json={"recipe_ids": []}).json()
+    assert empty["categorized"] == {} and empty["raw"] == {} and empty["items"] == []
 
 
 def test_activating_plan_is_exclusive(client):

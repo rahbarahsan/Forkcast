@@ -172,6 +172,28 @@ class IngredientCatalog:
                 *(row.get("plurals") or "").split(","),
             ]:
                 if name.strip():
+                    # Historical seed aliases included substitutions. A shopping
+                    # list must distinguish cuts, varieties and pantry products.
+                    distinct = {
+                        "olive oil",
+                        "vegetable oil",
+                        "mustard oil",
+                        "shallot",
+                        "scallion",
+                        "spring onion",
+                        "brown rice",
+                        "white rice",
+                        "basmati rice",
+                        "moong dal",
+                        "masoor dal",
+                        "toor dal",
+                        "atta",
+                        "maida",
+                        "heavy cream",
+                    }
+                    if name.strip().lower() in distinct and name.strip().lower() != canonical:
+                        self.categories[name.strip().lower()] = row.get("category") or "Other"
+                        continue
                     self.names[name.strip().lower()] = canonical
 
     def canonical(self, name):

@@ -13,273 +13,324 @@ import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import type { RootTabParamList } from '../navigation';
-
-const tools: {
-  title: string;
-  description: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  screen: keyof RootTabParamList;
-  step: string;
-}[] = [
-  {
-    title: 'Find your next favorite',
-    description: 'Explore recipes and choose what sounds good this week.',
-    icon: 'restaurant-outline',
-    screen: 'Discover',
-    step: '01 / DISCOVER',
-  },
-  {
-    title: 'Make room for good food',
-    description: 'Bring your recipes together in a plan that works for you.',
-    icon: 'calendar-outline',
-    screen: 'Planner',
-    step: '02 / PLAN',
-  },
-  {
-    title: 'Start with what you have',
-    description: 'Keep track of your pantry and skip ingredients you already own.',
-    icon: 'file-tray-stacked-outline',
-    screen: 'Pantry',
-    step: '03 / CHECK',
-  },
-  {
-    title: 'One trip. One clear list.',
-    description: 'Combine ingredients from your recipes, organized by aisle.',
-    icon: 'basket-outline',
-    screen: 'Groceries',
-    step: '04 / SHOP',
-  },
-];
+import { useHousehold } from '../context/HouseholdContext';
+import { colors, serif, Button } from '../components/ui';
+import { Reveal } from '../components/Reveal';
+import { RecipeArtwork } from '../components/RecipeArtwork';
 
 export default function HomeScreen() {
   const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
+  const { recipes, pantry, plans } = useHousehold();
   const { width } = useWindowDimensions();
-  const compact = width < 700;
-
+  const compact = width < 800;
+  const active = plans.find((plan) => plan.isActive);
+  const navigate = (screen: keyof RootTabParamList) => navigation.navigate(screen);
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.brandRow}>
-        <View style={styles.brandMark}>
-          <Ionicons name="leaf" size={22} color="#fff" />
-        </View>
-        <Text style={styles.brand}>Forkcast</Text>
-        <Text style={styles.brandNote}>A little planning. A lot less waste.</Text>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.paper }}
+      contentContainerStyle={{
+        padding: compact ? 20 : 40,
+        gap: 36,
+        maxWidth: 1440,
+        width: '100%',
+        alignSelf: 'center',
+        paddingBottom: 60,
+      }}
+    >
+      <View style={styles.topline}>
+        <Text style={styles.kicker}>A GOOD WEEK STARTS IN THE KITCHEN</Text>
+        <Text style={styles.issue}>VOL. 01 / EVERYDAY GOOD FOOD</Text>
       </View>
-
-      <View style={[styles.hero, compact && styles.heroCompact]}>
-        <View style={styles.heroCopy}>
-          <Text style={styles.eyebrow}>GOOD FOOD STARTS HERE</Text>
-          <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact]}>
-            Your week,{'\n'}a little fresher.
-          </Text>
-          <Text style={styles.subtitle}>
-            Recipes you love. A plan that fits. A shopping list that brings it all together.
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Explore recipes"
-            onPress={() => navigation.navigate('Discover')}
-            style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
+      <Reveal style={[styles.hero, compact && { flexDirection: 'column', padding: 26 }]}>
+        <View style={{ flex: 1.1, gap: 24, zIndex: 1 }}>
+          <View style={styles.pill}>
+            <View style={styles.dot} />
+            <Text style={styles.pillText}>A little planning. More living.</Text>
+          </View>
+          <Text
+            accessibilityRole="header"
+            style={[styles.title, { fontSize: compact ? 51 : 72, lineHeight: compact ? 56 : 76 }]}
           >
-            <Text style={styles.primaryLabel}>Explore recipes</Text>
-            <Ionicons name="arrow-forward" size={20} color="#fff" />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open my meal plan"
-            onPress={() => navigation.navigate('Planner')}
-            style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
-          >
-            <Text style={styles.secondaryLabel}>Open my meal plan</Text>
-            <Ionicons name="arrow-forward" size={17} color="#245544" />
-          </Pressable>
+            Good food.{'\n'}Less{' '}
+            <Text style={{ fontStyle: 'italic', color: '#ddecaa' }}>figuring{'\n'}it out.</Text>
+          </Text>
+          <Text style={styles.description}>
+            Find a recipe you love. Make a plan that fits.{'\n'}Bring home just what you need.
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Explore recipes"
+              onPress={() => navigate('Discover')}
+              style={({ pressed }) => [
+                styles.cta,
+                pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
+              ]}
+            >
+              <Text style={styles.ctaText}>Explore recipes</Text>
+              <Ionicons name="arrow-forward" size={19} color="#203c2d" />
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open my meal plan"
+              onPress={() => navigate('Planner')}
+              style={styles.outlineCta}
+            >
+              <Text style={{ color: '#fff', fontSize: 13 }}>My meal plan ↗</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.smallPrint}>YOUR RECIPES. YOUR PANTRY. YOUR OWN LITTLE KITCHEN.</Text>
         </View>
-        <View style={[styles.heroVisual, compact && styles.heroVisualCompact]}>
+        <View
+          style={{
+            flex: 1,
+            minHeight: compact ? 310 : 420,
+            width: compact ? '100%' : undefined,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <View
+            style={[styles.orbit, { width: compact ? 280 : 370, height: compact ? 280 : 370 }]}
+          />
           <Image
             source={heroImage}
-            accessibilityLabel="A bowl of chicken stew, ready to serve"
-            style={styles.heroImage}
-            resizeMode="cover"
+            accessibilityLabel="Slow-cooked chicken stew, serving inspiration"
+            style={{
+              width: compact ? 240 : 320,
+              height: compact ? 240 : 320,
+              borderRadius: 180,
+              borderWidth: 12,
+              borderColor: '#f5f0df',
+              transform: [{ rotate: '-12deg' }],
+            }}
           />
-          <View style={styles.imageCaption}>
-            <View style={styles.captionIcon}>
-              <Ionicons name="checkmark" size={20} color="#245544" />
-            </View>
-            <View style={styles.captionCopy}>
-              <Text style={styles.captionTitle}>Less figuring out. More cooking.</Text>
-              <Text style={styles.captionText}>Turn a few recipes into one sensible list.</Text>
+          <View style={styles.floatingNote}>
+            <Ionicons name="leaf-outline" size={24} color={colors.green} />
+            <View>
+              <Text style={{ color: colors.ink, fontFamily: serif, fontSize: 20 }}>
+                A fresher kind of week.
+              </Text>
+              <Text style={{ color: colors.muted, fontSize: 11, marginTop: 4 }}>
+                Made for the way you cook.
+              </Text>
             </View>
           </View>
+          <View style={styles.circleStamp}>
+            <Text
+              style={{
+                color: colors.green,
+                fontWeight: '700',
+                fontSize: 11,
+                textAlign: 'center',
+                lineHeight: 17,
+              }}
+            >
+              LESS WASTE{'\n'}MORE TASTE
+            </Text>
+          </View>
         </View>
+      </Reveal>
+      <View style={styles.stats}>
+        {[
+          { value: recipes.length, label: 'RECIPES TO MAKE YOUR OWN' },
+          { value: pantry.length, label: 'THINGS ALREADY AT HOME' },
+          { value: active?.recipeIds.length || 0, label: 'DISHES IN YOUR WEEK' },
+        ].map((stat) => (
+          <View key={stat.label} style={{ flex: 1, minWidth: 70, gap: 8 }}>
+            <Text style={styles.statValue}>{String(stat.value).padStart(2, '0')}</Text>
+            <Text style={styles.statLabel}>{stat.label}</Text>
+          </View>
+        ))}
       </View>
-
-      <View style={styles.sectionHeading}>
-        <Text style={styles.eyebrow}>FROM INSPIRATION TO YOUR KITCHEN</Text>
-        <Text accessibilityRole="header" style={styles.sectionTitle}>
-          A simpler way to feed your week.
-        </Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 18,
+        }}
+      >
+        <View style={{ gap: 10 }}>
+          <Text style={styles.kicker}>SOMETHING GOOD IS COOKING</Text>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>
+            Meet your next favorite.
+          </Text>
+        </View>
+        <Button title="Browse the collection ↗" secondary onPress={() => navigate('Discover')} />
       </View>
-      <View style={styles.grid}>
-        {tools.map((tool) => (
+      <View style={{ flexDirection: compact ? 'column' : 'row', gap: 18 }}>
+        {recipes.slice(0, 3).map((recipe) => (
           <Pressable
-            key={tool.screen}
+            key={recipe.id}
             accessibilityRole="button"
-            accessibilityLabel={tool.title + '. ' + tool.description}
-            onPress={() => navigation.navigate(tool.screen)}
-            style={({ pressed }) => [
-              styles.card,
-              { width: compact ? '100%' : '48.5%' },
-              pressed && styles.pressed,
-            ]}
+            accessibilityLabel={'Discover ' + recipe.title}
+            onPress={() => navigate('Discover')}
+            style={({ pressed }) => ({
+              flex: 1,
+              backgroundColor: '#fff',
+              borderRadius: 24,
+              padding: 12,
+              gap: 14,
+              borderWidth: 1,
+              borderColor: colors.border,
+              transform: [{ translateY: pressed ? -3 : 0 }],
+            })}
           >
-            <View style={styles.cardTop}>
-              <Text style={styles.step}>{tool.step}</Text>
-              <Ionicons name={tool.icon} size={26} color="#245544" />
-            </View>
-            <Text style={styles.cardTitle}>{tool.title}</Text>
-            <Text style={styles.cardDescription}>{tool.description}</Text>
-            <Ionicons name="arrow-forward" size={20} color="#245544" style={styles.cardArrow} />
+            <RecipeArtwork title={recipe.title} cuisine={recipe.cuisine} />
+            <Text
+              style={{
+                fontSize: 10,
+                color: colors.muted,
+                letterSpacing: 1.5,
+                paddingHorizontal: 8,
+              }}
+            >
+              {recipe.cuisine.toUpperCase()}
+            </Text>
+            <Text
+              style={{
+                fontFamily: serif,
+                fontSize: 23,
+                color: colors.ink,
+                paddingHorizontal: 8,
+                paddingBottom: 12,
+              }}
+            >
+              {recipe.title}
+            </Text>
           </Pressable>
         ))}
       </View>
-      <View style={styles.footer}>
-        <Ionicons name="leaf-outline" size={18} color="#53665b" />
-        <Text style={styles.footerText}>
-          Your kitchen stays on this installation. Recipes, pantry, and plans save automatically.
+      <View
+        style={[styles.assistant, compact && { flexDirection: 'column', alignItems: 'flex-start' }]}
+      >
+        <View style={{ gap: 12, flex: 1 }}>
+          <Text style={styles.kicker}>A SECOND PAIR OF HANDS</Text>
+          <Text style={styles.sectionTitle}>
+            What's for dinner?{'\n'}Let's figure it out together.
+          </Text>
+          <Text style={{ color: colors.muted, lineHeight: 24 }}>
+            Turn a passing idea into a meal plan, a pantry update, or a shopping list you can
+            actually use.
+          </Text>
+        </View>
+        <Button title="Talk to your kitchen assistant ↗" onPress={() => navigate('Assistant')} />
+      </View>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+          flexWrap: 'wrap',
+          borderTopWidth: 1,
+          borderColor: colors.border,
+          paddingTop: 24,
+        }}
+      >
+        <Text style={{ fontFamily: serif, fontSize: 28, color: colors.green }}>forkcast.</Text>
+        <Text style={{ fontSize: 11, color: colors.muted }}>
+          Made for good food and ordinary days.
         </Text>
       </View>
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#f7f8f2' },
-  content: { width: '100%', maxWidth: 1180, alignSelf: 'center', padding: 24, paddingBottom: 40 },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 28,
-  },
-  brandMark: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: '#245544',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brand: { fontSize: 23, fontWeight: '700', color: '#1e342a', letterSpacing: -0.7 },
-  brandNote: { flexGrow: 1, color: '#53665b', fontSize: 13, textAlign: 'right' },
+  topline: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 },
+  kicker: { fontSize: 9, fontWeight: '600', letterSpacing: 2, color: colors.muted },
+  issue: { fontSize: 9, letterSpacing: 1.4, color: colors.muted },
   hero: {
+    backgroundColor: '#1d4031',
+    borderRadius: 30,
+    padding: 44,
     flexDirection: 'row',
-    backgroundColor: '#e9eddf',
-    borderRadius: 28,
+    gap: 16,
     overflow: 'hidden',
-    marginBottom: 44,
   },
-  heroCompact: { flexDirection: 'column' },
-  heroCopy: { flex: 1, padding: 32, justifyContent: 'center' },
-  eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 1.6, color: '#47634f' },
-  title: {
-    fontSize: 54,
-    lineHeight: 59,
-    fontWeight: '700',
-    letterSpacing: -2,
-    color: '#1e342a',
-    marginTop: 18,
-    marginBottom: 18,
-  },
-  titleCompact: { fontSize: 40, lineHeight: 46, letterSpacing: -1.3 },
-  subtitle: { fontSize: 16, lineHeight: 25, color: '#465c4e', maxWidth: 390, marginBottom: 26 },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 14,
-    backgroundColor: '#245544',
-    borderRadius: 12,
-    padding: 16,
-    alignSelf: 'flex-start',
-    minHeight: 50,
-  },
-  primaryLabel: { color: '#fff', fontWeight: '600', fontSize: 15 },
-  secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 16,
-    alignSelf: 'flex-start',
-    minHeight: 48,
-  },
-  secondaryLabel: { color: '#245544', fontWeight: '600', fontSize: 14 },
-  pressed: { opacity: 0.75 },
-  heroVisual: { flex: 1, minHeight: 430, backgroundColor: '#d9dfcf' },
-  heroVisualCompact: { flex: undefined, minHeight: 280 },
-  heroImage: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    width: '100%',
-    height: '100%',
-  },
-  imageCaption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    margin: 18,
-    marginTop: 'auto',
-    padding: 16,
-    backgroundColor: '#fffdf6',
-    borderRadius: 16,
-  },
-  captionIcon: { padding: 8, backgroundColor: '#e9eddf', borderRadius: 24 },
-  captionCopy: { flex: 1 },
-  captionTitle: { color: '#1e342a', fontWeight: '600', fontSize: 14, marginBottom: 4 },
-  captionText: { color: '#53665b', fontSize: 12, lineHeight: 18 },
-  sectionHeading: { marginBottom: 24 },
-  sectionTitle: {
-    color: '#1e342a',
-    fontSize: 28,
-    fontWeight: '600',
-    letterSpacing: -0.7,
-    marginTop: 10,
-  },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 16 },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 24,
+  pill: {
     borderWidth: 1,
-    borderColor: '#e0e5d9',
-    minHeight: 205,
-  },
-  cardHovered: { backgroundColor: '#f0f3e9', borderColor: '#8da58c' },
-  cardTop: {
+    borderColor: '#68816b',
+    borderRadius: 30,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignSelf: 'flex-start',
     alignItems: 'center',
-    marginBottom: 18,
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
-  step: { fontSize: 10, fontWeight: '600', letterSpacing: 1.3, color: '#53665b' },
-  cardTitle: {
-    color: '#1e342a',
-    fontSize: 20,
-    fontWeight: '600',
-    letterSpacing: -0.4,
-    marginBottom: 8,
-  },
-  cardDescription: { color: '#53665b', fontSize: 14, lineHeight: 22, paddingRight: 24 },
-  cardArrow: { alignSelf: 'flex-end', marginTop: 14 },
-  footer: {
+  dot: { width: 5, height: 5, borderRadius: 4, backgroundColor: '#ddecaa' },
+  pillText: { color: '#e4ecd8', fontSize: 10 },
+  title: { fontFamily: serif, color: '#faf7ed', letterSpacing: -3, fontWeight: '500' },
+  description: { color: '#dae2d3', fontSize: 15, lineHeight: 25 },
+  cta: {
+    backgroundColor: '#ddecaa',
+    borderRadius: 30,
+    paddingHorizontal: 22,
+    paddingVertical: 15,
     flexDirection: 'row',
+    gap: 20,
+    alignItems: 'center',
+  },
+  ctaText: { fontSize: 13, fontWeight: '600', color: '#203c2d' },
+  outlineCta: {
+    borderWidth: 1,
+    borderColor: '#728773',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    justifyContent: 'center',
+  },
+  smallPrint: { fontSize: 7, letterSpacing: 1.5, color: '#c1cfb4', marginTop: 6 },
+  orbit: {
+    position: 'absolute',
+    borderRadius: 220,
+    borderWidth: 1,
+    borderColor: '#839966',
+    transform: [{ rotate: '-20deg' }],
+  },
+  floatingNote: {
+    position: 'absolute',
+    bottom: 12,
+    left: 0,
+    backgroundColor: '#f7f2e4',
+    padding: 17,
+    borderRadius: 16,
+    gap: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    boxShadow: '0px 10px 20px #0b211a20',
+  },
+  circleStamp: {
+    position: 'absolute',
+    top: 5,
+    right: 0,
+    width: 88,
+    height: 88,
+    borderRadius: 50,
+    backgroundColor: '#ddecaa',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    marginTop: 32,
+    transform: [{ rotate: '12deg' }],
   },
-  footerText: { flexShrink: 1, color: '#53665b', fontSize: 12, lineHeight: 20 },
+  stats: {
+    flexDirection: 'row',
+    gap: 20,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+    paddingBottom: 32,
+  },
+  statValue: { fontSize: 40, fontFamily: serif, color: colors.green },
+  statLabel: { fontSize: 8, letterSpacing: 1.2, color: colors.muted, lineHeight: 14 },
+  sectionTitle: { fontFamily: serif, fontSize: 35, color: colors.ink, letterSpacing: -1 },
+  assistant: {
+    backgroundColor: '#ebeedd',
+    borderRadius: 24,
+    padding: 30,
+    flexDirection: 'row',
+    gap: 30,
+    alignItems: 'center',
+  },
 });

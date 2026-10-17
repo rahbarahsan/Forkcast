@@ -10,8 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 try:
-    from .aggregator import SmartGroceryAggregator
+    from .assistant import ChatInput, apply_task, chat
     from .database import Database
+    from .groceries import generate
     from .imports import recipe_preview
     from .kitchen import optimize, pantry_preview, suggestions
     from .models import (
@@ -20,6 +21,7 @@ try:
         GroceryRequest,
         GroceryResponse,
         HistoryInput,
+        ModelSettings,
         OfferBatch,
         OfferInput,
         OptimizeRequest,
@@ -27,12 +29,18 @@ try:
         PantryInput,
         PlanInput,
         RecipeInput,
+        StoreSearch,
         TextImport,
+        YouTubeInput,
     )
-    from .providers import ProviderError, configuration, extract
+    from .network import SourceError
+    from .providers import ProviderError, configuration, extract, save_configuration
+    from .stores import nearby, recommend
+    from .youtube import preview_video
 except ImportError:
-    from aggregator import SmartGroceryAggregator
+    from assistant import ChatInput, apply_task, chat
     from database import Database
+    from groceries import generate
     from imports import recipe_preview
     from kitchen import optimize, pantry_preview, suggestions
     from models import (
@@ -41,6 +49,7 @@ except ImportError:
         GroceryRequest,
         GroceryResponse,
         HistoryInput,
+        ModelSettings,
         OfferBatch,
         OfferInput,
         OptimizeRequest,
@@ -48,9 +57,14 @@ except ImportError:
         PantryInput,
         PlanInput,
         RecipeInput,
+        StoreSearch,
         TextImport,
+        YouTubeInput,
     )
-    from providers import ProviderError, configuration, extract
+    from network import SourceError
+    from providers import ProviderError, configuration, extract, save_configuration
+    from stores import nearby, recommend
+    from youtube import preview_video
 
 logger = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parents[1]
@@ -119,6 +133,47 @@ def create_app(database_path=None):
     def model_configuration():
         return configuration()
 
+    @app.put("/api/models/config")
+    def update_model_configuration(body: ModelSettings):
+        try:
+            return save_configuration(body.provider, body.model)
+        except ProviderError as exc:
+            raise HTTPException(409, str(exc)) from None
+
+    @app.get("/api/conversations")
+    def conversations():
+        return list(reversed(db.list("conversation")))
+
+    @app.post("/api/chat")
+    def assistant_chat(body: ChatInput):
+        try:
+            return chat(db, body)
+        except (ProviderError, ValueError) as exc:
+            raise HTTPException(422, str(exc)) from None
+
+    @app.post("/api/tasks/{task_id}/apply")
+    def apply_assistant_task(task_id: str):
+        try:
+            return apply_task(db, task_id)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+
+    @app.post("/api/tasks/{task_id}/cancel")
+    def cancel_assistant_task(task_id: str):
+        try:
+            return apply_task(db, task_id, cancel=True)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+
+    @app.delete("/api/conversations/{conversation_id}", status_code=204)
+    def delete_conversation(conversation_id: str):
+        require("conversation", conversation_id)
+        for task in db.list("assistant_task"):
+            if task.get("conversation_id") == conversation_id:
+                db.delete("assistant_task", task["id"])
+        db.delete("conversation", conversation_id)
+        return Response(status_code=204)
+
     @app.post("/api/extract")
     def extract_preview(body: ExtractInput):
         try:
@@ -143,6 +198,13 @@ def create_app(database_path=None):
                 422,
                 "Cannot parse recipe. Include a title, Ingredients and Instructions headings, or valid recipe JSON.",
             )
+
+    @app.post("/api/import/youtube")
+    def preview_youtube(body: YouTubeInput):
+        try:
+            return preview_video(body.url, body.pasted_text, body.use_model, body.languages)
+        except (SourceError, ValueError) as exc:
+            raise HTTPException(422, str(exc)) from None
 
     @app.put("/api/recipes/{recipe_id}")
     def edit_recipe(recipe_id: str, body: RecipeInput):
@@ -218,10 +280,7 @@ def create_app(database_path=None):
         validate_recipe_ids(ids)
         chosen = [r for r in db.recipes() if r["id"] in ids]
         pantry_items = body.pantry_items if body.pantry_items is not None else db.list("pantry")
-        categorized, raw = SmartGroceryAggregator(
-            chosen, pantry_items, db.lookup(), db.preprocessed(ids)
-        ).generate()
-        return {"categorized": categorized, "raw": raw}
+        return generate(db, chosen, pantry_items, body.intelligence, body.scale)
 
     @app.get("/api/history")
     def history():
@@ -249,7 +308,7 @@ def create_app(database_path=None):
                 for r in db.recipes()
                 if any(name.lower() in line.lower() for line in r["ingredients"])
             ],
-            "quantity_note": "Weight and volume are kept separate. Pantry presence removes an ingredient entirely.",
+            "quantity_note": "Compatible pantry quantities are deducted. Blank stock quantities mean available in sufficient quantity. Weight, volume, and counts remain separate.",
         }
 
     @app.post("/api/import/pantry")
@@ -282,6 +341,21 @@ def create_app(database_path=None):
     def optimize_groceries(body: OptimizeRequest):
         grocery = groceries(GroceryRequest.model_validate(body.model_dump(exclude={"currency"})))
         return optimize(grocery, db.list("offer"), db.lookup(), body.currency)
+
+    @app.post("/api/stores/search")
+    def search_stores(body: StoreSearch):
+        try:
+            return nearby(db, body.location, body.radius)
+        except (SourceError, ValueError, KeyError, TypeError):
+            raise HTTPException(
+                422,
+                "Store lookup is unavailable or the location was not found. Try a city and country; saved offers still work offline.",
+            ) from None
+
+    @app.post("/api/stores/recommend")
+    def recommend_stores(body: OptimizeRequest):
+        grocery = groceries(GroceryRequest.model_validate(body.model_dump(exclude={"currency"})))
+        return recommend(grocery, db.list("offer"), db.lookup(), body.currency)
 
     @app.post("/api/history", status_code=201)
     def save_history(body: HistoryInput):

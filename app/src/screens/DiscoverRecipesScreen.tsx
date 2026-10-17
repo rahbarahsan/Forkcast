@@ -1,18 +1,16 @@
 import { ExtractPanel } from '../components/ExtractPanel';
-import placeholderImage from '../../assets/images/placeholder.jpg';
-import stewImage from '../../assets/images/classic_french_coq_au_vin.jpg';
+import { YouTubePanel } from '../components/YouTubePanel';
 import React, { useEffect, useState } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Linking, Text, useWindowDimensions, View } from 'react-native';
 import { RecipeRow, useHousehold } from '../context/HouseholdContext';
 import { api, json } from '../lib/api';
 import { Button, DeleteButton, Field, Page, ui } from '../components/ui';
+import { RecipeArtwork } from '../components/RecipeArtwork';
 
-const images: Record<string, number> = {
-  mexican_chicken_enchiladas: placeholderImage,
-  classic_french_coq_au_vin: stewImage,
-  placeholder: placeholderImage,
-};
 export default function DiscoverScreen() {
+  const { width } = useWindowDimensions();
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [cuisineFilter, setCuisineFilter] = useState('');
   const { recipes, pantry, selected, setSelected, mutate } = useHousehold();
   const [query, setQuery] = useState('');
   const [suggested, setSuggested] = useState<
@@ -35,7 +33,14 @@ export default function DiscoverScreen() {
   const [prep, setPrep] = useState('');
   const [cook, setCook] = useState('');
   const [importText, setImportText] = useState('');
+  const [provenance, setProvenance] = useState<Partial<RecipeRow>>({});
   const loadForm = (recipe: Partial<RecipeRow>) => {
+    setProvenance({
+      source_url: recipe.source_url || '',
+      source_name: recipe.source_name || '',
+      halal_notes: recipe.halal_notes || '',
+      servings: recipe.servings || 4,
+    });
     setTitle(recipe.title || '');
     setCuisine(recipe.cuisine || 'Home cooking');
     setIngredients(recipe.ingredients?.join('\n') || '');
@@ -49,6 +54,12 @@ export default function DiscoverScreen() {
       title="Your recipe collection"
       description="Pick a few favorites, then build a plan. Everything you add is saved locally."
     >
+      <YouTubePanel
+        onPreview={(recipe) => {
+          setEditing(null);
+          loadForm(recipe);
+        }}
+      />
       <ExtractPanel
         task="recipe"
         onPreview={(recipe: Partial<RecipeRow>) => {
@@ -116,6 +127,7 @@ export default function DiscoverScreen() {
                   editing ? '/recipes/' + editing : '/recipes',
                   editing ? 'PUT' : 'POST',
                   {
+                    ...provenance,
                     title,
                     cuisine,
                     ingredients: ingredients
@@ -144,65 +156,102 @@ export default function DiscoverScreen() {
           onPress={() => setPantryFirst(!pantryFirst)}
         />
       </View>
-      {[...recipes]
-        .sort((a, b) =>
-          pantryFirst
-            ? (suggested.find((s) => s.recipe_id === b.id)?.coverage || 0) -
-              (suggested.find((s) => s.recipe_id === a.id)?.coverage || 0)
-            : a.title.localeCompare(b.title),
-        )
-        .filter((r) =>
-          (r.title + r.cuisine + r.ingredients.join(' '))
-            .toLowerCase()
-            .includes(query.toLowerCase()),
-        )
-        .map((recipe) => (
-          <View key={recipe.id} style={ui.card}>
-            <Image
-              source={images[recipe.image] || images.placeholder}
-              style={{ width: '100%', height: 180, borderRadius: 12 }}
-              accessibilityLabel="Recipe illustration"
-            />
-            <Text style={ui.heading}>{recipe.title}</Text>
-            <Text style={ui.subtitle}>
-              {suggested.find((s) => s.recipe_id === recipe.id)?.available.length || 0} ingredients
-              already in your pantry
-            </Text>
-            <Text style={ui.subtitle}>
-              {recipe.cuisine} - Prep {recipe.prep_time || 'not specified'} - Cook{' '}
-              {recipe.cook_time || 'not specified'}
-            </Text>
-            <Button
-              title={selected.includes(recipe.id) ? 'Remove from selection' : 'Select recipe'}
-              secondary={selected.includes(recipe.id)}
-              onPress={() =>
-                setSelected((ids) =>
-                  ids.includes(recipe.id)
-                    ? ids.filter((id) => id !== recipe.id)
-                    : [...ids, recipe.id],
-                )
-              }
-            />
-            <Text style={ui.text}>{recipe.ingredients.join('\n')}</Text>
-            <Text style={ui.text}>{recipe.instructions}</Text>
-            <View style={ui.row}>
-              <Button
-                title="Edit recipe"
-                secondary
-                onPress={() => {
-                  setEditing(recipe.id);
-                  loadForm(recipe);
-                }}
-              />
-              {recipe.source === 'personal' && (
-                <DeleteButton
-                  title="Delete personal recipe"
-                  onDelete={() => mutate('/recipes/' + recipe.id, 'DELETE')}
-                />
-              )}
-            </View>
-          </View>
+      <View style={ui.row}>
+        <Button
+          title="All cuisines"
+          secondary={!!cuisineFilter}
+          onPress={() => setCuisineFilter('')}
+        />
+        {[...new Set(recipes.map((recipe) => recipe.cuisine))].sort().map((cuisine) => (
+          <Button
+            key={cuisine}
+            title={cuisine}
+            secondary={cuisineFilter !== cuisine}
+            onPress={() => setCuisineFilter(cuisineFilter === cuisine ? '' : cuisine)}
+          />
         ))}
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 18, alignItems: 'flex-start' }}>
+        {[...recipes]
+          .sort((a, b) =>
+            pantryFirst
+              ? (suggested.find((s) => s.recipe_id === b.id)?.coverage || 0) -
+                (suggested.find((s) => s.recipe_id === a.id)?.coverage || 0)
+              : a.title.localeCompare(b.title),
+          )
+          .filter(
+            (r) =>
+              (!cuisineFilter || r.cuisine === cuisineFilter) &&
+              (r.title + r.cuisine + r.ingredients.join(' '))
+                .toLowerCase()
+                .includes(query.toLowerCase()),
+          )
+          .map((recipe) => (
+            <View
+              key={recipe.id}
+              style={[ui.card, { width: width >= 1050 ? '48.6%' : '100%', minWidth: 0 }]}
+            >
+              <RecipeArtwork title={recipe.title} cuisine={recipe.cuisine} />
+              <Text style={ui.heading}>{recipe.title}</Text>
+              <Text style={ui.subtitle}>
+                {suggested.find((s) => s.recipe_id === recipe.id)?.available.length || 0}{' '}
+                ingredients already in your pantry
+              </Text>
+              <Text style={ui.subtitle}>
+                {recipe.cuisine} - Prep {recipe.prep_time || 'not specified'} - Cook{' '}
+                {recipe.cook_time || 'not specified'}
+              </Text>
+              <Button
+                title={selected.includes(recipe.id) ? 'Remove from selection' : 'Select recipe'}
+                secondary={selected.includes(recipe.id)}
+                onPress={() =>
+                  setSelected((ids) =>
+                    ids.includes(recipe.id)
+                      ? ids.filter((id) => id !== recipe.id)
+                      : [...ids, recipe.id],
+                  )
+                }
+              />
+              <Button
+                title={expanded === recipe.id ? 'Close recipe details' : 'View recipe details'}
+                secondary
+                onPress={() => setExpanded(expanded === recipe.id ? null : recipe.id)}
+              />
+              {expanded === recipe.id && (
+                <>
+                  <Text style={ui.heading}>Ingredients · serves {recipe.servings || 4}</Text>
+                  <Text style={ui.text}>{recipe.ingredients.join('\n')}</Text>
+                  <Text style={ui.heading}>Make it</Text>
+                  <Text style={ui.text}>{recipe.instructions}</Text>
+                  {!!recipe.halal_notes && <Text style={ui.chip}>{recipe.halal_notes}</Text>}
+                  {!!recipe.source_url && (
+                    <Button
+                      title={'Original recipe · ' + (recipe.source_name || 'publisher')}
+                      secondary
+                      onPress={() => Linking.openURL(recipe.source_url!)}
+                    />
+                  )}
+                </>
+              )}
+              <View style={ui.row}>
+                <Button
+                  title="Edit recipe"
+                  secondary
+                  onPress={() => {
+                    setEditing(recipe.id);
+                    loadForm(recipe);
+                  }}
+                />
+                {recipe.source === 'personal' && (
+                  <DeleteButton
+                    title="Delete personal recipe"
+                    onDelete={() => mutate('/recipes/' + recipe.id, 'DELETE')}
+                  />
+                )}
+              </View>
+            </View>
+          ))}
+      </View>
     </Page>
   );
 }

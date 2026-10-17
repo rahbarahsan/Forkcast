@@ -20,6 +20,41 @@ software, these features work without an internet connection.
 - Record flyer offers and compare whole-pack prices with expiry/currency checks.
 - Optionally extract recipes from pasted video transcripts, pantry photos, and
   flyer images using a configured subscription CLI or API provider.
+- Fetch a YouTube video's public description/captions, interpret its recipe, and
+  review the result before saving. Pasted transcripts work when access is blocked.
+- Use model-assisted grocery interpretation with per-recipe evidence, exact
+  quantity deductions, compatible units, and a persistent private result cache.
+- Find mapped grocery stores near a location you enter and rank recorded offers
+  by basket coverage and whole-pack cost.
+- Ask the kitchen assistant to prepare meal plans, pantry updates, shopping lists,
+  price comparisons, or video imports. Review changes and apply them once.
+
+The interface includes desktop navigation, a compact phone layout, cuisine filters,
+recipe details, and motion that respects the device's reduced-motion preference.
+
+In **Chat → Model settings**, select your signed-in subscription CLI or a provider.
+Only provider/model names are saved locally; API keys stay in server environment
+variables. Explicit FORKCAST_MODEL_PROVIDER environment configuration takes precedence.
+The assistant sends the relevant recipe catalog, pantry, plans and recent
+conversation to your chosen provider. Interpretation sends the selected recipe.
+
+For optional typed ingredient review using TypeSafe Jev, set
+FORKCAST_DECISION_PROVIDER=jev and TYPESAFE_API_KEY; optionally pin
+FORKCAST_DECISION_MODEL (default jev-latest). Jev flags uncertain source-to-item
+matches for review; it does not generate recipes or replace arithmetic.
+This independent decision adapter is optional and tested with protocol mocks.
+See [TypeSafe's API](https://docs.typesafe.ai/api).
+
+The chatbot uses a bounded LangGraph workflow with local SQLite conversations and
+task previews. Apply is atomic and idempotent. A preview expires after one hour
+and is rejected if the kitchen has changed. Its tools cover kitchen tasks only.
+LangSmith tracing is disabled for this workflow.
+
+Nearby-store search uses Nominatim and Overpass only after an explicit location
+search, caches results for a day, and attributes OpenStreetMap contributors.
+Distances are straight-line estimates. Listings do not establish product stock,
+halal certification or current prices. Offer recommendations work offline and
+rank complete coverage before partial subtotals; prices come from your records.
 
 ## Start locally
 

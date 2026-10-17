@@ -13,10 +13,23 @@ export interface RecipeRow {
   prep_time: string;
   cook_time: string;
   source?: string;
+  servings?: number;
+  source_url?: string;
+  source_name?: string;
+  halal_notes?: string;
 }
 export interface GroceryList {
   categorized: Record<string, string[]>;
   raw: Record<string, Record<string, number>>;
+  items?: {
+    name: string;
+    category: string;
+    sources: { recipe_id: string; recipe_title: string; line: string }[];
+    notes: string[];
+  }[];
+  method?: string;
+  warnings?: string[];
+  pantry_deductions?: { name: string; quantity: number; unit: string; note?: string }[];
 }
 export interface HistoryEntry {
   id: string;

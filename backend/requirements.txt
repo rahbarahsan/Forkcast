@@ -3,4 +3,6 @@ fastapi>=0.143.3,<0.144
 pydantic>=2.14,<2.15
 uvicorn>=0.54,<0.55
 python-dotenv>=1.2,<2
+youtube-transcript-api==1.2.4
+langgraph==1.2.16
 

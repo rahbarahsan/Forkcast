@@ -40,7 +40,7 @@ test('a household can plan, shop, export, and reload without external services',
   await page.getByLabel('Ingredient name', { exact: true }).fill('garlic');
   await page.getByRole('button', { name: 'Add pantry item', exact: true }).click();
   await page.getByRole('button', { name: 'Edit pantry item', exact: true }).first().click();
-  await page.getByLabel('Quantity and unit', { exact: true }).fill('1 bulb');
+  await page.getByLabel('Quantity and unit', { exact: true }).fill('2 cloves');
   await page.getByRole('button', { name: 'Save pantry changes', exact: true }).click();
   await page.getByRole('tab', { name: /Groceries/ }).click();
   await expect(page.getByRole('checkbox', { name: /rice.*500 g/ })).toBeVisible();
