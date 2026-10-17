@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Linking, Text, View } from 'react-native';
 import { Button, DeleteButton, Field, Page, ui } from '../components/ui';
 import { ModelSettings } from '../components/ModelSettings';
 import { useHousehold } from '../context/HouseholdContext';
@@ -7,7 +7,19 @@ import { api, json } from '../lib/api';
 
 interface TaskWrite {
   kind: string;
-  data: { name?: string; title?: string; quantity?: string; recipeIds?: string[] };
+  data: {
+    name?: string;
+    title?: string;
+    quantity?: string;
+    recipeIds?: string[];
+    ingredients?: string[];
+    instructions?: string;
+    halal_notes?: string;
+    source_url?: string;
+    startDate?: string;
+    endDate?: string;
+    isActive?: boolean;
+  };
 }
 interface Message {
   role: string;
@@ -23,6 +35,16 @@ interface Message {
       recommendation?: string;
       reason?: string;
       recipe?: { title: string };
+      currency?: string;
+      stores?: {
+        id?: string;
+        name?: string;
+        store?: string;
+        distance_km?: number;
+        subtotal?: number;
+        complete?: boolean;
+        url?: string;
+      }[];
     };
   }[];
 }
@@ -120,6 +142,28 @@ export default function AssistantScreen() {
                 <Text style={ui.text}>Best recorded coverage: {entry.result.recommendation}</Text>
               )}
               {entry.result.reason && <Text style={ui.subtitle}>{entry.result.reason}</Text>}
+              {entry.result.stores?.map((store, storeIndex) => (
+                <View key={store.id || store.store || storeIndex} style={{ gap: 6 }}>
+                  <Text style={ui.text}>
+                    {store.name || store.store}
+                    {store.distance_km !== undefined ? ' · ' + store.distance_km + ' km' : ''}
+                    {store.subtotal !== undefined
+                      ? ' · ' +
+                        entry.result.currency +
+                        ' ' +
+                        store.subtotal.toFixed(2) +
+                        (store.complete ? ' basket total' : ' partial subtotal')
+                      : ''}
+                  </Text>
+                  {!!store.url && (
+                    <Button
+                      title={'Map listing for ' + store.name}
+                      secondary
+                      onPress={() => Linking.openURL(store.url!)}
+                    />
+                  )}
+                </View>
+              ))}
               {entry.result.recipe && (
                 <Text style={ui.text}>Recipe preview: {entry.result.recipe.title}</Text>
               )}
@@ -148,6 +192,27 @@ export default function AssistantScreen() {
                       {recipes.find((recipe) => recipe.id === id)?.title || id}
                     </Text>
                   ))}
+                  {!!write.data.startDate && (
+                    <Text style={ui.subtitle}>
+                      From {write.data.startDate}
+                      {write.data.endDate ? ' to ' + write.data.endDate : ''}
+                    </Text>
+                  )}
+                  {write.data.isActive && <Text style={ui.chip}>Use as the active plan</Text>}
+                  {write.kind === 'recipe' && (
+                    <>
+                      <Text style={ui.text}>{write.data.ingredients?.join('\n')}</Text>
+                      <Text style={ui.text}>{write.data.instructions}</Text>
+                      <Text style={ui.subtitle}>{write.data.halal_notes}</Text>
+                      {!!write.data.source_url && (
+                        <Button
+                          title="Check original video"
+                          secondary
+                          onPress={() => Linking.openURL(write.data.source_url!)}
+                        />
+                      )}
+                    </>
+                  )}
                 </View>
               ))}
               {message.status === 'pending' && message.task_id ? (

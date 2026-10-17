@@ -39,6 +39,7 @@ export default function DiscoverScreen() {
       source_url: recipe.source_url || '',
       source_name: recipe.source_name || '',
       halal_notes: recipe.halal_notes || '',
+      source_notes: recipe.source_notes || '',
       servings: recipe.servings || 4,
     });
     setTitle(recipe.title || '');
@@ -224,6 +225,7 @@ export default function DiscoverScreen() {
                   <Text style={ui.heading}>Make it</Text>
                   <Text style={ui.text}>{recipe.instructions}</Text>
                   {!!recipe.halal_notes && <Text style={ui.chip}>{recipe.halal_notes}</Text>}
+                  {!!recipe.source_notes && <Text style={ui.subtitle}>{recipe.source_notes}</Text>}
                   {!!recipe.source_url && (
                     <Button
                       title={'Original recipe · ' + (recipe.source_name || 'publisher')}

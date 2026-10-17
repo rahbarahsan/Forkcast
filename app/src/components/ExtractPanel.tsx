@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 import { Image, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { api, json } from '../lib/api';
@@ -18,11 +19,13 @@ export function ExtractPanel<T>({
   task: 'recipe' | 'pantry' | 'offers';
   onPreview: (data: T) => void;
 }) {
+  const focused = useIsFocused();
   const [config, setConfig] = useState<Configuration | null>(null);
   const [text, setText] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [error, setError] = useState('');
   useEffect(() => {
+    if (!focused) return;
     const controller = new AbortController();
     void api<Configuration>('/models/config', { signal: controller.signal })
       .then(setConfig)
@@ -30,7 +33,7 @@ export function ExtractPanel<T>({
         if (!controller.signal.aborted) setError(e.message);
       });
     return () => controller.abort();
-  }, []);
+  }, [focused]);
   return (
     <View style={ui.card}>
       <Text style={ui.heading}>

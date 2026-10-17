@@ -17,6 +17,7 @@ export interface RecipeRow {
   source_url?: string;
   source_name?: string;
   halal_notes?: string;
+  source_notes?: string;
 }
 export interface GroceryList {
   categorized: Record<string, string[]>;

@@ -9,7 +9,7 @@
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
-    "build:web": "expo export --platform web",
+    "build:web": "expo export --platform web --max-workers 2",
     "test:e2e": "playwright test",
     "format:check": "prettier --check ."
   },

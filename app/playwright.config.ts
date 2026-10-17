@@ -16,7 +16,7 @@ export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
   workers: 1,
-  use: { baseURL: 'http://localhost:8081', trace: 'retain-on-failure' },
+  use: { baseURL: 'http://localhost:8081', trace: 'retain-on-failure', reducedMotion: 'reduce' },
   projects: [
     {
       name: 'desktop',
