@@ -60,6 +60,7 @@ def normalize_plural(word: str) -> str:
         "grass",
         "rice",
         "quinoa",
+        "manis",
     }:
         return word
 

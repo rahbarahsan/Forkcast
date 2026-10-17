@@ -138,6 +138,44 @@ def test_model_must_cover_all_lines(client, monkeypatch):
     assert result["warnings"]
 
 
+def test_model_cannot_silently_drop_cooked_or_meat_form(client, monkeypatch):
+    identifier = recipe(
+        client, ["1 cup cooked basmati rice", "500 g halal boneless chicken thighs"]
+    )
+    monkeypatch.setattr(
+        groceries,
+        "configuration",
+        lambda: {"available": True, "provider": "codex", "model": "test"},
+    )
+    monkeypatch.setattr(
+        groceries,
+        "complete",
+        lambda *_: {
+            "lines": [
+                {
+                    "index": 0,
+                    "name": "basmati rice",
+                    "quantity": 1,
+                    "unit": "cup",
+                    "category": "Grains & bakery",
+                },
+                {
+                    "index": 1,
+                    "name": "chicken thigh",
+                    "quantity": 500,
+                    "unit": "g",
+                    "category": "Meat & fish",
+                },
+            ]
+        },
+    )
+    result = client.post(
+        "/api/grocery-list", json={"recipe_ids": [identifier], "intelligence": "model"}
+    ).json()
+    assert "cooked basmati rice" in result["raw"]
+    assert "halal boneless chicken thigh" in result["raw"]
+
+
 def test_assistant_review_apply_once_and_cancel(client, monkeypatch):
     monkeypatch.setattr(
         assistant,

@@ -76,15 +76,18 @@ def fetch_transcript(identifier, languages):
         )
 
 
-def structured_description(text, title="Imported video recipe"):
-    heading = re.search(r"(?im)^\s*ingredients\s*:\s*$", text)
+def structured_description(text, title=""):
+    heading = re.search(r"(?im)^\s*ingredients\s*:?\s*$", text)
     if not heading:
         return recipe_preview(text)
     section = text[heading.start() :]
     section = re.split(
         r"(?im)^\s*(?:recipe in (?:urdu|hindi)|urdu recipe|follow us|subscribe)\b", section
     )[0]
-    return recipe_preview(title + "\n" + section)
+    prefix = [line.strip() for line in text[: heading.start()].splitlines() if line.strip()]
+    return recipe_preview(
+        (title or (prefix[-1] if prefix else "Imported video recipe")) + "\n" + section
+    )
 
 
 def preview_video(url, pasted_text="", use_model=True, languages=None):
@@ -126,9 +129,7 @@ def preview_video(url, pasted_text="", use_model=True, languages=None):
                     "Model interpretation: check every amount and step against the source before saving."
                 )
             else:
-                recipe = structured_description(
-                    description or transcript, title or "Imported video recipe"
-                ).model_dump()
+                recipe = structured_description(description or transcript, title).model_dump()
         except (ValueError, KeyError, TypeError, StopIteration, IndexError):
             if use_model and configuration()["available"]:
                 try:
@@ -145,9 +146,7 @@ def preview_video(url, pasted_text="", use_model=True, languages=None):
         except ProviderError as exc:
             warnings.append(str(exc))
             try:
-                recipe = structured_description(
-                    description or transcript, title or "Imported video recipe"
-                ).model_dump()
+                recipe = structured_description(description or transcript, title).model_dump()
             except (ValueError, KeyError, TypeError, StopIteration, IndexError):
                 pass
     if recipe:

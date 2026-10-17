@@ -13,6 +13,11 @@ except ImportError:
     from grocery_rules.plural_resolver import normalize_plural
 
 UNIT_ALIASES = {
+    "lbs": "lb",
+    "pound": "lb",
+    "pounds": "lb",
+    "ounce": "oz",
+    "ounces": "oz",
     "liter": "l",
     "liters": "l",
     "litre": "l",
@@ -66,7 +71,9 @@ UNIT_ALIASES = {
     "stalks": "stalk",
 }
 
-KNOWN_UNITS = {"g", "kg", "ml", "l", "cup", "tbsp", "tsp", "pcs", "clove"} | set(UNIT_ALIASES)
+KNOWN_UNITS = {"g", "kg", "ml", "l", "cup", "tbsp", "tsp", "pcs", "clove", "lb", "oz"} | set(
+    UNIT_ALIASES
+)
 
 
 def _canonical_unit(token: str) -> str:
@@ -191,7 +198,11 @@ class IngredientCatalog:
                         "maida",
                         "heavy cream",
                     }
-                    if name.strip().lower() in distinct and name.strip().lower() != canonical:
+                    if (
+                        name.strip().lower() in distinct
+                        and canonical in {"oil", "onion", "rice", "lentil", "flour", "cream"}
+                        and name.strip().lower() != canonical
+                    ):
                         self.categories[name.strip().lower()] = row.get("category") or "Other"
                         continue
                     self.names[name.strip().lower()] = canonical

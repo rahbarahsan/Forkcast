@@ -29,6 +29,7 @@ jobs:
       - run: python -m ruff check . ../scripts
       - run: python -m ruff format --check . ../scripts
       - run: python -m pytest -q
+      - run: python ../scripts/validate_catalog.py
 
   app:
     runs-on: ubuntu-latest

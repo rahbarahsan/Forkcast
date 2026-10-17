@@ -17,6 +17,17 @@ GATE = Lock()
 LAST_GEOCODE = 0.0
 
 
+def geocode(parameters):
+    global LAST_GEOCODE
+    with GATE:
+        sleep(max(0, 1.05 - (monotonic() - LAST_GEOCODE)))
+        LAST_GEOCODE = monotonic()
+        return read_json(
+            "https://nominatim.openstreetmap.org/search?" + urlencode(parameters),
+            {"nominatim.openstreetmap.org"},
+        )
+
+
 def distance(a, b, x, y):
     a, b, x, y = map(math.radians, (a, b, x, y))
     value = math.sin((x - a) / 2) ** 2 + math.cos(a) * math.cos(x) * math.sin((y - b) / 2) ** 2
@@ -24,28 +35,63 @@ def distance(a, b, x, y):
 
 
 def nearby(db, location, radius=5000):
-    global LAST_GEOCODE
     key = location.strip().lower() + ":" + str(radius)
     cached = db.get("store_search", key)
     now = datetime.now(UTC)
     if cached and datetime.fromisoformat(cached["fetched_at"]) > now - timedelta(days=1):
         return {**cached["result"], "cached": True}
     # Only explicit searches, never keystroke/autocomplete requests. One request/sec.
-    with GATE:
-        sleep(max(0, 1.05 - (monotonic() - LAST_GEOCODE)))
-        LAST_GEOCODE = monotonic()
-        places = read_json(
-            "https://nominatim.openstreetmap.org/search?"
-            + urlencode({"q": location.strip(), "format": "jsonv2", "limit": 1}),
-            {"nominatim.openstreetmap.org"},
-        )
+    places = geocode({"q": location.strip(), "format": "jsonv2", "limit": 1})
     if not places:
         raise SourceError("Location not found. Include a city and country, or a postal code.")
     lat, lon = float(places[0]["lat"]), float(places[0]["lon"])
-    query = f'[out:json][timeout:15];nwr["shop"~"^(supermarket|grocery|convenience|greengrocer|butcher)$"](around:{radius},{lat},{lon});out center tags 60;'
-    data = read_json(
-        "https://overpass-api.de/api/interpreter?" + urlencode({"data": query}), {"overpass-api.de"}
-    )
+    query = f'[out:json][timeout:15];nwr["shop"~"^(supermarket|grocery|greengrocer|butcher)$"](around:{radius},{lat},{lon});out center tags 80;'
+    data = None
+    for host in ("overpass-api.de", "overpass.private.coffee"):
+        try:
+            candidate = read_json(
+                "https://" + host + "/api/interpreter?" + urlencode({"data": query}), {host}
+            )
+            if (
+                isinstance(candidate, dict)
+                and isinstance(candidate.get("elements"), list)
+                and not candidate.get("remark")
+            ):
+                data = candidate
+                break
+        except SourceError:
+            continue
+    fallback = data is None
+    if fallback:
+        delta_lat = radius / 111_000
+        delta_lon = delta_lat / max(0.2, math.cos(math.radians(lat)))
+        found = geocode(
+            {
+                "q": "supermarket",
+                "format": "jsonv2",
+                "limit": 20,
+                "namedetails": 1,
+                "extratags": 1,
+                "bounded": 1,
+                "viewbox": f"{lon - delta_lon},{lat + delta_lat},{lon + delta_lon},{lat - delta_lat}",
+            }
+        )
+        data = {
+            "elements": [
+                {
+                    "type": place["osm_type"],
+                    "id": place["osm_id"],
+                    "lat": float(place["lat"]),
+                    "lon": float(place["lon"]),
+                    "tags": {
+                        "name": place.get("name") or place.get("namedetails", {}).get("name"),
+                        "shop": "supermarket",
+                        **(place.get("extratags") or {}),
+                    },
+                }
+                for place in found
+            ]
+        }
     stores = []
     for row in data.get("elements", []):
         tags = row.get("tags", {})
@@ -54,6 +100,8 @@ def nearby(db, location, radius=5000):
         if not name or "lat" not in center or "lon" not in center:
             continue
         store_lat, store_lon = center["lat"], center["lon"]
+        if distance(lat, lon, store_lat, store_lon) > radius / 1000:
+            continue
         stores.append(
             {
                 "id": f"{row['type']}/{row['id']}",
@@ -83,12 +131,26 @@ def nearby(db, location, radius=5000):
         )
     result = {
         "location": places[0]["display_name"],
-        "stores": sorted(stores, key=lambda store: (store["distance_km"], store["name"]))[:20],
+        "stores": sorted(
+            stores,
+            key=lambda store: (
+                {"supermarket": 0, "grocery": 1, "greengrocer": 2, "butcher": 3}.get(
+                    store["kind"], 4
+                ),
+                store["distance_km"],
+                store["name"],
+            ),
+        )[:20],
         "source": "OpenStreetMap contributors (ODbL)",
         "source_url": "https://www.openstreetmap.org/copyright",
         "fetched_at": now.isoformat(),
         "cached": False,
-        "note": "Distances are straight-line estimates. Map listings do not establish stock, prices, opening hours, or halal certification; check with the store.",
+        "note": "Distances are straight-line estimates. Map listings do not establish stock, prices, opening hours, or halal certification; check with the store."
+        + (
+            " Public map queries were busy; these results include mapped supermarkets only."
+            if fallback
+            else ""
+        ),
     }
     db.save("store_search", {"fetched_at": now.isoformat(), "result": result}, key)
     return result

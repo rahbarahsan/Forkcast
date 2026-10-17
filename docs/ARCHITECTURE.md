@@ -29,7 +29,17 @@ Ingredient aggregation uses validated prepared rows when they match an original
 line exactly. Invalid spreadsheet quantities fall back to the deterministic
 parser. The lookup resolves synonyms and plurals. Compatible units are combined;
 weight, volume, and counts remain separate because density is ingredient-specific.
-An ingredient present in the pantry is omitted entirely, regardless of quantity.
+Explicit compatible pantry quantities are subtracted using decimal arithmetic.
+A blank pantry quantity means available in sufficient quantity. Unreadable or
+incompatible stock measures remain on the list with a review warning.
+
+The grocery pipeline uses reviewed prepared rows for reference recipes. Personal
+recipes can use semantic interpretation through the selected subscription/API.
+Every ingredient index must be covered exactly once, explicit measures are
+checked, and source product forms are retained. Arithmetic is local. Interpretation
+results are cached by content, provider, model and pipeline version in SQLite.
+Every purchase item retains its recipe lines, scaling and measure provenance.
+An optional TypeSafe Jev gate adds typed, confidence-based review flags.
 
 Offer comparison matches canonical ingredients and comparable units, excludes
 expired offers and other currencies, and selects the lowest whole-pack cost for
@@ -48,6 +58,23 @@ Extraction has a timeout and a concurrency limit. Submitted material is treated 
 data, tools are restricted, responses are validated against application schemas,
 and results are previews. Persistence always requires a separate save action.
 The default provider is disabled. A failed provider cannot disable local workflows.
+
+YouTube import accepts only recognized video URL forms and fetches public
+descriptions/captions without downloading media or using cookies. Source URLs,
+creator names and extraction warnings accompany the editable preview. Network
+requests have time/size bounds; pasted transcripts support blocked videos.
+
+The kitchen assistant uses a bounded LangGraph plan/resolve workflow and typed
+allowlisted tools. Conversation and pending writes stay in ignored SQLite records.
+Task application revalidates the kitchen fingerprint, expires previews after an
+hour, and applies all changes in one immediate transaction. Completed/cancelled
+tasks cannot apply twice. The graph disables LangSmith tracing and has no shell
+or arbitrary network tool. Providers remain isolated from application files.
+
+Store searches use an explicit user location, rate-limited Nominatim geocoding,
+bounded Overpass queries with fallback, and a one-day private cache. OpenStreetMap
+evidence never implies stock, price, opening-hours or halal certification. Saved
+offer ranking prefers basket coverage before comparable whole-pack subtotal.
 
 ## Deployment boundary
 

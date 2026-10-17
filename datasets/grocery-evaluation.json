@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "cases": [
+    {"line": "3 green onions, thinly sliced", "name": "spring onion", "category": "Produce"},
+    {"line": "200 g baby spinach, washed", "name": "baby spinach", "category": "Produce"},
+    {"line": "1 tbsp extra virgin olive oil", "name": "extra virgin olive oil", "category": "Oils & condiments"},
+    {"line": "1 tsp cumin seeds, lightly toasted", "name": "cumin seed", "category": "Spices & seasonings"},
+    {"line": "1 tsp ground cumin", "name": "ground cumin", "category": "Spices & seasonings"},
+    {"line": "400 g canned chickpeas, drained", "name": "canned chickpea", "category": "Pulses & canned goods"},
+    {"line": "150 g dried red lentils, rinsed", "name": "dried red lentil", "category": "Pulses & canned goods"},
+    {"line": "1 cup cooked basmati rice", "name": "cooked basmati rice", "category": "Grains & bakery"},
+    {"line": "2 cloves garlic, finely minced", "name": "garlic", "category": "Produce"},
+    {"line": "500 g halal boneless chicken thighs", "name": "halal boneless chicken thigh", "category": "Meat & fish"},
+    {"line": "2 tbsp fresh coriander leaves, chopped", "name": "fresh coriander leaf", "category": "Produce"},
+    {"line": "1 tsp dried oregano", "name": "dried oregano", "category": "Spices & seasonings"}
+  ],
+  "equivalents": {
+    "spring onion": ["green onion", "scallion"],
+    "fresh coriander leaf": ["fresh cilantro", "fresh cilantro leaf", "cilantro", "coriander leaf"],
+    "cumin seed": ["whole cumin seed"],
+    "canned chickpea": ["canned chickpeas"],
+    "dried red lentil": ["dry red lentil", "red lentil", "red lentils"],
+    "halal boneless chicken thigh": ["halal boneless chicken thighs", "boneless halal chicken thigh"]
+  }
+}

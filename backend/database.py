@@ -44,6 +44,28 @@ class Database:
                 );
                 INSERT OR IGNORE INTO migrations VALUES (1);
             """)
+            current_ids = {recipe["id"] for recipe in catalog["recipes"]}
+            plans = [
+                json.loads(row[0])
+                for row in conn.execute("SELECT data FROM records WHERE kind='plan'")
+            ]
+            referenced = {identifier for plan in plans for identifier in plan.get("recipeIds", [])}
+            for row in conn.execute("SELECT id,data FROM catalog_recipes").fetchall():
+                if row["id"] in current_ids:
+                    continue
+                if row["id"] in referenced:
+                    retired = json.loads(row["data"])
+                    retired["halal_notes"] = (
+                        "Preserved from the retired starter catalog for an existing plan. This recipe has not been reviewed for halal suitability."
+                    )
+                    conn.execute(
+                        "INSERT OR IGNORE INTO records(kind,id,data) VALUES ('recipe',?,?)",
+                        (row["id"], json.dumps(retired)),
+                    )
+                conn.execute("DELETE FROM parsed_ingredients WHERE recipe_id=?", (row["id"],))
+                conn.execute("DELETE FROM catalog_recipes WHERE id=?", (row["id"],))
+            conn.execute("DELETE FROM ingredient_lookup")
+            conn.execute("INSERT OR IGNORE INTO migrations VALUES (2)")
             for recipe in catalog["recipes"]:
                 conn.execute(
                     "INSERT INTO catalog_recipes VALUES (?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data",

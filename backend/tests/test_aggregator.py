@@ -36,10 +36,10 @@ def test_units_merge_without_inventing_density_and_synonyms_deduct_pantry():
     ]
     categories, raw = SmartGroceryAggregator(recipes, [{"name": "onions"}]).generate()
     assert raw["rice"] == {"g": 1500, "ml": 240}
-    assert raw["oil"] == {"ml": 30}
+    assert raw["neutral cooking oil"] == {"ml": 30}
     assert raw["tomato"] == {"can": 1, "pcs": 2}
     assert "onion" not in raw
-    assert "tomato" in categories["Vegetables"]
+    assert "tomato" in categories["Produce"]
 
 
 def test_bad_prepared_quantity_falls_back_to_recipe_line():

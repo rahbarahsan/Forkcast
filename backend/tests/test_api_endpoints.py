@@ -12,7 +12,7 @@ def test_local_household_workflow_survives_restart(tmp_path):
     path = tmp_path / "household.sqlite3"
     with TestClient(create_app(path)) as client:
         assert client.get("/api/health").json()["storage"] == "sqlite"
-        assert len(client.get("/api/recipes").json()) == 6
+        assert len(client.get("/api/recipes").json()) == 50
         response = client.post("/api/recipes", json=RECIPE)
         assert response.status_code == 201
         recipe = response.json()
@@ -34,7 +34,7 @@ def test_local_household_workflow_survives_restart(tmp_path):
         )
         assert saved.status_code == 201
     with TestClient(create_app(path)) as client:
-        assert len(client.get("/api/recipes").json()) == 7
+        assert len(client.get("/api/recipes").json()) == 51
         assert client.get("/api/pantry").json()[0]["id"] == pantry["id"]
         assert client.get("/api/plans").json()[0]["id"] == plan["id"]
         assert client.get("/api/history").json()[0]["checked"] == ["rice"]
@@ -86,9 +86,9 @@ def test_import_preview_never_persists_until_saved(client):
     preview = client.post("/api/import/recipe", json={"text": text})
     assert preview.status_code == 200
     assert preview.json()["ingredients"] == ["1 cup rice", "1 lemon"]
-    assert len(client.get("/api/recipes").json()) == 6
+    assert len(client.get("/api/recipes").json()) == 50
     assert client.post("/api/recipes", json=preview.json()).status_code == 201
-    assert len(client.get("/api/recipes").json()) == 7
+    assert len(client.get("/api/recipes").json()) == 51
     assert client.post("/api/import/recipe", json={"text": "not a recipe"}).status_code == 422
 
 

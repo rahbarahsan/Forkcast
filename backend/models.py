@@ -22,6 +22,7 @@ class RecipeInput(Input):
     source_url: str = Field(default="", max_length=2000, pattern=r"^(https://[^\s]+)?$")
     source_name: str = Field(default="", max_length=200)
     halal_notes: str = Field(default="", max_length=2000)
+    source_notes: str = Field(default="", max_length=5000)
 
 
 class PantryInput(Input):

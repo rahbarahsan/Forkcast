@@ -99,8 +99,9 @@ single-household application; public hosting needs authentication and TLS.
 | Runtime sidecars, extraction scratch files, browser output | Ignored runtime directories | No |
 | Environment files and provider credentials | Local environment | No |
 
-The catalog includes six recipes, 90 prepared ingredient rows, and 45 lookup
-entries recovered from the original SQL seed. Startup refreshes reference data
+The catalog includes 50 halal recipe adaptations from nine original publishers,
+933 prepared ingredient rows, and 239 lookup entries. [Browse the source index](datasets/README.md).
+Startup refreshes reference data
 without touching personal records. Changes made through the app never update
 `datasets/catalog.json`. Deleting a personal override restores the reference
 recipe. A database path can be overridden with `FORKCAST_DATABASE`.
@@ -129,8 +130,8 @@ The application does not copy login tokens or turn a subscription into an API ke
 API credentials stay on the server; never put them in an `EXPO_PUBLIC_` variable.
 
 Codex and API modes accept JPEG, PNG, and WebP images up to 5 MB. Claude CLI mode
-accepts pasted text. Recipe Scout accepts pasted transcripts; it does not fetch
-YouTube videos or bypass captions/access controls. Results are validated previews
+accepts pasted text. YouTube import fetches public descriptions and available
+captions without downloading media or bypassing access controls. Results are validated previews
 and require a separate save action. Images and submitted text go to the selected
 provider only after you request extraction.
 
@@ -139,6 +140,9 @@ A live subscription smoke check is optional:
 ```sh
 python scripts/check_model.py --provider codex
 # or --provider claude
+python scripts/check_intelligence.py --provider codex --youtube
+python scripts/evaluate_groceries.py --provider claude
+python scripts/validate_catalog.py
 ```
 
 Provider integration follows the documented [Codex noninteractive interface](https://learn.chatgpt.com/docs/non-interactive-mode)
@@ -173,7 +177,8 @@ constraints and the npm lockfile record the verified versions. See
 
 ## Behavior and limits
 
-Pantry presence removes an ingredient entirely; quantities are not subtracted.
+Compatible measured pantry quantities are subtracted; blank quantities mean you
+have enough. Incompatible stock units remain for review.
 Weight, volume, and counts stay separate rather than guessing food densities.
 Spoons/cups use 5/15/240 ml conversions. Ambiguous preparation text may need a
 manual recipe edit. These lists are shopping aids, not nutritional calculations.
@@ -181,7 +186,8 @@ manual recipe edit. These lists are shopping aids, not nutritional calculations.
 Price comparison uses only recorded offers in the requested currency. It chooses
 the lowest whole-pack cost per ingredient with comparable units, reports missing
 prices, and excludes travel costs and combinations of different pack sizes.
-No live store prices are invented or fetched automatically.
+No live store prices are invented or fetched automatically. Nearby mapped stores
+are a separate location search; map data and public source fetching need internet.
 
 See [architecture](docs/ARCHITECTURE.md) for storage and request details and
 [the reference dataset](datasets/README.md) for catalog provenance.
