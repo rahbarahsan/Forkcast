@@ -8,7 +8,10 @@ The dataset includes 933 prepared ingredient lines and 239 canonical lookup
 entries. Grocery reconciliation accounts for 859 purchase source lines across
 235 grocery names; cooking water and three explicitly reused cooking liquids
 are excluded from purchases. Methods are independently worded for this catalog;
-source recipe photos and articles are not bundled.
+source recipe articles and publisher photographs are not bundled. The app includes
+separately licensed dish photographs from Wikimedia Commons as serving suggestions.
+See [photo-credits.json](photo-credits.json) for each photograph's author, source,
+license and checksum, and [the photo guide](../docs/RECIPE_PHOTOS.md) for reuse.
 
 Use halal meat and suitable packaged ingredients as described in each recipe.
 These adaptations do not certify a publisher, brand, store, or product. Original

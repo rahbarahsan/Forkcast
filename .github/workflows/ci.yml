@@ -30,6 +30,7 @@ jobs:
       - run: python -m ruff format --check . ../scripts
       - run: python -m pytest -q
       - run: python ../scripts/validate_catalog.py
+      - run: python ../scripts/prepare_recipe_photos.py
 
   app:
     runs-on: ubuntu-latest

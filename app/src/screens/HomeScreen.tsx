@@ -16,7 +16,7 @@ import type { RootTabParamList } from '../navigation';
 import { useHousehold } from '../context/HouseholdContext';
 import { colors, serif, Button } from '../components/ui';
 import { Reveal } from '../components/Reveal';
-import { RecipeArtwork } from '../components/RecipeArtwork';
+import { RecipePhoto } from '../components/RecipePhoto';
 
 export default function HomeScreen() {
   const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
@@ -178,7 +178,7 @@ export default function HomeScreen() {
               transform: [{ translateY: pressed ? -3 : 0 }],
             })}
           >
-            <RecipeArtwork title={recipe.title} cuisine={recipe.cuisine} />
+            <RecipePhoto title={recipe.title} cuisine={recipe.cuisine} image={recipe.image} />
             <Text
               style={{
                 fontSize: 10,

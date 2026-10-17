@@ -5,7 +5,7 @@
     {
       "title": "Pakistani Chicken Biryani",
       "cuisine": "Pakistani",
-      "image": "placeholder",
+      "image": "recipe-photo:pakistani-chicken-biryani",
       "ingredients": [
         "1 1/4 lb halal bone-in skinless chicken, cut up",
         "1/2 cup plain whole-milk yogurt",
@@ -69,7 +69,7 @@
     {
       "title": "Pakistani Chicken Karahi",
       "cuisine": "Pakistani",
-      "image": "placeholder",
+      "image": "recipe-photo:pakistani-chicken-karahi",
       "ingredients": [
         "2 tbsp ghee",
         "3 tbsp neutral oil",
@@ -104,7 +104,7 @@
     {
       "title": "Aloo Keema",
       "cuisine": "Pakistani",
-      "image": "placeholder",
+      "image": "recipe-photo:aloo-keema",
       "ingredients": [
         "1 cinnamon stick, 2 inches long",
         "1 tsp cumin seeds",
@@ -146,7 +146,7 @@
     {
       "title": "Chapli Kabab",
       "cuisine": "Pakistani",
-      "image": "placeholder",
+      "image": "recipe-photo:chapli-kabab",
       "ingredients": [
         "3 tbsp coriander seeds",
         "1 tbsp cumin seeds",
@@ -185,7 +185,7 @@
     {
       "title": "Pakistani Chicken Yakhni Pulao",
       "cuisine": "Pakistani",
-      "image": "placeholder",
+      "image": "recipe-photo:pakistani-chicken-yakhni-pulao",
       "ingredients": [
         "2 3/4 cups water for broth, plus water as needed to restore strained broth volume",
         "1 1/4 lb halal bone-in skinless chicken, cut up",
@@ -237,7 +237,7 @@
     {
       "title": "Masoor Dal",
       "cuisine": "Pakistani",
-      "image": "placeholder",
+      "image": "recipe-photo:masoor-dal",
       "ingredients": [
         "1 cup red split lentils",
         "3 1/4 cups water for cooking lentils",
@@ -275,7 +275,7 @@
     {
       "title": "Aloo Baingan",
       "cuisine": "Pakistani",
-      "image": "placeholder",
+      "image": "recipe-photo:aloo-baingan",
       "ingredients": [
         "1 small to medium globe eggplant, unpeeled",
         "1/2 cup neutral oil, divided between curry and pan-frying",
@@ -315,7 +315,7 @@
     {
       "title": "Lebanese Mujadara",
       "cuisine": "Lebanese",
-      "image": "placeholder",
+      "image": "recipe-photo:lebanese-mujadara",
       "ingredients": [
         "1 cup long-grain white rice, rinsed",
         "4 1/2 cups water",
@@ -340,7 +340,7 @@
     {
       "title": "Shish Tawook",
       "cuisine": "Lebanese",
-      "image": "placeholder",
+      "image": "recipe-photo:shish-tawook",
       "ingredients": [
         "2 lb halal boneless skinless chicken breast, cut into large chunks",
         "1/2 cup plain whole-milk yogurt",
@@ -369,7 +369,7 @@
     {
       "title": "Lebanese Falafel",
       "cuisine": "Lebanese",
-      "image": "placeholder",
+      "image": "recipe-photo:lebanese-falafel",
       "ingredients": [
         "1 lb dry uncooked chickpeas",
         "1 tbsp salt",
@@ -399,7 +399,7 @@
     {
       "title": "Lebanese Baba Ghanoush",
       "cuisine": "Lebanese",
-      "image": "placeholder",
+      "image": "recipe-photo:lebanese-baba-ghanoush",
       "ingredients": [
         "1 large eggplant",
         "¼ cup tahini",
@@ -421,7 +421,7 @@
     {
       "title": "Lebanese Rice with Vermicelli",
       "cuisine": "Lebanese",
-      "image": "placeholder",
+      "image": "recipe-photo:lebanese-rice-with-vermicelli",
       "ingredients": [
         "2 cups long grain white rice",
         "½ cup dried rice vermicelli noodles",
@@ -444,7 +444,7 @@
     {
       "title": "Chicken Shawarma Pitas",
       "cuisine": "Levantine",
-      "image": "placeholder",
+      "image": "recipe-photo:chicken-shawarma-pitas",
       "ingredients": [
         "¾ tablespoon ground cumin",
         "¾ tablespoon turmeric powder",
@@ -476,7 +476,7 @@
     {
       "title": "Shakshuka",
       "cuisine": "Tunisian",
-      "image": "placeholder",
+      "image": "recipe-photo:shakshuka",
       "ingredients": [
         "3 tablespoons extra virgin olive oil",
         "1 large yellow onion, chopped",
@@ -508,7 +508,7 @@
     {
       "title": "Moroccan Harira",
       "cuisine": "Moroccan",
-      "image": "placeholder",
+      "image": "recipe-photo:moroccan-harira",
       "ingredients": [
         "4 tablespoons extra virgin olive oil",
         "1 large yellow onion, finely chopped",
@@ -545,7 +545,7 @@
     {
       "title": "Fattoush Salad",
       "cuisine": "Levantine",
-      "image": "placeholder",
+      "image": "recipe-photo:fattoush-salad",
       "ingredients": [
         "2 pitas",
         "3 tbsp extra virgin olive oil, for frying",
@@ -578,7 +578,7 @@
     {
       "title": "Tabouli Salad",
       "cuisine": "Levantine",
-      "image": "placeholder",
+      "image": "recipe-photo:tabouli-salad",
       "ingredients": [
         "1/2 cup fine bulgur wheat",
         "Water, for soaking",
@@ -605,7 +605,7 @@
     {
       "title": "Spanakorizo (Greek Spinach Rice)",
       "cuisine": "Greek",
-      "image": "placeholder",
+      "image": "recipe-photo:spanakorizo-greek-spinach-rice",
       "ingredients": [
         "1 cup medium-grain rice",
         "1/4 cup extra virgin olive oil",
@@ -635,7 +635,7 @@
     {
       "title": "Chana Masala",
       "cuisine": "North Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:chana-masala",
       "ingredients": [
         "1 cup dried raw chickpeas",
         "4 cups water, for soaking",
@@ -674,7 +674,7 @@
     {
       "title": "Palak Paneer",
       "cuisine": "North Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:palak-paneer",
       "ingredients": [
         "150 g microbial/vegetarian-rennet or halal-certified paneer (1 1/4 cups)",
         "120 g spinach (4 cups)",
@@ -709,7 +709,7 @@
     {
       "title": "Dal Tadka",
       "cuisine": "North Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:dal-tadka",
       "ingredients": [
         "200 g dried split pigeon pea, 1 cup (200 g) dry toor dal (split pigeon peas)",
         "3 cups water, for cooking dal",
@@ -751,7 +751,7 @@
     {
       "title": "Vegetable Biryani",
       "cuisine": "Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:vegetable-biryani",
       "ingredients": [
         "1 cup aged basmati rice",
         "½ cup onion (1 medium), thinly sliced",
@@ -792,7 +792,7 @@
     {
       "title": "Paneer Tikka Masala",
       "cuisine": "North Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:paneer-tikka-masala",
       "ingredients": [
         "250 g halal-certified paneer, cut into 1-inch cubes",
         "½ cup hung curd",
@@ -839,7 +839,7 @@
     {
       "title": "Punjabi Rajma Masala",
       "cuisine": "North Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:punjabi-rajma-masala",
       "ingredients": [
         "200 g dried kidney bean, 1 cup (200 g) dry kidney beans",
         "4 cups water, for soaking and discarding",
@@ -879,7 +879,7 @@
     {
       "title": "Aloo Gobi",
       "cuisine": "North Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:aloo-gobi",
       "ingredients": [
         "1½ cups potatoes (2 medium), cut into ¾-inch cubes",
         "180 g cauliflower floret, 2 cups (180 g) cauliflower florets, cut to 1½ inches",
@@ -917,7 +917,7 @@
     {
       "title": "Masala Dosa",
       "cuisine": "South Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:masala-dosa",
       "ingredients": [
         "½ cup skinned urad dal",
         "3 tbsp chana dal for batter",
@@ -960,7 +960,7 @@
     {
       "title": "Mushroom Masala Curry",
       "cuisine": "Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:mushroom-masala-curry",
       "ingredients": [
         "300 g mushrooms, stems trimmed and quartered",
         "120 g onion, 1 cup finely chopped onion (120 g)",
@@ -1002,7 +1002,7 @@
     {
       "title": "Bhindi Masala",
       "cuisine": "North Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:bhindi-masala",
       "ingredients": [
         "250 g okra",
         "3 tbsp oil",
@@ -1035,7 +1035,7 @@
     {
       "title": "Indian Chicken Curry",
       "cuisine": "Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:indian-chicken-curry",
       "ingredients": [
         "500 g halal bone-in chicken",
         "3 tbsp oil",
@@ -1071,7 +1071,7 @@
     {
       "title": "Malaysian Chicken Satay",
       "cuisine": "Malaysian",
-      "image": "placeholder",
+      "image": "recipe-photo:malaysian-chicken-satay",
       "ingredients": [
         "2 lb halal boneless skinless chicken breast",
         "1 cucumber, cut into small pieces",
@@ -1102,7 +1102,7 @@
     {
       "title": "Beef Rendang",
       "cuisine": "Malaysian",
-      "image": "placeholder",
+      "image": "recipe-photo:beef-rendang",
       "ingredients": [
         "1 1/2 lb halal boneless beef short ribs, cubed",
         "5 tbsp cooking oil",
@@ -1140,7 +1140,7 @@
     {
       "title": "Nasi Lemak",
       "cuisine": "Malaysian",
-      "image": "placeholder",
+      "image": "recipe-photo:nasi-lemak",
       "ingredients": [
         "2 cups rice",
         "1 1/2 cups water for rice",
@@ -1177,7 +1177,7 @@
     {
       "title": "Roti Canai",
       "cuisine": "Malaysian",
-      "image": "placeholder",
+      "image": "recipe-photo:roti-canai",
       "ingredients": [
         "420 g all-purpose flour, 3 1/2 cups all-purpose flour (420 g; source also lists 14.8 oz)",
         "1 1/2 tsp kosher salt",
@@ -1201,7 +1201,7 @@
     {
       "title": "Malaysian Chicken Curry",
       "cuisine": "Malaysian",
-      "image": "placeholder",
+      "image": "recipe-photo:malaysian-chicken-curry",
       "ingredients": [
         "2 tbsp cooking oil",
         "1/2 onion, diced",
@@ -1228,7 +1228,7 @@
     {
       "title": "Ayam Masak Merah",
       "cuisine": "Malaysian",
-      "image": "placeholder",
+      "image": "recipe-photo:ayam-masak-merah",
       "ingredients": [
         "2 kg halal chicken, cut into pieces (source suggests 2 chickens, each cut into 8 pieces)",
         "Salt to taste",
@@ -1262,7 +1262,7 @@
     {
       "title": "Tandoori Chicken",
       "cuisine": "Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:tandoori-chicken",
       "ingredients": [
         "1 lb halal chicken legs",
         "Oil for basting",
@@ -1291,7 +1291,7 @@
     {
       "title": "Garlic Butter Salmon Kebabs",
       "cuisine": "American",
-      "image": "placeholder",
+      "image": "recipe-photo:garlic-butter-salmon-kebabs",
       "ingredients": [
         "1 1/2 lb salmon",
         "1 tbsp olive oil",
@@ -1316,7 +1316,7 @@
     {
       "title": "Thai Green Chicken Curry",
       "cuisine": "Thai",
-      "image": "placeholder",
+      "image": "recipe-photo:thai-green-chicken-curry",
       "ingredients": [
         "1 1/2 tbsp oil",
         "2 tbsp halal-certified green curry paste",
@@ -1344,7 +1344,7 @@
     {
       "title": "Hummus",
       "cuisine": "Levantine",
-      "image": "placeholder",
+      "image": "recipe-photo:hummus",
       "ingredients": [
         "400 g canned chickpeas (1 can), drained; reserve liquid and about 10 chickpeas",
         "1/4 cup liquid from the canned chickpeas",
@@ -1371,7 +1371,7 @@
     {
       "title": "Malaysian Satay Chicken Curry",
       "cuisine": "Malaysian",
-      "image": "placeholder",
+      "image": "recipe-photo:malaysian-satay-chicken-curry",
       "ingredients": [
         "1 1/2 tsp coriander",
         "1 1/2 tsp ground cumin",
@@ -1410,7 +1410,7 @@
     {
       "title": "Chicken Tikka Masala",
       "cuisine": "Indian",
-      "image": "placeholder",
+      "image": "recipe-photo:chicken-tikka-masala",
       "ingredients": [
         "600 g halal boneless skinless chicken thigh, cut into 3 cm cubes",
         "1/2 cup plain full-fat yoghurt",
@@ -1460,7 +1460,7 @@
     {
       "title": "Nasi Goreng with Chicken",
       "cuisine": "Indonesian",
-      "image": "placeholder",
+      "image": "recipe-photo:nasi-goreng-with-chicken",
       "ingredients": [
         "1 tbsp oil",
         "150 g halal chicken breast, thinly sliced",
@@ -1491,7 +1491,7 @@
     {
       "title": "Chicken Mandi with Yellow Rice",
       "cuisine": "Yemeni",
-      "image": "placeholder",
+      "image": "recipe-photo:chicken-mandi-with-yellow-rice",
       "ingredients": [
         "2 tsp whole coriander seeds",
         "1 tsp whole cloves",
@@ -1532,7 +1532,7 @@
     {
       "title": "Iraqi Dolma",
       "cuisine": "Iraqi",
-      "image": "placeholder",
+      "image": "recipe-photo:iraqi-dolma",
       "ingredients": [
         "1.5 lb halal lean ground beef",
         "4 cups dry medium-grain rice, such as Calrose",
@@ -1573,7 +1573,7 @@
     {
       "title": "Chicken Machboos",
       "cuisine": "Arabian Gulf",
-      "image": "placeholder",
+      "image": "recipe-photo:chicken-machboos",
       "ingredients": [
         "4 halal whole chicken legs, skin-on and bone-in",
         "1/2 cup vegetable oil, for the pot",
@@ -1611,7 +1611,7 @@
     {
       "title": "Musakhan Rolls",
       "cuisine": "Palestinian",
-      "image": "placeholder",
+      "image": "recipe-photo:musakhan-rolls",
       "ingredients": [
         "3 full halal chicken legs, skin on and bone in",
         "2 yellow onions",
@@ -1643,7 +1643,7 @@
     {
       "title": "Shish Barak (Beef Dumplings in Yogurt Sauce)",
       "cuisine": "Lebanese",
-      "image": "placeholder",
+      "image": "recipe-photo:shish-barak-beef-dumplings-in-yogurt-sauce",
       "ingredients": [
         "360 g all-purpose flour",
         "1 tbsp granulated sugar",
@@ -1681,7 +1681,7 @@
     {
       "title": "Moroccan Meatball Tagine in Tomato Sauce (Kefta Mkaoura)",
       "cuisine": "Moroccan",
-      "image": "placeholder",
+      "image": "recipe-photo:moroccan-meatball-tagine-in-tomato-sauce-kefta-mkaoura",
       "ingredients": [
         "1 lb halal ground beef",
         "1 small onion, finely chopped",
@@ -1725,7 +1725,7 @@
     {
       "title": "Maafe (West African Peanut Soup with Beef)",
       "cuisine": "West African",
-      "image": "placeholder",
+      "image": "recipe-photo:maafe-west-african-peanut-soup-with-beef",
       "ingredients": [
         "2 lb halal beef",
         "1/4 cup oil",
@@ -1757,7 +1757,7 @@
     {
       "title": "Chicken Pepper Soup",
       "cuisine": "West African",
-      "image": "placeholder",
+      "image": "recipe-photo:chicken-pepper-soup",
       "ingredients": [
         "3 1/2 lb halal chicken, cut into pieces",
         "1 medium onion, sliced",

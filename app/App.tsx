@@ -16,7 +16,7 @@ function Content() {
     return (
       <View style={ui.content}>
         <Text style={ui.title}>Connect to your kitchen</Text>
-        <Text style={ui.text}>Start the local Forkcast backend on port 8000, then try again.</Text>
+        <Text style={ui.text}>Start your configured local Forkcast backend, then try again.</Text>
         <Text accessibilityRole="alert" style={ui.error}>
           {error}
         </Text>

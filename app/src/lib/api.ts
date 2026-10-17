@@ -1,9 +1,10 @@
 import Constants from 'expo-constants';
 
-export const API_URL = (Constants.expoConfig?.extra?.apiUrl || 'http://localhost:8000/api').replace(
-  /\/+$/,
-  '',
-);
+export const API_URL = (
+  process.env.EXPO_PUBLIC_API_URL ||
+  Constants.expoConfig?.extra?.apiUrl ||
+  'http://localhost:8000/api'
+).replace(/\/+$/, '');
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {

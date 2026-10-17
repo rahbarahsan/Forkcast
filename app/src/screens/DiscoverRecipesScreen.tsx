@@ -5,7 +5,7 @@ import { Linking, Text, useWindowDimensions, View } from 'react-native';
 import { RecipeRow, useHousehold } from '../context/HouseholdContext';
 import { api, json } from '../lib/api';
 import { Button, DeleteButton, Field, Page, ui } from '../components/ui';
-import { RecipeArtwork } from '../components/RecipeArtwork';
+import { RecipePhoto } from '../components/RecipePhoto';
 
 export default function DiscoverScreen() {
   const { width } = useWindowDimensions();
@@ -36,6 +36,7 @@ export default function DiscoverScreen() {
   const [provenance, setProvenance] = useState<Partial<RecipeRow>>({});
   const loadForm = (recipe: Partial<RecipeRow>) => {
     setProvenance({
+      image: recipe.image || 'placeholder',
       source_url: recipe.source_url || '',
       source_name: recipe.source_name || '',
       halal_notes: recipe.halal_notes || '',
@@ -192,7 +193,7 @@ export default function DiscoverScreen() {
               key={recipe.id}
               style={[ui.card, { width: width >= 1050 ? '48.6%' : '100%', minWidth: 0 }]}
             >
-              <RecipeArtwork title={recipe.title} cuisine={recipe.cuisine} />
+              <RecipePhoto title={recipe.title} cuisine={recipe.cuisine} image={recipe.image} />
               <Text style={ui.heading}>{recipe.title}</Text>
               <Text style={ui.subtitle}>
                 {suggested.find((s) => s.recipe_id === recipe.id)?.available.length || 0}{' '}
