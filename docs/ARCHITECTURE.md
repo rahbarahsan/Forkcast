@@ -1,86 +1,172 @@
 # Architecture
 
-Forkcast runs as an Expo/React Native app and a local FastAPI service backed by
-SQLite. Core behavior makes no external requests and needs no accounts or keys.
+Forkcast is a single-household application: an Expo client talks to a local
+FastAPI service, which owns a SQLite database. Recipe management, meal planning,
+pantry deductions and recorded-price comparisons run without a cloud account.
+Model providers and public data sources extend those workflows when configured.
 
-## Storage
+## System boundaries
 
-`datasets/catalog.json` contains the shared recipe catalog, preprocessed ingredient
-rows, and canonical ingredient lookup. Startup seeds reference tables idempotently.
-Personal recipes and catalog overrides, pantry items, plans, saved lists, and flyer
-offers live in separate runtime records in `data/local/forkcast.sqlite3`.
+```mermaid
+flowchart LR
+    User[Browser or native client] --> UI[Expo / React Native]
+    UI -->|HTTP JSON| API[FastAPI]
+    API --> DB[(Private SQLite database)]
+    Seed[Versioned recipe dataset] -->|Seed on startup| DB
+    Photos[Bundled recipe photographs] --> UI
+    API -. Optional extraction .-> Models[Subscription CLI or model API]
+    API -. Video import .-> YouTube[Public YouTube metadata / captions]
+    API -. Explicit location search .-> OSM[Nominatim / Overpass]
+```
 
-Runtime storage, SQLite sidecars, credentials, and local collaboration files are
-ignored by Git. There is no automatic path from personal data to the seed dataset.
-Deleting a personal catalog override restores the original reference recipe.
+The client never holds provider API keys. SQLite remains the source of truth for
+household records; there is no automatic upload to the reference dataset or a
+hosted database. Opening a reference photo makes no external request.
 
-SQLite uses transactions, foreign keys, a busy timeout, and WAL. Each operation
-opens and closes its own connection. Application initialization runs in FastAPI's
-lifespan. Tests use isolated databases and verify persistence after restart.
+| Component                                                                                  | Responsibility                                                                   |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| [`app/src/context/HouseholdContext.tsx`](../app/src/context/HouseholdContext.tsx)          | Shared client view of recipes, pantry, plans and history; refresh after writes   |
+| [`app/src/lib/api.ts`](../app/src/lib/api.ts)                                              | Configured API address, JSON requests and error handling                         |
+| [`backend/main.py`](../backend/main.py)                                                    | HTTP routes, input validation, household operations and browser-origin policy    |
+| [`backend/database.py`](../backend/database.py)                                            | Schema initialization, reference refresh and transactional record persistence    |
+| [`backend/groceries.py`](../backend/groceries.py)                                          | Ingredient interpretation, source checks, totals, pantry deductions and evidence |
+| [`backend/assistant.py`](../backend/assistant.py)                                          | Typed LangGraph planning, task previews and atomic Apply/cancel                  |
+| [`backend/providers.py`](../backend/providers.py)                                          | Optional model adapters, output schemas and isolated subscription requests       |
+| [`backend/youtube.py`](../backend/youtube.py), [`backend/stores.py`](../backend/stores.py) | Bounded source fetching and attributed public results                            |
 
-## Request path
+## Data model and lifecycle
 
-The frontend uses the local HTTP API for all persistent household data. React
-context holds a shared view of recipes, pantry, plans, and history. Writes refresh
-that view; failures are shown beside the action. Grocery requests are cancelled
-when inputs change, preventing stale responses from replacing a newer selection.
+The default database is `data/local/forkcast.sqlite3`; `FORKCAST_DATABASE` selects
+another path. Each operation opens a connection with foreign keys enabled and a
+15-second busy timeout. Startup enables WAL and seeds the reference tables inside
+the FastAPI lifespan. Transactions close before the connection is released.
 
-Ingredient aggregation uses validated prepared rows when they match an original
-line exactly. Invalid spreadsheet quantities fall back to the deterministic
-parser. The lookup resolves synonyms and plurals. Compatible units are combined;
-weight, volume, and counts remain separate because density is ingredient-specific.
-Explicit compatible pantry quantities are subtracted using decimal arithmetic.
-A blank pantry quantity means available in sufficient quantity. Unreadable or
-incompatible stock measures remain on the list with a review warning.
+| Table                | Key          | Contents                                                   |
+| -------------------- | ------------ | ---------------------------------------------------------- |
+| `migrations`         | `version`    | Applied schema/catalog migrations                          |
+| `catalog_recipes`    | `id`         | Versioned reference recipe JSON                            |
+| `parsed_ingredients` | `recipe_id`  | Reviewed ingredient rows; foreign key to `catalog_recipes` |
+| `ingredient_lookup`  | `canonical`  | Ingredient aliases and grocery categories                  |
+| `records`            | `(kind, id)` | Private JSON records with a creation timestamp             |
 
-The grocery pipeline uses reviewed prepared rows for reference recipes. Personal
-recipes can use semantic interpretation through the selected subscription/API.
-Every ingredient index must be covered exactly once, explicit measures are
-checked, and source product forms are retained. Arithmetic is local. Interpretation
-results are cached by content, provider, model and pipeline version in SQLite.
-Every purchase item retains its recipe lines, scaling and measure provenance.
-An optional TypeSafe Jev gate adds typed, confidence-based review flags.
+Record kinds include recipes, pantry stock, plans, saved grocery lists, offers,
+conversations, assistant tasks, interpretation caches and store-search caches.
+Recipe IDs inside plans are logical JSON references validated by the API.
 
-Offer comparison matches canonical ingredients and comparable units, excludes
-expired offers and other currencies, and selects the lowest whole-pack cost for
-each item. It reports unpriced items separately and excludes travel costs and
-mixed-size pack combinations.
+`datasets/catalog.json` is committed reference data. Initialization refreshes its
+tables while retaining private records. A personal edit of a reference recipe is
+stored as an override under the same ID. Reads combine the catalog and overrides;
+deleting an override reveals the original. Removing a custom recipe also removes
+its references from plans. Recipes from a retired catalog that an existing plan
+uses are preserved as explicitly unreviewed personal records.
 
-## Optional extraction
+Photographs use static Metro imports generated from
+`datasets/photo-credits.json`. This bundles the assets for web and native exports
+and keeps the photographer/license information attached to each reference image.
 
-Recipe Scout, photo inventory, and flyer extraction use a configured provider
-only after a user requests extraction. OpenAI, Anthropic, and Google API keys stay
-on the server. Codex and Claude modes use an installed, authenticated CLI with API
-key environment variables removed. Temporary extraction files are isolated under
-ignored runtime storage and removed after completion.
+## From recipes to a shopping list
 
-Extraction has a timeout and a concurrency limit. Submitted material is treated as
-data, tools are restricted, responses are validated against application schemas,
-and results are previews. Persistence always requires a separate save action.
-The default provider is disabled. A failed provider cannot disable local workflows.
+```mermaid
+flowchart TD
+    Selection[Recipe selection or meal plans] --> Lines[Original ingredient lines]
+    Lines --> Prepared{Exact reviewed catalog match?}
+    Prepared -->|Yes| Measures[Validated measures and food forms]
+    Prepared -->|No| Interpret[Configured model or local parser]
+    Interpret --> Guard[Check line coverage, explicit amounts and food forms]
+    Guard --> Measures
+    Measures --> Canonical[Canonical names and compatible units]
+    Canonical --> Totals[Decimal totals and requested multipliers]
+    Pantry[Recorded pantry quantities] --> Deduct[Subtract compatible stock once]
+    Totals --> Deduct
+    Deduct --> List[Aisle groups, recipe evidence and review warnings]
+    List --> Offers[Comparable offers and whole-pack costs]
+```
 
-YouTube import accepts only recognized video URL forms and fetches public
-descriptions/captions without downloading media or using cookies. Source URLs,
-creator names and extraction warnings accompany the editable preview. Network
-requests have time/size bounds; pasted transcripts support blocked videos.
+Reviewed catalog rows are authoritative when their raw text matches the current
+recipe line. A personal edit therefore uses its current ingredients rather than
+stale prepared rows. Model interpretation must cover every ingredient index once,
+preserve explicit quantities and retain distinctions such as raw/cooked,
+fresh/dried and meat cuts. Cached interpretations are keyed by ingredient content,
+provider, model and pipeline version. Optional TypeSafe Jev review adds uncertainty
+flags at the interpretation boundary.
 
-The kitchen assistant uses a bounded LangGraph plan/resolve workflow and typed
-allowlisted tools. Conversation and pending writes stay in ignored SQLite records.
-Task application revalidates the kitchen fingerprint, expires previews after an
-hour, and applies all changes in one immediate transaction. Completed/cancelled
-tasks cannot apply twice. The graph disables LangSmith tracing and has no shell
-or arbitrary network tool. Providers remain isolated from application files.
+Arithmetic stays local. Weight, volume and counts remain separate; the app does
+not infer density, can weights or lemon yields. Measured stock is deducted only
+with compatible units. An empty stock quantity means sufficient supply. Unknown
+amounts and incompatible stock remain visible for review. Purchase items retain
+the originating recipe lines and applied multipliers.
 
-Store searches use an explicit user location, rate-limited Nominatim geocoding,
-bounded Overpass queries with fallback, and a one-day private cache. OpenStreetMap
-evidence never implies stock, price, opening-hours or halal certification. Saved
-offer ranking prefers basket coverage before comparable whole-pack subtotal.
+Offer comparison excludes expired records and other currencies, rounds purchases
+up to whole packs, and reports unpriced lines separately. It does not optimize
+travel, combine multiple pack sizes or establish current retailer stock.
 
-## Deployment boundary
+## Model requests and assistant changes
 
-The default installation is one household on a trusted computer. Start the API
-bound to `127.0.0.1`. Browser origins are explicitly allowed and untrusted browser
-writes are rejected. This is not a public multi-tenant deployment: exposing it
-requires a separately designed authentication layer, TLS, and backup policy.
-Native devices on a trusted LAN need an explicit bind address, API URL, and allowed
-browser origin where applicable.
+The default provider is disabled. OpenAI, Anthropic and Google adapters use server
+environment keys. Codex and Claude use the operator's signed-in local CLI;
+API-key variables are removed from those child processes. Requests use isolated
+temporary directories, disabled tools, a timeout and one model request at a time
+per server process. Structured results are validated before the API returns them.
+
+Recipe, pantry and flyer extraction return previews. The user saves reviewed
+data through the normal household endpoints. Grocery interpretation can run in
+automatic, local or model mode; it receives the selected recipe ingredients.
+Assistant requests include relevant kitchen state and recent conversation.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant App
+    participant Graph as LangGraph planner/resolver
+    participant DB as SQLite
+    User->>App: Request a kitchen task
+    App->>Graph: Message and household context
+    Graph->>Graph: Validate typed tools and resolve reads
+    Graph->>DB: Save conversation and pending writes
+    Graph-->>App: Proposed changes and results
+    App-->>User: Review / Apply / Discard
+    User->>App: Apply
+    App->>DB: Recheck expiry and kitchen fingerprint
+    DB->>DB: Apply all writes in one immediate transaction
+    DB-->>App: Persisted outcome
+```
+
+The tool set covers pantry additions, meal plans, groceries, offer comparisons,
+YouTube import and explicitly requested store lookup. It does not expose a shell,
+arbitrary URL browsing, ordering or record deletion. Pending tasks expire after
+one hour and fail if the kitchen changed. Applied or cancelled tasks are
+idempotent. LangSmith tracing is disabled in the workflow.
+
+## External sources
+
+YouTube import accepts recognized video URL forms and fetches available public
+descriptions/captions. It does not download the video or use account cookies.
+Unavailable or blocked content can be supplied as pasted text. Source links,
+creator information and extraction warnings accompany the preview.
+
+Store lookup sends an explicitly supplied location to Nominatim and Overpass.
+Requests have size/time limits and bounded fallbacks; results are cached privately
+for one day and attributed to OpenStreetMap. Distance is a straight-line estimate.
+Map tags do not establish prices, stock, opening hours or halal certification.
+
+## Deployment and recovery
+
+The supported boundary is one household on a trusted computer/network. The API
+defaults to `127.0.0.1`. `FORKCAST_ORIGINS` controls browser origins, including a
+write-origin check. CORS is not authentication: internet deployment requires an
+authentication layer, TLS and an operational backup policy.
+
+A browser client currently needs access to the local API to load household data.
+Grocery checkoffs persist on the device. A responsive phone layout and a native
+JavaScript bundle do not establish offline phone support or a tested device build.
+
+`scripts/backup.py` uses SQLite's backup API, including committed WAL transactions,
+and refuses to overwrite a destination. To recover, stop the backend and point
+`FORKCAST_DATABASE` at a verified copy, keeping the previous database until the
+restored household has been checked. Runtime databases, sidecars, credentials
+and extraction files remain outside version control.
+
+Backend tests use disposable databases and block external HTTP. Browser tests
+cover household flows on desktop and phone layouts; provider/network fixtures
+keep them repeatable. Separate optional CLI checks exercise actual subscriptions
+and source fetching. See [Contributing](../CONTRIBUTING.md) for the commands.

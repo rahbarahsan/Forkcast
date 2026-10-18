@@ -100,6 +100,8 @@ test('recipe import requires save and personal deletion requires confirmation', 
 });
 
 test('review pantry text and record a comparable flyer offer', async ({ page, request }) => {
+  const pantry = await (await request.get('http://localhost:8000/api/pantry')).json();
+  const flourCount = pantry.filter((item: { name: string }) => item.name === 'flour').length;
   const recipe = await request.post('http://localhost:8000/api/recipes', {
     data: { title: 'Flyer test rice', ingredients: ['500 g rice'], instructions: 'Cook rice.' },
   });
@@ -113,7 +115,7 @@ test('review pantry text and record a comparable flyer offer', async ({ page, re
   await page.getByRole('button', { name: 'Preview pantry scan', exact: true }).click();
   await expect(page.getByLabel('Scanned ingredient 1', { exact: true })).toHaveValue('flour');
   await page.getByRole('button', { name: 'Add reviewed pantry items', exact: true }).click();
-  await expect(page.getByText('flour', { exact: true })).toBeVisible();
+  await expect(page.getByText('flour', { exact: true })).toHaveCount(flourCount + 1);
   await page.getByRole('tab', { name: /Tools/ }).click();
   await page.getByLabel('Offer ingredient', { exact: true }).fill('rice');
   await page.getByLabel('Store', { exact: true }).fill('Local market');
