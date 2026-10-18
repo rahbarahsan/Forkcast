@@ -1,86 +1,55 @@
 # Forkcast
 
-Turn a week of recipes into one sensible shopping list.
+Plan meals, use what is in your pantry, and turn recipes into one shopping list.
+Forkcast runs locally with SQLite. AI can help import recipes, read pantry notes
+and flyers, and prepare kitchen tasks for review.
 
-[![Forkcast walkthrough: recipe photos, meal planning, pantry-aware groceries, video imports and reviewed assistant actions](docs/forkcast-demo.gif)](docs/forkcast-walkthrough.mp4)
+[![Forkcast product overview: recipes, AI-assisted planning and pantry-aware shopping](docs/forkcast-demo.gif)](docs/forkcast-overview.mp4)
 
-[Watch the full captioned walkthrough (MP4)](docs/forkcast-walkthrough.mp4)
-· [Chapters, transcript and recording details](docs/WALKTHROUGH.md)
+[Watch the product overview (2:48)](docs/forkcast-overview.mp4) ·
+[Follow the complete kitchen walkthrough (14:38)](docs/forkcast-walkthrough.mp4)
 
-Recorded in the current app with an example household. Click the animated preview
-for the full walkthrough, including the compact phone layout.
+Both videos include narration. The walkthrough follows an example household
+from a Sunday pantry check to a meal plan and shopping trip. Demonstration flyer
+prices are fictional; model results and mapped stores come from the running app.
+English captions: [overview](docs/forkcast-overview.vtt) ·
+[walkthrough](docs/forkcast-walkthrough.vtt).
 
-Forkcast runs on your computer with a local SQLite database. No Supabase project,
-cloud account, or model provider is required for recipes, planning, pantry,
-groceries, history, or recorded flyer-price comparisons. After installing the
-software, these features work without an internet connection.
+## Features
 
-## What you can do
+| Workflow          | What you can do                                                                                                                                |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Recipes           | Browse 50 sourced halal adaptations with local photographs; add and edit personal recipes; import text, JSON or YouTube descriptions/captions. |
+| Pantry            | Record stock quantities, review extracted text/images, and find recipes that use what you have.                                                |
+| Planning          | Create and share meal plans, or ask the assistant to prepare a plan and review it before applying.                                             |
+| Shopping          | Combine compatible ingredient quantities, deduct pantry stock, inspect recipe evidence, check off items, export lists and keep history.        |
+| Prices and stores | Record flyer offers, compare whole-pack costs, identify unpriced items and find mapped grocery stores near a chosen location.                  |
+| Optional AI       | Use a signed-in Codex/Claude CLI or OpenAI, Anthropic or Google API. Extraction produces editable previews; assistant changes require Apply.   |
 
-- Browse the bundled recipes, create your own, and edit personal copies.
-- Import recipe text, JSON, or schema.org Recipe data with a preview before save.
-- Build meal plans and share them as text.
-- Track pantry ingredients and rank recipes by what you already have.
-- Combine ingredients, keep compatible quantities together, and group by aisle.
-- Check off groceries, inspect ingredient names and recipe usage, export a list,
-  and keep shopping history.
-- Review pasted pantry/OCR text and add the selected items in one transaction.
-- Record flyer offers and compare whole-pack prices with expiry/currency checks.
-- Optionally extract recipes from pasted video transcripts, pantry photos, and
-  flyer images using a configured subscription CLI or API provider.
-- Fetch a YouTube video's public description/captions, interpret its recipe, and
-  review the result before saving. Pasted transcripts work when access is blocked.
-- Use model-assisted grocery interpretation with per-recipe evidence, exact
-  quantity deductions, compatible units, and a persistent private result cache.
-- Find mapped grocery stores near a location you enter and rank recorded offers
-  by basket coverage and whole-pack cost.
-- Ask the kitchen assistant to prepare meal plans, pantry updates, shopping lists,
-  price comparisons, or video imports. Review changes and apply them once.
+The interface supports desktop and phone-sized browsers. Recipes, plans, pantry,
+shopping history and recorded-offer comparisons need no cloud account. Model
+requests, video fetching and map searches need access to their respective services.
 
-The interface includes desktop navigation, a compact phone layout, cuisine filters,
-recipe details, and motion that respects the device's reduced-motion preference.
+## Run locally
 
-In **Chat → Model settings**, select your signed-in subscription CLI or a provider.
-Only provider/model names are saved locally; API keys stay in server environment
-variables. Explicit FORKCAST_MODEL_PROVIDER environment configuration takes precedence.
-The assistant sends the relevant recipe catalog, pantry, plans and recent
-conversation to your chosen provider. Interpretation sends the selected recipe.
+Requirements: Python 3.11+, Node 22.13+ (22.x) or 24.3+ (24.x), and npm.
 
-For optional typed ingredient review using TypeSafe Jev, set
-FORKCAST_DECISION_PROVIDER=jev and TYPESAFE_API_KEY; optionally pin
-FORKCAST_DECISION_MODEL (default jev-latest). Jev flags uncertain source-to-item
-matches for review; it does not generate recipes or replace arithmetic.
-This independent decision adapter is optional and tested with protocol mocks.
-See [TypeSafe's API](https://docs.typesafe.ai/api).
-
-The chatbot uses a bounded LangGraph workflow with local SQLite conversations and
-task previews. Apply is atomic and idempotent. A preview expires after one hour
-and is rejected if the kitchen has changed. Its tools cover kitchen tasks only.
-LangSmith tracing is disabled for this workflow.
-
-Nearby-store search uses Nominatim and Overpass only after an explicit location
-search, caches results for a day, and attributes OpenStreetMap contributors.
-Distances are straight-line estimates. Listings do not establish product stock,
-halal certification or current prices. Offer recommendations work offline and
-rank complete coverage before partial subtotals; prices come from your records.
-
-## Start locally
-
-Use Python 3.11+ and Node 22.13+ (or a supported newer LTS). Open two terminals.
-
-Backend:
+Create a backend environment:
 
 ```sh
 cd backend
-python -m venv venv
-# Windows PowerShell:
-.\venv\Scripts\Activate.ps1
-# macOS/Linux instead: source venv/bin/activate
+python -m venv .venv
+```
+
+Activate it with `source .venv/bin/activate` on macOS/Linux, or
+`.\.venv\Scripts\Activate.ps1` in Windows PowerShell. Then start the API:
+
+```sh
 python -m pip install -r requirements.txt
 python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-Frontend:
+In a second terminal:
 
 ```sh
 cd app
@@ -88,118 +57,70 @@ npm ci
 npm run web
 ```
 
-Open the address printed by Expo, normally `http://localhost:8081`.
-No environment files are needed. The API seeds the database automatically.
-`GET http://localhost:8000/api/health` checks the backend; `/docs` opens the API
-reference. `npm run build:web` creates a static web export in `app/dist`.
+Open the address printed by Expo, usually `http://localhost:8081`.
+The backend creates and seeds the local database on startup. No environment file
+is needed for the default setup. The API exposes
+[interactive endpoint documentation](http://localhost:8000/docs) and
+[a health check](http://localhost:8000/api/health).
 
-For a phone on your trusted LAN, set `EXPO_PUBLIC_API_URL` to your computer's
-LAN address plus `:8000/api`, then start the backend bound to that interface.
-Configure `FORKCAST_ORIGINS` if using a different browser origin. This is a
-single-household application; public hosting needs authentication and TLS.
+`npm run build:web` exports the client to `app/dist`. For a phone on a trusted LAN,
+set `EXPO_PUBLIC_API_URL` to the computer's LAN address plus `:8000/api`, bind the
+backend to that interface, and allow the browser origin with `FORKCAST_ORIGINS`.
+This installation has no user authentication; do not expose it directly to the
+public internet. The current browser app needs access to the local API to load
+household data.
 
-## Your data and the shared catalog
+## Configure AI
 
-| Data | Location | Committed? |
-|---|---|---|
-| Reference recipes, parsed ingredients, lookup | `datasets/catalog.json` | Yes |
-| Personal recipes, overrides, pantry, plans, offers, history | `data/local/forkcast.sqlite3` | No |
-| Runtime sidecars, extraction scratch files, browser output | Ignored runtime directories | No |
-| Environment files and provider credentials | Local environment | No |
+Open **Chat → Model settings** to choose an available provider, or set these
+variables on the backend before starting it:
 
-The catalog includes 50 halal recipe adaptations from nine original publishers,
-933 prepared ingredient rows, and 239 lookup entries. [Browse the source index](datasets/README.md).
-Startup refreshes reference data
-without touching personal records. Changes made through the app never update
-`datasets/catalog.json`. Deleting a personal override restores the reference
-recipe. A database path can be overridden with `FORKCAST_DATABASE`.
+| Mode                | `FORKCAST_MODEL_PROVIDER` | Configuration                                          |
+| ------------------- | ------------------------- | ------------------------------------------------------ |
+| Codex subscription  | `codex`                   | Installed Codex CLI, signed in with your account       |
+| Claude subscription | `claude`                  | Installed Claude Code CLI, signed in with your account |
+| OpenAI API          | `openai`                  | `OPENAI_API_KEY` and `FORKCAST_MODEL`                  |
+| Anthropic API       | `anthropic`               | `ANTHROPIC_API_KEY` and `FORKCAST_MODEL`               |
+| Google API          | `google`                  | `GOOGLE_API_KEY` and `FORKCAST_MODEL`                  |
 
-Back up the local database with `python scripts/backup.py /path/to/backup.sqlite3`.
-Keep backups private: they contain your recipes and household data.
+The default is `none`; CLI modes can use their configured default model. An
+explicit backend `FORKCAST_MODEL_PROVIDER` overrides the in-app selection.
+Codex and the vision API adapters accept JPEG, PNG and WebP images up to 5 MB;
+Claude CLI accepts text.
 
-## Optional model extraction
+Submitted extraction material goes to the chosen provider. The assistant also
+receives relevant recipes, pantry, plans and recent conversation. API keys stay
+on the server; never put them in `EXPO_PUBLIC_` variables. Source content and
+model output need review before saving. Optional TypeSafe Jev ingredient review
+is configured with `FORKCAST_DECISION_PROVIDER=jev` and `TYPESAFE_API_KEY`.
 
-The default provider is `none`. Local text import and all core features continue
-to work when extraction is disabled or unavailable.
+## Data and backups
 
-Set server environment variables before starting the backend:
+Household records live in `data/local/forkcast.sqlite3`, or the path selected by
+`FORKCAST_DATABASE`. Personal recipes, edits, plans, pantry, conversations and
+offers stay separate from the committed reference catalog. Startup updates
+reference data while preserving household records.
 
-| Mode | `FORKCAST_MODEL_PROVIDER` | Other configuration |
-|---|---|---|
-| Codex subscription CLI | `codex` | Install Codex and sign in with your own account |
-| Claude subscription CLI | `claude` | Install Claude Code and sign in with your own account |
-| OpenAI API | `openai` | `OPENAI_API_KEY`, `FORKCAST_MODEL` |
-| Anthropic API | `anthropic` | `ANTHROPIC_API_KEY`, `FORKCAST_MODEL` |
-| Google Gemini API | `google` | `GOOGLE_API_KEY`, `FORKCAST_MODEL` |
-
-`FORKCAST_MODEL` is optional for CLI modes and uses the operator's CLI default
-when omitted. Model availability and subscription limits come from your provider.
-The application does not copy login tokens or turn a subscription into an API key.
-API credentials stay on the server; never put them in an `EXPO_PUBLIC_` variable.
-
-Codex and API modes accept JPEG, PNG, and WebP images up to 5 MB. Claude CLI mode
-accepts pasted text. YouTube import fetches public descriptions and available
-captions without downloading media or bypassing access controls. Results are validated previews
-and require a separate save action. Images and submitted text go to the selected
-provider only after you request extraction.
-
-A live subscription smoke check is optional:
+Create a consistent backup with a new destination path:
 
 ```sh
-python scripts/check_model.py --provider codex
-# or --provider claude
-python scripts/check_intelligence.py --provider codex --youtube
-python scripts/evaluate_groceries.py --provider claude
-python scripts/validate_catalog.py
+python scripts/backup.py /path/to/household-backup.sqlite3
 ```
 
-Provider integration follows the documented [Codex noninteractive interface](https://learn.chatgpt.com/docs/non-interactive-mode)
-and [Claude programmatic interface](https://code.claude.com/docs/en/headless).
+Keep backups private. Databases, credentials and runtime files are ignored by Git.
+Recipe sources and image credits are documented in [the dataset guide](datasets/README.md).
 
-## Checks
+## Development
 
-```sh
-cd backend
-python -m pip install -r requirements-dev.txt
-python -m ruff check . ../scripts
-python -m pytest -q
+- [Architecture](docs/ARCHITECTURE.md): components, storage model, grocery pipeline and assistant transactions.
+- [Contributing](CONTRIBUTING.md): development checks, catalog changes and dependency maintenance.
+- [Dataset and attribution](datasets/README.md): recipe sources and photograph licenses.
 
-cd ../app
-npm ci
-npm run typecheck
-npm run lint
-npm run build:web
-npx playwright install chromium
-npm run test:e2e
-```
-
-Backend tests use isolated SQLite databases and block external HTTP. Browser
-tests cover desktop and phone layouts, persistent household flows, imports,
-exports, and offer comparisons. They create ignored test databases and use ports
-8000 and 8081, which must be free. Set `FORKCAST_TEST_PYTHON` if your Python
-interpreter differs from the active shell's `python`.
-
-The app uses Expo SDK 58, React 19.3, and React Native 0.88. Dependency
-constraints and the npm lockfile record the verified versions. See
-[dependency notes](docs/DEPENDENCIES.md) for the remaining upstream advisories.
-
-## Behavior and limits
-
-Compatible measured pantry quantities are subtracted; blank quantities mean you
-have enough. Incompatible stock units remain for review.
-Weight, volume, and counts stay separate rather than guessing food densities.
-Spoons/cups use 5/15/240 ml conversions. Ambiguous preparation text may need a
-manual recipe edit. These lists are shopping aids, not nutritional calculations.
-
-Price comparison uses only recorded offers in the requested currency. It chooses
-the lowest whole-pack cost per ingredient with comparable units, reports missing
-prices, and excludes travel costs and combinations of different pack sizes.
-No live store prices are invented or fetched automatically. Nearby mapped stores
-are a separate location search; map data and public source fetching need internet.
-
-See [architecture](docs/ARCHITECTURE.md) for storage and request details and
-[the reference dataset](datasets/README.md) for catalog provenance.
+The app uses Expo 58, React 19.3, React Native 0.88, FastAPI and SQLite.
+The assistant uses LangGraph. Native builds need their platform toolchains;
+browser responsiveness and bundle export do not establish device compatibility.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+[MIT](LICENSE) for the application code. Bundled photographs retain the licenses
+listed in [their credit manifest](datasets/photo-credits.json).
