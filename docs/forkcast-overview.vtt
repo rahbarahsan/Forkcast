@@ -1,144 +1,161 @@
 WEBVTT
 
 1
-00:00:00.400 --> 00:00:05.904
-Forkcast brings recipes, meal planning, pantry
-stock, and shopping into one
+00:00:00.400 --> 00:00:05.733
+Forkcast brings recipes, meal planning,
+pantry stock, and shopping into
 
 2
-00:00:05.904 --> 00:00:11.409
-local kitchen. Here is the workflow, with
-practical artificial intelligence features
+00:00:05.822 --> 00:00:10.444
+one local kitchen. Here is the
+workflow, with practical artificial
 
 3
-00:00:11.409 --> 00:00:15.412
-and a chance to review changes before saving.
+00:00:10.533 --> 00:00:15.156
+intelligence features and a chance
+to review changes before saving.
 
 4
-00:00:21.400 --> 00:00:26.910
-Start with fifty sourced recipes, real
-photographs, and halal notes. Search
+00:00:21.400 --> 00:00:25.222
+Start with fifty sourced
+recipes and real photographs.
 
 5
-00:00:26.910 --> 00:00:32.420
-the collection, read the ingredients, and check
-the original publisher. You
+00:00:25.667 --> 00:00:29.400
+Search the collection, read the
+ingredients, and check the original
 
 6
-00:00:32.420 --> 00:00:37.931
-can also keep your own family recipes in the
-private household
+00:00:29.489 --> 00:00:33.133
+publisher. You can also keep
+your own family recipes in
 
 7
-00:00:37.931 --> 00:00:38.432
-database.
+00:00:33.222 --> 00:00:35.444
+the private household database.
 
 8
-00:00:42.400 --> 00:00:46.665
-Read a pantry note from an image using your
-configured model.
+00:00:42.400 --> 00:00:45.689
+Read a pantry note from an
+image using your configured
 
 9
-00:00:46.665 --> 00:00:50.931
-The extracted stock is a preview. Check the
-names and amounts,
+00:00:45.778 --> 00:00:49.422
+model. The extracted stock is a preview.
 
 10
-00:00:50.931 --> 00:00:55.196
-then save the reviewed items so the shopping
-list can use
+00:00:49.511 --> 00:00:52.978
+Check the names and amounts,
+then save the reviewed items
 
 11
-00:00:55.196 --> 00:00:56.747
-what you already have.
+00:00:53.067 --> 00:00:56.267
+so the shopping list can
+use what you already have.
 
 12
-00:01:03.400 --> 00:01:08.472
-Bring in a cooking video from its available
-description or captions.
+00:01:03.360 --> 00:01:06.560
+Bring in a cooking video from
+its available description or
 
 13
-00:01:08.472 --> 00:01:13.544
-The model prepares an editable recipe, keeping
-the original link. Review
+00:01:06.649 --> 00:01:11.538
+captions. The model prepares an
+editable recipe, keeping the original
 
 14
-00:01:13.544 --> 00:01:18.616
-the ingredients, make your own changes, and save
-it to your
+00:01:11.627 --> 00:01:15.804
+link. Review the ingredients,
+make your own changes, and save
 
 15
-00:01:18.616 --> 00:01:19.077
-collection.
+00:01:15.893 --> 00:01:17.316
+it to your collection.
 
 16
-00:01:24.400 --> 00:01:29.052
-Ask the assistant to prepare a weekly plan using
-your saved
+00:01:24.360 --> 00:01:27.738
+Ask the assistant to prepare
+a weekly plan using your
 
 17
-00:01:29.052 --> 00:01:33.704
-recipes. Read the proposed changes before
-applying them. The plan is
+00:01:27.916 --> 00:01:32.716
+saved recipes. Read the proposed
+changes before applying them.
 
 18
-00:01:33.704 --> 00:01:38.356
-saved only after you choose Apply, and it
-remains editable in
+00:01:32.982 --> 00:01:36.804
+The plan is saved only
+after you choose Apply, and
 
 19
-00:01:38.356 --> 00:01:39.202
-the planner.
+00:01:36.982 --> 00:01:39.293
+it remains editable in the planner.
 
 20
-00:01:45.400 --> 00:01:51.101
-Turn the active plan into an aisle-grouped
-shopping list. Pantry amounts
+00:01:45.360 --> 00:01:49.360
+Turn the active plan into an
+aisle-grouped shopping list.
 
 21
-00:01:51.101 --> 00:01:56.802
-are deducted, model interpretation can clarify
-ingredient names, and recipe evidence
+00:01:49.627 --> 00:01:55.316
+Pantry amounts are deducted, model
+interpretation can clarify ingredient names,
 
 22
-00:01:56.802 --> 00:02:02.503
-shows where the quantities came from. Uncertain
-amounts remain visible for
+00:01:55.404 --> 00:01:59.316
+and recipe evidence shows
+where the quantities came from.
 
 23
-00:02:02.503 --> 00:02:03.021
-review.
+00:01:59.449 --> 00:02:02.427
+Uncertain amounts remain visible for review.
 
 24
-00:02:06.400 --> 00:02:12.683
-Review extracted flyer offers and compare whole-
-pack costs, including any unpriced
+00:02:06.400 --> 00:02:10.311
+Read a real grocery flyer with
+your configured model, then
 
 25
-00:02:12.683 --> 00:02:18.965
-items. These prices are illustrative examples. A
-separate location search shows
+00:02:10.489 --> 00:02:12.711
+review the offers before saving.
 
 26
-00:02:18.965 --> 00:02:24.677
-actual mapped stores, without inventing stock or
-current retailer prices.
+00:02:13.244 --> 00:02:18.222
+Compare whole-pack costs and see
+which ingredients remain unpriced.
 
 27
-00:02:27.400 --> 00:02:32.780
-Use the responsive phone layout to check off
-groceries, export the
+00:02:18.267 --> 00:02:21.333
+The recorded prices have expiry dates.
 
 28
-00:02:32.780 --> 00:02:38.159
-list, and keep a shopping history. Everything
-saved belongs to your
+00:02:21.422 --> 00:02:26.044
+A separate map search finds actual
+nearby stores, without promising
 
 29
-00:02:38.159 --> 00:02:43.539
-local household. For the complete step-by-step
-session, follow the longer walkthrough
+00:02:26.133 --> 00:02:28.178
+stock at a particular branch.
 
 30
-00:02:43.539 --> 00:02:44.517
-linked below.
+00:02:30.040 --> 00:02:34.040
+Use the responsive phone layout
+to check off groceries, export
+
+31
+00:02:34.084 --> 00:02:36.707
+the list, and keep a shopping history.
+
+32
+00:02:36.796 --> 00:02:40.351
+Everything saved belongs
+to your local household.
+
+33
+00:02:40.396 --> 00:02:44.707
+For the complete step-by-step session,
+follow the longer walkthrough linked
+
+34
+00:02:44.973 --> 00:02:45.507
+below.

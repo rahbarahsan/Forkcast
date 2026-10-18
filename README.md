@@ -6,12 +6,16 @@ and flyers, and prepare kitchen tasks for review.
 
 [![Forkcast product overview: recipes, AI-assisted planning and pantry-aware shopping](docs/forkcast-demo.gif)](docs/forkcast-overview.mp4)
 
-[Watch the product overview (2:48)](docs/forkcast-overview.mp4) ·
-[Follow the complete kitchen walkthrough (14:38)](docs/forkcast-walkthrough.mp4)
+[Watch the product overview — elevenlabs.io (2:51)](docs/forkcast-overview.mp4) ·
+[Follow the complete kitchen walkthrough — elevenlabs.io (14:35)](docs/forkcast-walkthrough.mp4)
 
 Both videos include narration. The walkthrough follows an example household
-from a Sunday pantry check to a meal plan and shopping trip. Demonstration flyer
-prices are fictional; model results and mapped stores come from the running app.
+from a Sunday pantry check to a meal plan and shopping trip, with the mobile
+shopping flow shown inside a phone frame. The flyer scan uses
+[FreshCo's Ontario flyer](https://flipp.com/en-ca/scarborough-on/flyer/8180944-freshco-diwali-low-prices),
+valid October 15–November 11, 2026, alongside a Food Basics offer valid through
+October 21. Recorded offers include expiry dates; model results and mapped stores
+come from the running app. Phone footage demonstrates the responsive browser app.
 English captions: [overview](docs/forkcast-overview.vtt) ·
 [walkthrough](docs/forkcast-walkthrough.vtt).
 
@@ -124,3 +128,5 @@ browser responsiveness and bundle export do not establish device compatibility.
 
 [MIT](LICENSE) for the application code. Bundled photographs retain the licenses
 listed in [their credit manifest](datasets/photo-credits.json).
+The video narration is credited to elevenlabs.io and is shared for noncommercial
+use under [ElevenLabs' publication terms](https://help.elevenlabs.io/hc/en-us/articles/13313564601361-Can-I-publish-the-content-I-generate-on-the-platform).
