@@ -1,437 +1,491 @@
 WEBVTT
 
 1
-00:00:01.334 --> 00:00:05.832
-It is Sunday evening. There are four people to
-feed, a
+00:00:01.332 --> 00:00:04.976
+It is Sunday evening. There
+are four people to feed,
 
 2
-00:00:05.832 --> 00:00:10.329
-busy week ahead, and a familiar question: what
-are we cooking?
+00:00:05.065 --> 00:00:08.710
+a busy week ahead, and a familiar question:
 
 3
-00:00:10.329 --> 00:00:14.827
-Let's use Forkcast to plan three halal dinners,
-start with what
+00:00:08.799 --> 00:00:12.354
+what are we cooking? Let's
+use Forkcast to plan three
 
 4
-00:00:14.827 --> 00:00:19.324
-is already in the kitchen, and leave with one
-useful shopping
+00:00:12.443 --> 00:00:15.910
+dinners, start with what is
+already in the kitchen, and
 
 5
-00:00:19.324 --> 00:00:23.822
-list. This is an example household, so you can
-follow the
+00:00:16.088 --> 00:00:18.813
+leave with one useful shopping list.
 
 6
-00:00:23.822 --> 00:00:24.640
-whole journey.
+00:00:18.873 --> 00:00:21.776
+This is an example household,
+so you can follow the
 
 7
-00:00:43.551 --> 00:00:48.989
-First, we need one dependable dinner. The recipe
-collection includes real
+00:00:21.865 --> 00:00:23.021
+whole journey.
 
 8
-00:00:48.989 --> 00:00:54.428
-photographs, the original sources, and halal
-notes. We will choose shakshuka.
+00:00:43.430 --> 00:00:46.452
+First, we need one dependable dinner.
 
 9
-00:00:54.428 --> 00:00:59.866
-Open the details, read the ingredients, and
-check the source before
+00:00:46.897 --> 00:00:51.697
+The recipe collection includes real
+photographs and the original sources.
 
 10
-00:00:59.866 --> 00:01:05.304
-adding it to the plan. You can also search by
-ingredient
+00:00:51.963 --> 00:00:57.030
+We will choose shakshuka. Open
+the details, read the ingredients,
 
 11
-00:01:05.304 --> 00:01:07.282
-or filter by cuisine.
+00:00:57.119 --> 00:01:00.319
+and check the source before
+adding it to the plan.
 
 12
-00:01:26.118 --> 00:01:31.009
-Before choosing anything else, let's check the
-cupboard. We have a
+00:01:00.586 --> 00:01:04.497
+You can also search by
+ingredient or filter by cuisine.
 
 13
-00:01:31.009 --> 00:01:35.899
-short inventory note with rice, olive oil,
-garlic, and eggs. Instead
+00:01:25.961 --> 00:01:29.250
+Before choosing anything else,
+let's check the cupboard.
 
 14
-00:01:35.899 --> 00:01:40.790
-of typing every item, we can ask the image
-extractor to
+00:01:29.694 --> 00:01:33.339
+We have a short inventory
+note with rice, olive oil,
 
 15
-00:01:40.790 --> 00:01:45.680
-read the note. We are using a signed-in Codex
-subscription for
+00:01:33.472 --> 00:01:37.694
+garlic, and eggs. Instead
+of typing every item, we can
 
 16
-00:01:45.680 --> 00:01:46.569
-this demonstration.
+00:01:37.783 --> 00:01:40.361
+ask the image extractor to read the note.
 
 17
-00:02:10.932 --> 00:02:15.661
-The extractor has prepared the names and
-quantities. Nothing has entered
+00:01:40.894 --> 00:01:45.161
+We are using a signed-in Codex
+subscription for this demonstration.
 
 18
-00:02:15.661 --> 00:02:20.390
-the pantry yet. This is our chance to correct an
-amount
+00:02:10.749 --> 00:02:14.082
+The extractor has prepared
+the names and quantities.
 
 19
-00:02:20.390 --> 00:02:25.119
-or discard an item. Once the note matches what
-we actually
+00:02:14.305 --> 00:02:16.438
+Nothing has entered the pantry yet.
 
 20
-00:02:25.119 --> 00:02:29.849
-have, we save the reviewed items. Those
-quantities will reduce the
+00:02:16.705 --> 00:02:19.727
+This is our chance to
+correct an amount or discard
 
 21
-00:02:29.849 --> 00:02:31.138
-shopping list later.
+00:02:19.771 --> 00:02:23.638
+an item. Once the note
+matches what we actually have,
 
 22
-00:03:03.071 --> 00:03:08.059
-Someone in the family saved a Food Fusion pulao
-video for
+00:02:23.771 --> 00:02:25.727
+we save the reviewed items.
 
 23
-00:03:08.059 --> 00:03:13.047
-the weekend. Let's bring its recipe into our
-collection. The importer
+00:02:25.949 --> 00:02:29.060
+Those quantities will reduce
+the shopping list later.
 
 24
-00:03:13.047 --> 00:03:18.036
-reads the available description or captions. A
-pasted transcript is also
+00:03:02.785 --> 00:03:06.074
+Someone in the family saved
+a Food Fusion pulao video
 
 25
-00:03:18.036 --> 00:03:23.024
-available when the video service blocks access.
-The model turns that
+00:03:06.163 --> 00:03:09.985
+for the weekend. Let's bring
+its recipe into our collection.
 
 26
-00:03:23.024 --> 00:03:25.291
-material into an editable draft.
+00:03:10.341 --> 00:03:14.207
+The importer reads the available
+description or captions.
 
 27
-00:03:42.104 --> 00:03:46.980
-Here is the imported draft. We can read the
-ingredient amounts
+00:03:14.429 --> 00:03:18.252
+A pasted transcript is also
+available when the video service
 
 28
-00:03:46.980 --> 00:03:51.855
-and instructions, check the original video, and
-make any changes before
+00:03:18.341 --> 00:03:22.785
+blocks access. The model turns
+that material into an editable
 
 29
-00:03:51.855 --> 00:03:56.731
-saving. The source stays with the recipe. For
-this family, we
+00:03:22.874 --> 00:03:23.763
+draft.
 
 30
-00:03:56.731 --> 00:04:01.607
-will use halal meat and keep the original
-quantities visible for
+00:03:41.793 --> 00:03:43.660
+Here is the imported draft.
 
 31
-00:04:01.607 --> 00:04:02.050
-review.
+00:03:44.104 --> 00:03:47.526
+We can read the ingredient amounts
+and instructions, check the
 
 32
-00:04:24.325 --> 00:04:29.166
-The third dinner is a family favorite: lemon and
-chickpea rice.
+00:03:47.571 --> 00:03:50.860
+original video, and make changes before saving.
 
 33
-00:04:29.166 --> 00:04:34.008
-Personal recipes can start from an empty form,
-or from a
+00:03:51.304 --> 00:03:53.660
+The source stays with the recipe.
 
 34
-00:04:34.008 --> 00:04:38.849
-recipe note pasted here. We will preview our
-note, then adjust
+00:03:53.882 --> 00:03:57.660
+Keep the original quantities
+visible for review, and adapt the
 
 35
-00:04:38.849 --> 00:04:43.690
-the instructions. This recipe belongs to our
-local household, so adding
+00:03:57.704 --> 00:03:59.926
+ingredients to your own household.
 
 36
-00:04:43.690 --> 00:04:47.211
-it does not change the shared recipe dataset.
+00:04:23.912 --> 00:04:26.668
+The third dinner is a family favorite:
 
 37
-00:05:21.430 --> 00:05:25.986
-The recipe is saved. If we cook it differently
-next time,
+00:04:26.756 --> 00:04:31.201
+lemon and chickpea rice. Personal
+recipes can start from an
 
 38
-00:05:25.986 --> 00:05:30.542
-we can edit it again. The ingredients are still
-written in
+00:04:31.379 --> 00:04:34.668
+empty form, or from a recipe note pasted here.
 
 39
-00:05:30.542 --> 00:05:35.098
-the form we will actually use: rice, cooked
-chickpeas, lemon, garlic,
+00:04:35.201 --> 00:04:38.579
+We will preview our note,
+then adjust the instructions.
 
 40
-00:05:35.098 --> 00:05:39.655
-olive oil, and a little salt. Now we have three
-real
+00:04:39.112 --> 00:04:42.756
+This recipe belongs to our
+local household, so adding it
 
 41
-00:05:39.655 --> 00:05:41.311
-choices for the week.
+00:04:42.890 --> 00:04:45.779
+does not change the shared recipe dataset.
 
 42
-00:06:11.542 --> 00:06:15.996
-Now let's give the assistant a useful job.
-Prepare a meal
+00:05:20.992 --> 00:05:24.370
+The recipe is saved. If we
+cook it differently next
 
 43
-00:06:15.996 --> 00:06:20.450
-plan with these three recipes. The assistant can
-see the local
+00:05:24.459 --> 00:05:26.770
+time, we can edit it again.
 
 44
-00:06:20.450 --> 00:06:24.904
-collection and pantry, so we can ask in ordinary
-language. It
+00:05:26.859 --> 00:05:29.614
+The ingredients are still
+written in the form we will
 
 45
-00:06:24.904 --> 00:06:29.359
-prepares the change for review; asking a
-question does not give
+00:05:29.881 --> 00:05:36.192
+actually use: rice, cooked chickpeas,
+lemon, garlic, olive oil, and
 
 46
-00:06:29.359 --> 00:06:32.598
-it permission to change everything in the
-kitchen.
+00:05:36.236 --> 00:05:40.103
+a little salt. Now we have
+three real choices for
 
 47
-00:06:44.918 --> 00:06:49.103
-The proposed plan lists the recipes it will
-include. Read this
+00:05:40.148 --> 00:05:40.903
+the week.
 
 48
-00:06:49.103 --> 00:06:53.287
-before applying it. We are happy with the
-choices, so we
+00:06:11.392 --> 00:06:14.148
+Now let's give the assistant a useful job.
 
 49
-00:06:53.287 --> 00:06:57.472
-will apply the prepared change, then open the
-planner to check
+00:06:14.592 --> 00:06:17.525
+Prepare a meal plan with these three recipes.
 
 50
-00:06:57.472 --> 00:07:01.656
-the saved result. We can still edit the name or
-dates
+00:06:18.148 --> 00:06:21.525
+The assistant can see the
+local collection and pantry, so
 
 51
-00:07:01.656 --> 00:07:04.319
-and share the plan with the family.
+00:06:21.570 --> 00:06:23.792
+we can ask in ordinary language.
 
 52
-00:07:46.560 --> 00:07:51.759
-This is where the planning pays off. The active
-plan becomes
+00:06:24.014 --> 00:06:26.503
+It prepares the change for review;
 
 53
-00:07:51.759 --> 00:07:56.958
-one shopping list, grouped by aisle. Compatible
-quantities already in the
+00:06:26.592 --> 00:06:29.703
+asking a question does not
+give it permission to change
 
 54
-00:07:56.958 --> 00:08:02.157
-pantry are deducted. We can ask the configured
-model to improve
+00:06:29.792 --> 00:06:31.392
+everything in the kitchen.
 
 55
-00:08:02.157 --> 00:08:07.356
-ingredient interpretation, while the app keeps
-the quantity calculations and source
+00:06:44.734 --> 00:06:48.112
+The proposed plan lists the
+recipes it will include.
 
 56
-00:08:07.356 --> 00:08:08.301
-evidence explicit.
+00:06:48.556 --> 00:06:50.512
+Read this before applying it.
 
 57
-00:08:35.706 --> 00:08:40.418
-Take a moment to read the result. Each item can
-show
+00:06:51.045 --> 00:06:53.890
+We are happy with the choices, so we will apply
 
 58
-00:08:40.418 --> 00:08:45.130
-the recipe lines it came from. Ingredient
-insights help explain the
+00:06:53.934 --> 00:06:57.445
+the prepared change, then
+open the planner to check the
 
 59
-00:08:45.130 --> 00:08:49.842
-names and pantry rules. Counts, weights, and
-volumes stay separate when
+00:06:57.534 --> 00:07:01.356
+saved result. We can still
+edit the name or dates
 
 60
-00:08:49.842 --> 00:08:54.554
-a conversion would be a guess. Any uncertain
-amount stays visible,
+00:07:01.445 --> 00:07:03.578
+and share the plan with the family.
 
 61
-00:08:54.554 --> 00:08:57.552
-so we can check it before buying.
+00:07:45.924 --> 00:07:48.146
+This is where the planning pays off.
 
 62
-00:09:20.513 --> 00:09:25.631
-We also have a few flyer offers to compare.
-These stores
+00:07:48.591 --> 00:07:52.591
+The active plan becomes one
+shopping list, grouped by aisle.
 
 63
-00:09:25.631 --> 00:09:30.749
-and prices are fictional examples, clearly
-labelled on the image. The
+00:07:53.035 --> 00:07:56.591
+Compatible quantities already
+in the pantry are deducted.
 
 64
-00:09:30.749 --> 00:09:35.867
-image extractor reads the ingredient, pack size,
-price, and currency. As
+00:07:57.035 --> 00:08:01.391
+We can ask the configured model to
+improve ingredient interpretation,
 
 65
-00:09:35.867 --> 00:09:40.984
-with the pantry, we review the extracted offers
-before saving them.
+00:08:01.480 --> 00:08:05.213
+while the app keeps the quantity
+calculations and source evidence
 
 66
-00:10:43.973 --> 00:10:48.670
-The comparison buys whole packs and shows a
-priced subtotal. It
+00:08:05.302 --> 00:08:06.368
+explicit.
 
 67
-00:10:48.670 --> 00:10:53.367
-also lists ingredients with no recorded price.
-That means this is
+00:08:35.684 --> 00:08:37.906
+Take a moment to read the result.
 
 68
-00:10:53.367 --> 00:10:58.064
-not a promise about the cost of the whole
-basket. Store
+00:08:38.173 --> 00:08:41.017
+Each item can show the
+recipe lines it came from.
 
 69
-00:10:58.064 --> 00:11:02.761
-suggestions rank the offers we entered. A
-separate map search can
+00:08:41.462 --> 00:08:45.506
+Ingredient insights help explain
+the names and pantry rules.
 
 70
-00:11:02.761 --> 00:11:06.604
-find actual grocery stores near a location we
-choose.
+00:08:45.728 --> 00:08:49.817
+Counts, weights, and volumes stay
+separate when a conversion would
 
 71
-00:11:58.269 --> 00:12:02.852
-At the shop, the same household is easy to use
-on
+00:08:49.862 --> 00:08:53.728
+be a guess. Any uncertain
+amount stays visible, so we
 
 72
-00:12:02.852 --> 00:12:07.435
-a phone-sized screen. Open the active list and
-check off what
+00:08:53.817 --> 00:08:55.595
+can check it before buying.
 
 73
-00:12:07.435 --> 00:12:12.018
-goes into the basket. We can export a text copy,
-share
+00:09:21.401 --> 00:09:25.312
+Let's compare offers from a real
+FreshCo flyer, published for
 
 74
-00:12:12.018 --> 00:12:16.601
-it, and save a shopping snapshot in history. The
-saved snapshot
+00:09:25.445 --> 00:09:30.379
+Ontario from October fifteenth to
+November eleventh, twenty twenty-six.
 
 75
-00:12:16.601 --> 00:12:20.350
-remains useful even after our recipes or pantry
-change.
+00:09:30.645 --> 00:09:33.090
+The model reads the original page.
 
 76
-00:12:46.045 --> 00:12:50.559
-Here is the saved shopping trip, including the
-items we collected.
+00:09:33.312 --> 00:09:37.845
+We will review four offers,
+checking each product, pack size,
 
 77
-00:12:50.559 --> 00:12:55.073
-We can reopen or share it later. This part is a
+00:09:38.068 --> 00:09:41.757
+price, currency, and expiry date before saving.
 
 78
-00:12:55.073 --> 00:12:59.587
-responsive browser demonstration of the
-currently released app. It does not
+00:10:42.612 --> 00:10:46.612
+Here are recorded offers
+from FreshCo and Food Basics.
 
 79
-00:12:59.587 --> 00:13:04.101
-claim that a native phone build or disconnected
-phone shopping has
+00:10:46.879 --> 00:10:51.056
+The comparison buys whole packs
+and shows a priced subtotal,
 
 80
-00:13:04.101 --> 00:13:04.922
-been tested.
+00:10:51.190 --> 00:10:54.256
+with unpriced ingredients listed separately.
 
 81
-00:13:20.032 --> 00:13:24.972
-One last change: someone thinks we already have
-yogurt. Let's ask
+00:10:54.390 --> 00:10:58.345
+These are dated flyer prices, so
+check availability and current
 
 82
-00:13:24.972 --> 00:13:29.912
-the assistant to add it, but stop at the review.
-If
+00:10:58.434 --> 00:11:03.590
+offers before shopping. A separate
+location search finds actual mapped
 
 83
-00:13:29.912 --> 00:13:34.852
-we have not checked the fridge, we should
-discard the prepared
+00:11:03.679 --> 00:11:05.101
+grocery stores.
 
 84
-00:13:34.852 --> 00:13:39.793
-change. That keeps an uncertain assumption out
-of the pantry. The
+00:11:56.351 --> 00:11:59.640
+At the shop, the same household is easy to use
 
 85
-00:13:39.793 --> 00:13:42.038
-conversation remains available to revisit.
+00:11:59.684 --> 00:12:03.462
+on a phone-sized screen. Open
+the active list and check
 
 86
-00:14:12.769 --> 00:14:17.469
-We started with a busy week and a saved cooking
-video.
+00:12:03.551 --> 00:12:05.595
+off what goes into the basket.
 
 87
-00:14:17.469 --> 00:14:22.168
-Now we have three dinners, a checked pantry, an
-itemized shopping
+00:12:05.684 --> 00:12:08.795
+We can export a text copy, share it, and save
 
 88
-00:14:22.168 --> 00:14:26.868
-list, recorded offers, and a shopping history.
-The artificial intelligence helped
+00:12:08.884 --> 00:12:11.107
+a shopping snapshot in history.
 
 89
-00:14:26.868 --> 00:14:31.568
-read and organize the information, and we stayed
-in control of
+00:12:11.195 --> 00:12:15.107
+The saved snapshot remains
+useful even after our recipes or
 
 90
-00:14:31.568 --> 00:14:35.840
-what was saved. That is a Sunday reset with
-Forkcast.
+00:12:15.195 --> 00:12:16.440
+pantry change.
+
+91
+00:12:44.272 --> 00:12:47.383
+Here is the saved shopping
+trip, including the items we
+
+92
+00:12:47.472 --> 00:12:51.294
+collected. Reopen it to see
+what you bought, or share
+
+93
+00:12:51.383 --> 00:12:52.716
+the list with your household.
+
+94
+00:12:53.250 --> 00:12:56.805
+The saved snapshot stays in
+history when your recipes or
+
+95
+00:12:56.894 --> 00:13:00.539
+pantry change, so you can
+return to this trip later.
+
+96
+00:13:18.371 --> 00:13:22.993
+One last change: someone
+thinks we already have yogurt.
+
+97
+00:13:23.082 --> 00:13:25.838
+Let's ask the assistant to add it, but stop at
+
+98
+00:13:25.927 --> 00:13:29.127
+the review. If we have
+not checked the fridge, we
+
+99
+00:13:29.215 --> 00:13:31.615
+should discard the prepared change.
+
+100
+00:13:31.704 --> 00:13:35.260
+That keeps an uncertain
+assumption out of the pantry.
+
+101
+00:13:35.304 --> 00:13:38.282
+The conversation remains available to revisit.
+
+102
+00:14:11.028 --> 00:14:14.050
+We started with a busy week and a saved cooking
+
+103
+00:14:14.139 --> 00:14:18.317
+video. Now we have three
+dinners, a checked pantry, an
+
+104
+00:14:18.495 --> 00:14:23.650
+itemized shopping list, recorded
+offers, and a shopping history.
+
+105
+00:14:23.695 --> 00:14:28.272
+The artificial intelligence helped
+read and organize the information, and
+
+106
+00:14:28.406 --> 00:14:31.206
+we stayed in control of what was saved.
+
+107
+00:14:31.428 --> 00:14:34.495
+That is a Sunday reset with Forkcast.
