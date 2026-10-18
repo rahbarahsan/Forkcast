@@ -15,7 +15,7 @@ export default function PantryScreen() {
   return (
     <Page
       title="Start with your pantry"
-      description="Ingredients here are excluded from your shopping list. Amounts are a reminder; they are not subtracted from recipe quantities."
+      description="Compatible stock amounts are deducted from your grocery list. Leave an amount blank when you have enough."
     >
       <View style={ui.card}>
         <Field label="Ingredient name" value={name} onChangeText={setName} disabled={saving} />

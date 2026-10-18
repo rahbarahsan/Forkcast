@@ -2,6 +2,14 @@
 
 Turn a week of recipes into one sensible shopping list.
 
+[![Forkcast walkthrough: recipe photos, meal planning, pantry-aware groceries, video imports and reviewed assistant actions](docs/forkcast-demo.gif)](docs/forkcast-walkthrough.mp4)
+
+[Watch the full captioned walkthrough (MP4)](docs/forkcast-walkthrough.mp4)
+· [Chapters, transcript and recording details](docs/WALKTHROUGH.md)
+
+Recorded in the current app with an example household. Click the animated preview
+for the full walkthrough, including the compact phone layout.
+
 Forkcast runs on your computer with a local SQLite database. No Supabase project,
 cloud account, or model provider is required for recipes, planning, pantry,
 groceries, history, or recorded flyer-price comparisons. After installing the
