@@ -1,11 +1,3 @@
-/**
- * Shared data models.
- *
- * This is the single source of truth for the shapes below. They were
- * previously declared here, again in navigation/index.tsx and again in
- * context/PlannerContext.tsx, and the copies had already drifted apart.
- */
-
 export interface Recipe {
   id: string;
   title: string;

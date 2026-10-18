@@ -1,163 +1,373 @@
-# main.py
+"""Local household API. Start with uvicorn main:app --host 127.0.0.1."""
 
-import sys
-from typing import Optional
+import logging
+import os
+from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-# Windows consoles default to cp1252, which cannot encode the emoji used in the
-# debug logging below. Without this, a print() raises UnicodeEncodeError, the
-# handler re-prints the same characters via format_exc(), and the request dies
-# as a 500 that looks nothing like an encoding problem.
-for _stream in (sys.stdout, sys.stderr):
-    if hasattr(_stream, "reconfigure"):
-        _stream.reconfigure(encoding="utf-8", errors="replace")
-
-# Handle imports for both direct execution and module import
 try:
-    from .models import GroceryRequest, GroceryResponse, Recipe, PantryItem
-    from .supabase_client import supabase, client_for_token, user_id_from_token
-    from .aggregator import SmartGroceryAggregator
+    from .assistant import ChatInput, apply_task, chat
+    from .database import Database
+    from .groceries import generate
+    from .imports import recipe_preview
+    from .kitchen import optimize, pantry_preview, suggestions
+    from .models import (
+        ActivePlan,
+        ExtractInput,
+        GroceryRequest,
+        GroceryResponse,
+        HistoryInput,
+        ModelSettings,
+        OfferBatch,
+        OfferInput,
+        OptimizeRequest,
+        PantryBatch,
+        PantryInput,
+        PlanInput,
+        RecipeInput,
+        StoreSearch,
+        TextImport,
+        YouTubeInput,
+    )
+    from .network import SourceError
+    from .providers import ProviderError, configuration, extract, save_configuration
+    from .stores import nearby, recommend
+    from .youtube import preview_video
 except ImportError:
-    from models import GroceryRequest, GroceryResponse, Recipe, PantryItem
-    from supabase_client import supabase, client_for_token, user_id_from_token
-    from aggregator import SmartGroceryAggregator
+    from assistant import ChatInput, apply_task, chat
+    from database import Database
+    from groceries import generate
+    from imports import recipe_preview
+    from kitchen import optimize, pantry_preview, suggestions
+    from models import (
+        ActivePlan,
+        ExtractInput,
+        GroceryRequest,
+        GroceryResponse,
+        HistoryInput,
+        ModelSettings,
+        OfferBatch,
+        OfferInput,
+        OptimizeRequest,
+        PantryBatch,
+        PantryInput,
+        PlanInput,
+        RecipeInput,
+        StoreSearch,
+        TextImport,
+        YouTubeInput,
+    )
+    from network import SourceError
+    from providers import ProviderError, configuration, extract, save_configuration
+    from stores import nearby, recommend
+    from youtube import preview_video
+
+logger = logging.getLogger(__name__)
+ROOT = Path(__file__).resolve().parents[1]
 
 
-def _bearer_token(authorization: Optional[str]) -> Optional[str]:
-    """Pull the raw JWT out of an `Authorization: Bearer <token>` header."""
-    if not authorization:
-        return None
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token.strip():
-        return None
-    return token.strip()
+def create_app(database_path=None):
+    db = Database(
+        database_path or os.getenv("FORKCAST_DATABASE", ROOT / "data/local/forkcast.sqlite3")
+    )
 
-app = FastAPI()
+    @asynccontextmanager
+    async def lifespan(app):
+        db.initialize()
+        yield
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    app = FastAPI(title="Forkcast", version="2.0.0", lifespan=lifespan)
+    app.state.db = db
+    origins = [
+        o.strip()
+        for o in os.getenv(
+            "FORKCAST_ORIGINS", "http://localhost:8081,http://localhost:19006,http://127.0.0.1:8081"
+        ).split(",")
+        if o.strip()
+    ]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
+        allow_headers=["Content-Type"],
+    )
 
-@app.post("/api/grocery-list", response_model=GroceryResponse)
-async def generate_grocery_list(
-    req: GroceryRequest,
-    authorization: Optional[str] = Header(default=None),
-):
-    try:
-        recipes = []
-        pantry_items = req.pantry_items or []
+    @app.middleware("http")
+    async def restrict_browser_writes(request: Request, call_next):
+        if (
+            request.method not in ("GET", "HEAD", "OPTIONS")
+            and request.headers.get("origin")
+            and request.headers["origin"] not in origins
+        ):
+            return JSONResponse({"detail": "This browser origin is not allowed"}, status_code=403)
+        return await call_next(request)
 
-        print(f"DEBUG: Request: {req}")
+    @app.exception_handler(Exception)
+    async def unexpected(request, exc):
+        logger.exception("Request failed: %s %s", request.method, request.url.path)
+        return JSONResponse(
+            {"detail": "The request could not be completed. Check the server logs."},
+            status_code=500,
+        )
 
-        token = _bearer_token(authorization)
-        user_id = user_id_from_token(token) if token else None
+    def require(kind, record_id):
+        record = db.get(kind, record_id)
+        if record is None:
+            raise HTTPException(404, "Record not found")
+        return record
 
-        # A request claiming to be signed in must prove it. Note the check is on
-        # the verified token, not on req.is_guest, which any caller can set.
-        if not req.is_guest and user_id is None:
+    def validate_recipe_ids(ids):
+        known = {r["id"] for r in db.recipes()}
+        if set(ids) - known:
+            raise HTTPException(422, "One or more recipes no longer exist")
+
+    @app.get("/api/health")
+    def health():
+        return {"status": "ok", "storage": "sqlite", "version": "2.0.0"}
+
+    @app.get("/api/models/config")
+    def model_configuration():
+        return configuration()
+
+    @app.put("/api/models/config")
+    def update_model_configuration(body: ModelSettings):
+        try:
+            return save_configuration(body.provider, body.model)
+        except ProviderError as exc:
+            raise HTTPException(409, str(exc)) from None
+
+    @app.get("/api/conversations")
+    def conversations():
+        return list(reversed(db.list("conversation")))
+
+    @app.post("/api/chat")
+    def assistant_chat(body: ChatInput):
+        try:
+            return chat(db, body)
+        except (ProviderError, ValueError) as exc:
+            raise HTTPException(422, str(exc)) from None
+
+    @app.post("/api/tasks/{task_id}/apply")
+    def apply_assistant_task(task_id: str):
+        try:
+            return apply_task(db, task_id)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+
+    @app.post("/api/tasks/{task_id}/cancel")
+    def cancel_assistant_task(task_id: str):
+        try:
+            return apply_task(db, task_id, cancel=True)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+
+    @app.delete("/api/conversations/{conversation_id}", status_code=204)
+    def delete_conversation(conversation_id: str):
+        require("conversation", conversation_id)
+        for task in db.list("assistant_task"):
+            if task.get("conversation_id") == conversation_id:
+                db.delete("assistant_task", task["id"])
+        db.delete("conversation", conversation_id)
+        return Response(status_code=204)
+
+    @app.post("/api/extract")
+    def extract_preview(body: ExtractInput):
+        try:
+            return extract(body.task, body.text, body.image)
+        except ProviderError as exc:
+            raise HTTPException(422, str(exc))
+
+    @app.get("/api/recipes")
+    def recipes():
+        return db.recipes()
+
+    @app.post("/api/recipes", status_code=201)
+    def add_recipe(body: RecipeInput):
+        return db.save("recipe", body.model_dump())
+
+    @app.post("/api/import/recipe")
+    def preview_recipe(body: TextImport):
+        try:
+            return recipe_preview(body.text).model_dump()
+        except (ValueError, KeyError, TypeError, StopIteration, IndexError):
             raise HTTPException(
-                status_code=401,
-                detail="A valid Authorization bearer token is required for signed-in requests",
+                422,
+                "Cannot parse recipe. Include a title, Ingredients and Instructions headings, or valid recipe JSON.",
             )
 
-        if user_id is not None:
-            # Query as the user so RLS returns only their rows. Nothing here
-            # filters by a client-supplied id.
-            user_db = client_for_token(token)
-
-            plan_response = user_db.table("plans").select("*").execute()
-            plan_data = plan_response.data or []
-            plan_recipe_ids = set()
-            for plan in plan_data:
-                plan_recipe_ids.update(plan.get("recipe_ids") or [])
-
-            pantry_response = user_db.table("pantry").select("*").execute()
-            pantry_data = pantry_response.data or []
-            pantry_items = [
-                PantryItem(id=item.get("id"), name=item["name"], quantity=item.get("quantity"))
-                for item in pantry_data
-            ]
-
-            # Recipes the client explicitly asked for take precedence, so a
-            # signed-in user can still build a list from an ad-hoc selection.
-            requested_ids = set(req.recipe_ids or []) | set(req.selected_ids or [])
-            wanted_ids = requested_ids or plan_recipe_ids
-
-            recipe_response = supabase.table("recipes").select("*").execute()
-            all_recipes = recipe_response.data or []
-            recipes = [Recipe(**r) for r in all_recipes if r["id"] in wanted_ids]
-
-        else:
-            selected_ids = set(req.selected_ids or [])
-            plan_ids = set(req.plan_ids or [])
-            recipe_ids = set(req.recipe_ids or [])
-            print("🧾 selected_ids:", selected_ids)
-            print("📦 plan_ids:", plan_ids)
-            print("📘 recipe_ids:", recipe_ids)
-
-
-            if not selected_ids and not plan_ids and not recipe_ids:
-                return GroceryResponse(categorized={}, raw={})
-
-            recipe_response = supabase.table("recipes").select("*").execute()
-            all_recipes = recipe_response.data or []
-
-            plan_recipe_ids = set()
-            if plan_ids:
-                # In guest mode, assume planner passed plan -> recipe_ids mapping from memory
-                # So don't fetch from Supabase
-                print("Guest mode: skipping Supabase plan fetch, expecting frontend to pass recipe_ids")
-
-
-            all_recipe_ids = selected_ids.union(recipe_ids).union(plan_recipe_ids)
-            recipes = [Recipe(**r) for r in all_recipes if r["id"] in all_recipe_ids]
-
-            if recipe_ids and not recipes:
-                for recipe_id in recipe_ids:
-                    try:
-                        recipe_response = supabase.table("recipes").select("*").eq("id", recipe_id).execute()
-                        if recipe_response.data:
-                            recipes.append(Recipe(**recipe_response.data[0]))
-                    except Exception as e:
-                        print(f"DEBUG: Error fetching recipe {recipe_id}: {str(e)}")
-
-        for recipe in recipes:
-            if not hasattr(recipe, 'ingredients') or not isinstance(recipe.ingredients, list):
-                raise ValueError(f"Invalid recipe format: {recipe}. 'ingredients' must be a list.")
-
-        print(f"DEBUG: Pantry items detail: {[{'id': p.id, 'name': p.name, 'quantity': p.quantity} for p in pantry_items]}")
-        print(f"DEBUG: Processing {len(recipes)} recipes with IDs: {[r.id for r in recipes if hasattr(r, 'id')]}")
-
+    @app.post("/api/import/youtube")
+    def preview_youtube(body: YouTubeInput):
         try:
-            # The SmartGroceryAggregator will now fetch pre-processed ingredients from grocery_items_per_recipe table
-            aggregator = SmartGroceryAggregator(recipes, pantry_items)
-            categorized, raw = aggregator.generate()
-        except Exception as agg_error:
-            raise ValueError(f"Error in SmartGroceryAggregator: {str(agg_error)}")
+            return preview_video(body.url, body.pasted_text, body.use_model, body.languages)
+        except (SourceError, ValueError) as exc:
+            raise HTTPException(422, str(exc)) from None
 
-        raw_dict = raw if isinstance(raw, dict) else {ingredient: {"kg": 1.0} for ingredient in raw}
-        return GroceryResponse(categorized=categorized, raw=raw_dict)
+    @app.put("/api/recipes/{recipe_id}")
+    def edit_recipe(recipe_id: str, body: RecipeInput):
+        validate_recipe_ids([recipe_id])
+        return db.save("recipe", body.model_dump(), recipe_id)
 
-    except HTTPException:
-        # Deliberate responses (e.g. the 401 above) must not be rewritten as 500s
-        # by the catch-all below.
-        raise
-    except Exception as e:
-        import traceback
-        print(f"DEBUG: Error in generate_grocery_list: {str(e)}")
-        print(f"DEBUG: Traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=str(e))
+    @app.delete("/api/recipes/{recipe_id}", status_code=204)
+    def delete_recipe(recipe_id: str):
+        if not db.delete("recipe", recipe_id):
+            raise HTTPException(
+                409,
+                "Reference recipes are part of the seed catalog; edit to create a personal override",
+            )
+        if any(r["id"] == recipe_id for r in db.recipes()):
+            return Response(status_code=204)
+        for plan in db.list("plan"):
+            plan["recipeIds"] = [r for r in plan["recipeIds"] if r != recipe_id]
+            db.save("plan", plan, plan["id"])
+        return Response(status_code=204)
 
-@app.get("/api/recipes", response_model=list[Recipe])
-async def get_recipes():
-    try:
-        recipe_response = supabase.table("recipes").select("*").execute()
-        return recipe_response.data or []
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    @app.get("/api/pantry")
+    def pantry():
+        return db.list("pantry")
+
+    @app.post("/api/pantry", status_code=201)
+    def add_pantry(body: PantryInput):
+        return db.save("pantry", body.model_dump())
+
+    @app.put("/api/pantry/{item_id}")
+    def edit_pantry(item_id: str, body: PantryInput):
+        require("pantry", item_id)
+        return db.save("pantry", body.model_dump(), item_id)
+
+    @app.delete("/api/pantry/{item_id}", status_code=204)
+    def delete_pantry(item_id: str):
+        require("pantry", item_id)
+        db.delete("pantry", item_id)
+        return Response(status_code=204)
+
+    @app.get("/api/plans")
+    def plans():
+        return db.list("plan")
+
+    @app.post("/api/plans", status_code=201)
+    def add_plan(body: PlanInput):
+        validate_recipe_ids(body.recipeIds)
+        return db.save_plan(body.model_dump(mode="json"))
+
+    @app.put("/api/plans/active")
+    def activate_plan(body: ActivePlan):
+        if body.id:
+            require("plan", body.id)
+        db.activate_plan(body.id)
+        return db.list("plan")
+
+    @app.put("/api/plans/{plan_id}")
+    def edit_plan(plan_id: str, body: PlanInput):
+        require("plan", plan_id)
+        validate_recipe_ids(body.recipeIds)
+        return db.save_plan(body.model_dump(mode="json"), plan_id)
+
+    @app.delete("/api/plans/{plan_id}", status_code=204)
+    def delete_plan(plan_id: str):
+        require("plan", plan_id)
+        db.delete("plan", plan_id)
+        return Response(status_code=204)
+
+    @app.post("/api/grocery-list", response_model=GroceryResponse)
+    def groceries(body: GroceryRequest):
+        ids = set(body.recipe_ids + body.selected_ids)
+        for plan_id in body.plan_ids:
+            ids.update(require("plan", plan_id)["recipeIds"])
+        validate_recipe_ids(ids)
+        chosen = [r for r in db.recipes() if r["id"] in ids]
+        pantry_items = body.pantry_items if body.pantry_items is not None else db.list("pantry")
+        return generate(db, chosen, pantry_items, body.intelligence, body.scale)
+
+    @app.get("/api/history")
+    def history():
+        return list(reversed(db.list("history")))
+
+    @app.get("/api/suggestions")
+    def recipe_suggestions():
+        recipes = db.recipes()
+        return suggestions(
+            recipes, db.list("pantry"), db.lookup(), db.preprocessed([r["id"] for r in recipes])
+        )
+
+    @app.get("/api/ingredients/{name}")
+    def ingredient_insights(name: str):
+        from_name = next((r for r in db.lookup() if r["canonical"] == name), None)
+        return {
+            "name": name,
+            "lookup": from_name,
+            "recipes": [
+                {
+                    "id": r["id"],
+                    "title": r["title"],
+                    "lines": [line for line in r["ingredients"] if name.lower() in line.lower()],
+                }
+                for r in db.recipes()
+                if any(name.lower() in line.lower() for line in r["ingredients"])
+            ],
+            "quantity_note": "Compatible pantry quantities are deducted. Blank stock quantities mean available in sufficient quantity. Weight, volume, and counts remain separate.",
+        }
+
+    @app.post("/api/import/pantry")
+    def preview_pantry(body: TextImport):
+        return {"items": pantry_preview(body.text)}
+
+    @app.post("/api/pantry/batch", status_code=201)
+    def save_pantry_batch(body: PantryBatch):
+        return db.save_many("pantry", [item.model_dump() for item in body.items])
+
+    @app.get("/api/offers")
+    def offers():
+        return db.list("offer")
+
+    @app.post("/api/offers", status_code=201)
+    def add_offer(body: OfferInput):
+        return db.save("offer", body.model_dump(mode="json"))
+
+    @app.post("/api/offers/batch", status_code=201)
+    def add_offers(body: OfferBatch):
+        return db.save_many("offer", [offer.model_dump(mode="json") for offer in body.items])
+
+    @app.delete("/api/offers/{offer_id}", status_code=204)
+    def delete_offer(offer_id: str):
+        require("offer", offer_id)
+        db.delete("offer", offer_id)
+        return Response(status_code=204)
+
+    @app.post("/api/optimize")
+    def optimize_groceries(body: OptimizeRequest):
+        grocery = groceries(GroceryRequest.model_validate(body.model_dump(exclude={"currency"})))
+        return optimize(grocery, db.list("offer"), db.lookup(), body.currency)
+
+    @app.post("/api/stores/search")
+    def search_stores(body: StoreSearch):
+        try:
+            return nearby(db, body.location, body.radius)
+        except (SourceError, ValueError, KeyError, TypeError):
+            raise HTTPException(
+                422,
+                "Store lookup is unavailable or the location was not found. Try a city and country; saved offers still work offline.",
+            ) from None
+
+    @app.post("/api/stores/recommend")
+    def recommend_stores(body: OptimizeRequest):
+        grocery = groceries(GroceryRequest.model_validate(body.model_dump(exclude={"currency"})))
+        return recommend(grocery, db.list("offer"), db.lookup(), body.currency)
+
+    @app.post("/api/history", status_code=201)
+    def save_history(body: HistoryInput):
+        return db.save("history", body.model_dump())
+
+    @app.delete("/api/history/{history_id}", status_code=204)
+    def delete_history(history_id: str):
+        require("history", history_id)
+        db.delete("history", history_id)
+        return Response(status_code=204)
+
+    return app
+
+
+app = create_app()

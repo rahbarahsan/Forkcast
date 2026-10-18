@@ -39,9 +39,9 @@ yarn-error.*
 # Ignore __pycache__ in any directory
 **/__pycache__/
 
-# Files ending with config
-**/*config.*
-**/*config
-
 # typescript
 *.tsbuildinfo
+
+# Browser test output (may contain personal data)
+test-results/
+playwright-report/

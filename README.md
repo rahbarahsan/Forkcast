@@ -1,187 +1,205 @@
 # Forkcast
 
-**Turn a week of recipes into one sensible shopping list.**
+Turn a week of recipes into one sensible shopping list.
 
-Pick some recipes, tell Forkcast what is already in your kitchen, and it works
-out what you actually need to buy — combining the same ingredient across
-recipes, subtracting what you have, and grouping the result by aisle.
+[![Forkcast walkthrough: recipe photos, meal planning, pantry-aware groceries, video imports and reviewed assistant actions](docs/forkcast-demo.gif)](docs/forkcast-walkthrough.mp4)
 
-The interesting part is not the meal planning. It is that "2 cloves garlic,
-minced", "1 tbsp garlic paste" and "3 garlic cloves" all have to become one
-line on your shopping list.
+[Watch the full captioned walkthrough (MP4)](docs/forkcast-walkthrough.mp4)
+· [Chapters, transcript and recording details](docs/WALKTHROUGH.md)
 
-![Forkcast: picking two recipes and generating a combined grocery list](docs/forkcast-demo.gif)
+Recorded in the current app with an example household. Click the animated preview
+for the full walkthrough, including the compact phone layout.
 
-*Two recipes in, one deduplicated 25-item list out, grouped into 6 aisles.*
+Forkcast runs on your computer with a local SQLite database. No Supabase project,
+cloud account, or model provider is required for recipes, planning, pantry,
+groceries, history, or recorded flyer-price comparisons. After installing the
+software, these features work without an internet connection.
 
----
+## What you can do
 
-## The problem this actually solves
+- Browse the bundled recipes, create your own, and edit personal copies.
+- Import recipe text, JSON, or schema.org Recipe data with a preview before save.
+- Build meal plans and share them as text.
+- Track pantry ingredients and rank recipes by what you already have.
+- Combine ingredients, keep compatible quantities together, and group by aisle.
+- Check off groceries, inspect ingredient names and recipe usage, export a list,
+  and keep shopping history.
+- Review pasted pantry/OCR text and add the selected items in one transaction.
+- Record flyer offers and compare whole-pack prices with expiry/currency checks.
+- Optionally extract recipes from pasted video transcripts, pantry photos, and
+  flyer images using a configured subscription CLI or API provider.
+- Fetch a YouTube video's public description/captions, interpret its recipe, and
+  review the result before saving. Pasted transcripts work when access is blocked.
+- Use model-assisted grocery interpretation with per-recipe evidence, exact
+  quantity deductions, compatible units, and a persistent private result cache.
+- Find mapped grocery stores near a location you enter and rank recorded offers
+  by basket coverage and whole-pack cost.
+- Ask the kitchen assistant to prepare meal plans, pantry updates, shopping lists,
+  price comparisons, or video imports. Review changes and apply them once.
 
-Recipes are written for humans. An ingredient line is free text with a
-quantity, a unit, a name and some preparation notes all run together, and
-nothing is spelled consistently:
+The interface includes desktop navigation, a compact phone layout, cuisine filters,
+recipe details, and motion that respects the device's reduced-motion preference.
 
-```
-"2 cloves garlic, minced"
-"320g Arborio rice"
-"1L vegetable or chicken stock, warm"
-"1/2 tsp chili powder"
-"Salt and pepper to taste"
-```
+In **Chat → Model settings**, select your signed-in subscription CLI or a provider.
+Only provider/model names are saved locally; API keys stay in server environment
+variables. Explicit FORKCAST_MODEL_PROVIDER environment configuration takes precedence.
+The assistant sends the relevant recipe catalog, pantry, plans and recent
+conversation to your chosen provider. Interpretation sends the selected recipe.
 
-To merge three recipes into one shopping list you have to answer, for every
-line: how much, in what unit, of *what* — and is that the same "what" as the
-thing in recipe two?
+For optional typed ingredient review using TypeSafe Jev, set
+FORKCAST_DECISION_PROVIDER=jev and TYPESAFE_API_KEY; optionally pin
+FORKCAST_DECISION_MODEL (default jev-latest). Jev flags uncertain source-to-item
+matches for review; it does not generate recipes or replace arithmetic.
+This independent decision adapter is optional and tested with protocol mocks.
+See [TypeSafe's API](https://docs.typesafe.ai/api).
 
-Forkcast answers this in three stages:
+The chatbot uses a bounded LangGraph workflow with local SQLite conversations and
+task previews. Apply is atomic and idempotent. A preview expires after one hour
+and is rejected if the kitchen has changed. Its tools cover kitchen tasks only.
+LangSmith tracing is disabled for this workflow.
 
-**1. Parse.** Split each line into quantity, unit and ingredient. Units are
-matched against a known vocabulary rather than guessed at, because a
-length-based heuristic mistakes `cloves` for part of the ingredient name and
-`eggs` for a unit. Preparation notes after a comma are dropped, glued forms
-like `320g` are split, and `1/2` is read as a fraction.
+Nearby-store search uses Nominatim and Overpass only after an explicit location
+search, caches results for a day, and attributes OpenStreetMap contributors.
+Distances are straight-line estimates. Listings do not establish product stock,
+halal certification or current prices. Offer recommendations work offline and
+rank complete coverage before partial subtotals; prices come from your records.
 
-**2. Normalise.** Reduce the ingredient to a canonical name — plurals folded
-(`tomatoes` → `tomato`), synonyms resolved through a lookup table that also
-covers non-English names (`pyaz` → `onion`), so the same thing written three
-ways aggregates into one entry.
+## Start locally
 
-**3. Aggregate.** Convert quantities to a comparable weight, sum per
-ingredient across every selected recipe, drop anything already in your pantry,
-and group by supermarket category.
+Use Python 3.11+ and Node 22.13+ (or a supported newer LTS). Open two terminals.
 
-On that last point: if an ingredient is in your pantry it comes off the list
-entirely, rather than having the pantry amount subtracted from what the recipes
-need. This is deliberate. Pantry quantities and recipe quantities are rarely in
-comparable units — 2kg of flour in the cupboard against 2 tablespoons in a
-recipe — so subtracting one from the other produces a confident-looking number
-that is simply wrong. "It is in the pantry, so I do not need to buy it" is
-coarser, but it is right far more often than a bad unit conversion would be.
+Backend:
 
-Stages 1 and 2 also run offline as a batch pipeline (`backend/ingredient_pipeline/`)
-that pre-parses recipes with LLM assistance and writes the structured result
-to the database, so the request path stays fast and deterministic. The
-runtime parser is the fallback for anything not yet pre-processed.
-
-## Features
-
-- **Plan** meals and browse a recipe catalogue
-- **Pantry tracking** — what you already own is deducted from the list
-- **Smart grocery list** — deduplicated, aggregated, grouped by aisle
-- **Works signed out.** Guest mode is a first-class path, not a teaser. An
-  account only adds saving across devices.
-
-## Tech
-
-| Layer | Stack |
-|---|---|
-| App | React Native + Expo (web and native from one codebase) |
-| API | FastAPI (Python) |
-| Data & auth | Supabase (Postgres, Row Level Security, email/password auth) |
-| Offline pipeline | Python + NLTK + LLM via OpenRouter |
-
-Authorisation is enforced by the database, not the application. The API never
-accepts a user id from the client: identity comes from a signature-verified
-JWT, and the request is executed as that user so Postgres RLS decides what is
-visible. A second user who knows the exact row id of your pantry item cannot
-read, update or delete it.
-
-## Running it locally
-
-You will need your own Supabase project (free tier is fine), Python 3.11+ and
-Node 18+.
-
-**1. Create the database**
-
-In the Supabase SQL editor, run in order:
-
-```
-supabase/migrations/0001_core_schema.sql   -- tables + public-read RLS policies
-supabase/migrations/0002_user_data.sql     -- pantry & plans, owner-only RLS
-supabase/seed.sql                          -- 6 recipes and the lookup tables
-```
-
-The seed is idempotent, so re-running it is harmless.
-
-**2. Backend**
-
-```bash
+```sh
 cd backend
-python -m venv venv && venv/Scripts/activate     # Linux/macOS: source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env                             # fill in SUPABASE_URL and SUPABASE_KEY
-uvicorn main:app --reload --port 8000
+python -m venv venv
+# Windows PowerShell:
+.\venv\Scripts\Activate.ps1
+# macOS/Linux instead: source venv/bin/activate
+python -m pip install -r requirements.txt
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-Use the **publishable** key (`sb_publishable_…`), not the secret one. The
-backend deliberately holds no privileged credential — it forwards the user's
-token so RLS applies.
+Frontend:
 
-**3. Frontend**
-
-```bash
+```sh
 cd app
-npm install
-cp .env.example .env                             # set API URL + Supabase URL/anon key
+npm ci
 npm run web
 ```
 
-For local development `EXPO_PUBLIC_API_URL` should be
-`http://localhost:8000/api`.
+Open the address printed by Expo, normally `http://localhost:8081`.
+No environment files are needed. The API seeds the database automatically.
+`GET http://localhost:8000/api/health` checks the backend; `/docs` opens the API
+reference. `npm run build:web` creates a static web export in `app/dist`.
 
-**4. Auth settings**
+For a phone on your trusted LAN, set `EXPO_PUBLIC_API_URL` to your computer's
+LAN address plus `:8000/api`, then start the backend bound to that interface.
+Configure `FORKCAST_ORIGINS` if using a different browser origin. This is a
+single-household application; public hosting needs authentication and TLS.
 
-Under Authentication → Sign In / Providers → Email, turn off "Confirm email"
-unless you have configured custom SMTP. Supabase's built-in email service is
-rate limited to a few messages per hour and will reject most sign-ups.
+## Your data and the shared catalog
 
-## Tests
+| Data | Location | Committed? |
+|---|---|---|
+| Reference recipes, parsed ingredients, lookup | `datasets/catalog.json` | Yes |
+| Personal recipes, overrides, pantry, plans, offers, history | `data/local/forkcast.sqlite3` | No |
+| Runtime sidecars, extraction scratch files, browser output | Ignored runtime directories | No |
+| Environment files and provider credentials | Local environment | No |
 
-```bash
-cd backend && pytest tests/ -q    # 16 passed
-cd app && npx tsc --noEmit
+The catalog includes 50 halal recipe adaptations from nine original publishers,
+933 prepared ingredient rows, and 239 lookup entries. [Browse the source index](datasets/README.md).
+Startup refreshes reference data
+without touching personal records. Changes made through the app never update
+`datasets/catalog.json`. Deleting a personal override restores the reference
+recipe. A database path can be overridden with `FORKCAST_DATABASE`.
+
+Back up the local database with `python scripts/backup.py /path/to/backup.sqlite3`.
+Keep backups private: they contain your recipes and household data.
+
+## Optional model extraction
+
+The default provider is `none`. Local text import and all core features continue
+to work when extraction is disabled or unavailable.
+
+Set server environment variables before starting the backend:
+
+| Mode | `FORKCAST_MODEL_PROVIDER` | Other configuration |
+|---|---|---|
+| Codex subscription CLI | `codex` | Install Codex and sign in with your own account |
+| Claude subscription CLI | `claude` | Install Claude Code and sign in with your own account |
+| OpenAI API | `openai` | `OPENAI_API_KEY`, `FORKCAST_MODEL` |
+| Anthropic API | `anthropic` | `ANTHROPIC_API_KEY`, `FORKCAST_MODEL` |
+| Google Gemini API | `google` | `GOOGLE_API_KEY`, `FORKCAST_MODEL` |
+
+`FORKCAST_MODEL` is optional for CLI modes and uses the operator's CLI default
+when omitted. Model availability and subscription limits come from your provider.
+The application does not copy login tokens or turn a subscription into an API key.
+API credentials stay on the server; never put them in an `EXPO_PUBLIC_` variable.
+
+Codex and API modes accept JPEG, PNG, and WebP images up to 5 MB. Claude CLI mode
+accepts pasted text. YouTube import fetches public descriptions and available
+captions without downloading media or bypassing access controls. Results are validated previews
+and require a separate save action. Images and submitted text go to the selected
+provider only after you request extraction.
+
+A live subscription smoke check is optional:
+
+```sh
+python scripts/check_model.py --provider codex
+# or --provider claude
+python scripts/check_intelligence.py --provider codex --youtube
+python scripts/evaluate_groceries.py --provider claude
+python scripts/validate_catalog.py
 ```
 
-## Known limitations
+Provider integration follows the documented [Codex noninteractive interface](https://learn.chatgpt.com/docs/non-interactive-mode)
+and [Claude programmatic interface](https://code.claude.com/docs/en/headless).
 
-Being honest about the rough edges, since they are visible in the code:
+## Checks
 
-- **Weight estimation is coarse.** Quantities map to broad weight bands, so
-  "3 eggs" and "5 eggs" can round to the same estimate.
-- **Some pre-parsed data is imperfect.** `1L vegetable or chicken stock`
-  yields an ingredient called "vegetable", and stock is filed under Meat &
-  Seafood.
-- **No live demo yet.** The backend is being moved off its old host, so the
-  GIF above is the closest thing for now.
-- Three tables (`ingredient_weights`, `ingredient_exceptions`, `features`) are
-  present but unused; equivalent data is currently hardcoded.
+```sh
+cd backend
+python -m pip install -r requirements-dev.txt
+python -m ruff check . ../scripts
+python -m pytest -q
 
-For how the pieces fit together, the security model, and the reasoning behind
-the design decisions, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-## Project layout
-
+cd ../app
+npm ci
+npm run typecheck
+npm run lint
+npm run build:web
+npx playwright install chromium
+npm run test:e2e
 ```
-backend/
-  main.py                FastAPI app: /api/recipes, /api/grocery-list
-  models.py              request/response schemas
-  supabase_client.py     clients: anon, and per-request with the user's JWT
-  aggregator.py          parsing, aggregation, pantry deduction
-  grocery_rules/         units, plurals, synonyms, categories
-  ingredient_pipeline/   offline LLM-assisted pre-parsing (not on the request path)
-  tests/
-supabase/
-  migrations/            schema + RLS policies
-  seed.sql               reference data
-app/
-  src/screens/           Home, Discover, Planner, Pantry, Groceries, Auth
-  src/context/           auth, pantry, planner, recipes
-  src/types/             shared data models (single source of truth)
-docs/
-  forkcast-demo.gif
-```
+
+Backend tests use isolated SQLite databases and block external HTTP. Browser
+tests cover desktop and phone layouts, persistent household flows, imports,
+exports, and offer comparisons. They create ignored test databases and use ports
+8000 and 8081, which must be free. Set `FORKCAST_TEST_PYTHON` if your Python
+interpreter differs from the active shell's `python`.
+
+The app uses Expo SDK 58, React 19.3, and React Native 0.88. Dependency
+constraints and the npm lockfile record the verified versions. See
+[dependency notes](docs/DEPENDENCIES.md) for the remaining upstream advisories.
+
+## Behavior and limits
+
+Compatible measured pantry quantities are subtracted; blank quantities mean you
+have enough. Incompatible stock units remain for review.
+Weight, volume, and counts stay separate rather than guessing food densities.
+Spoons/cups use 5/15/240 ml conversions. Ambiguous preparation text may need a
+manual recipe edit. These lists are shopping aids, not nutritional calculations.
+
+Price comparison uses only recorded offers in the requested currency. It chooses
+the lowest whole-pack cost per ingredient with comparable units, reports missing
+prices, and excludes travel costs and combinations of different pack sizes.
+No live store prices are invented or fetched automatically. Nearby mapped stores
+are a separate location search; map data and public source fetching need internet.
+
+See [architecture](docs/ARCHITECTURE.md) for storage and request details and
+[the reference dataset](datasets/README.md) for catalog provenance.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

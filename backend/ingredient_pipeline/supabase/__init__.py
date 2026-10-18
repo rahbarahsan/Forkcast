@@ -1,1 +1,0 @@
-# Initialize the supabase package

@@ -1,454 +1,260 @@
-// src/screens/DiscoverRecipesScreen.tsx
+import { ExtractPanel } from '../components/ExtractPanel';
+import { YouTubePanel } from '../components/YouTubePanel';
+import React, { useEffect, useState } from 'react';
+import { Linking, Text, useWindowDimensions, View } from 'react-native';
+import { RecipeRow, useHousehold } from '../context/HouseholdContext';
+import { api, json } from '../lib/api';
+import { Button, DeleteButton, Field, Page, ui } from '../components/ui';
+import { RecipePhoto } from '../components/RecipePhoto';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Modal,
-  StyleSheet,
-  TextInput,
-  Platform,
-  SafeAreaView,
-} from 'react-native';
-import { useResponsive } from '../hooks/useResponsive';
-import fallbackRecipes from '../data/fallbackRecipes';
-import RecipeCard from '../components/RecipeCard';
-import { useContext } from 'react';
-import { RecipesContext } from '../context/RecipesContext';
-import { useNavigation } from '@react-navigation/native';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
-import { useRecipes } from '../hooks/useRecipes';
-
-// Define the navigation param list type
-type RootTabParamList = {
-  Home: undefined;
-  Discover: undefined;
-  Planner: undefined;
-  Pantry: undefined;
-  Groceries: undefined;
-  History: undefined;
-};
-
-type DiscoverScreenNavigationProp = BottomTabNavigationProp<RootTabParamList>;
-
-const categories = ['All', 'South Asian', 'Italian', 'Mexican', 'Japanese'];
-const sortOptions = ['Trending', 'Recently Added', 'Most Popular', 'Favorites'];
-
-export default function DiscoverRecipesScreen() {
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [sortBy, setSortBy] = useState('Trending');
-  const [showSort, setShowSort] = useState(false);
-  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(12);
-  const { selectedIds, toggleSelection } = useContext(RecipesContext);
-  const navigation = useNavigation<DiscoverScreenNavigationProp>();
-  const { width, isMobile, isTablet, isDesktop, isLargeDesktop, isWeb } = useResponsive();
-
-  const isLargeScreen = isDesktop || isLargeDesktop;
-
-  // Adjust items per page based on screen size
+export default function DiscoverScreen() {
+  const { width } = useWindowDimensions();
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [cuisineFilter, setCuisineFilter] = useState('');
+  const { recipes, pantry, selected, setSelected, mutate } = useHousehold();
+  const [query, setQuery] = useState('');
+  const [suggested, setSuggested] = useState<
+    { recipe_id: string; coverage: number; available: string[]; missing: string[] }[]
+  >([]);
+  const [pantryFirst, setPantryFirst] = useState(false);
   useEffect(() => {
-    if (isLargeDesktop) {
-      setItemsPerPage(20);
-    } else if (isDesktop) {
-      setItemsPerPage(16);
-    } else if (isTablet) {
-      setItemsPerPage(12);
-    } else {
-      setItemsPerPage(8);
-    }
-  }, [isLargeDesktop, isDesktop, isTablet, isMobile]);
-
-  // Determine number of columns based on screen size
-  const getNumColumns = () => {
-    if (isLargeDesktop) return 5;
-    if (isDesktop) return 4;
-    if (isTablet) return 3;
-    if (isMobile && width > 480) return 2;
-    return 1;
+    const controller = new AbortController();
+    api<typeof suggested>('/suggestions', { signal: controller.signal })
+      .then(setSuggested)
+      .catch(() => {});
+    return () => controller.abort();
+  }, [recipes, pantry]);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState('');
+  const [cuisine, setCuisine] = useState('Home cooking');
+  const [ingredients, setIngredients] = useState('');
+  const [instructions, setInstructions] = useState('');
+  const [prep, setPrep] = useState('');
+  const [cook, setCook] = useState('');
+  const [importText, setImportText] = useState('');
+  const [provenance, setProvenance] = useState<Partial<RecipeRow>>({});
+  const loadForm = (recipe: Partial<RecipeRow>) => {
+    setProvenance({
+      image: recipe.image || 'placeholder',
+      source_url: recipe.source_url || '',
+      source_name: recipe.source_name || '',
+      halal_notes: recipe.halal_notes || '',
+      source_notes: recipe.source_notes || '',
+      servings: recipe.servings || 4,
+    });
+    setTitle(recipe.title || '');
+    setCuisine(recipe.cuisine || 'Home cooking');
+    setIngredients(recipe.ingredients?.join('\n') || '');
+    setInstructions(recipe.instructions || '');
+    setPrep(recipe.prep_time || '');
+    setCook(recipe.cook_time || '');
+    setShowForm(true);
   };
-
-  // Filter and sort recipes
-  const { recipes } = useRecipes();
-  const filteredRecipes = recipes.filter((recipe) => {
-    const matchesCategory = selectedCategory === 'All' || recipe.cuisine === selectedCategory;
-    const matchesSearch =
-      searchQuery === '' ||
-      recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      recipe.ingredients.some((i) => i.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    return matchesCategory && matchesSearch;
-  });
-
-  // Sort recipes based on selected sort option
-  const sortedRecipes = [...filteredRecipes].sort((a, b) => {
-    switch (sortBy) {
-      case 'Recently Added':
-        // Assuming newer recipes have higher IDs or you could add a timestamp field
-        return b.id.localeCompare(a.id);
-      case 'Most Popular':
-        // This would ideally use a popularity metric
-        return b.ingredients.length - a.ingredients.length;
-      case 'Favorites':
-        // Show selected recipes first
-        return (selectedIds.has(b.id) ? 1 : 0) - (selectedIds.has(a.id) ? 1 : 0);
-      case 'Trending':
-      default:
-        // Default sorting logic
-        return a.title.localeCompare(b.title);
-    }
-  });
-
-  // Calculate pagination
-  const totalPages = Math.ceil(sortedRecipes.length / itemsPerPage);
-  const paginatedRecipes = sortedRecipes.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedCategory, searchQuery, sortBy]);
-
-  const handleCardExpand = (id: string) => {
-    setExpandedCardId(expandedCardId === id ? null : id);
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.contentContainer}>
-        {isWeb && (
-          <View style={styles.header}>
-            <Text style={styles.heading}>Discover Recipes</Text>
-          </View>
-        )}
-
-        {/* Search Bar */}
-        <View style={[styles.searchContainer, { margin: 16 }]}>
-          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search recipes or ingredients..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery !== '' && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={20} color="#666" />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <View style={styles.categorySection}>
-          <Text style={styles.sectionTitle}>Browse by Category</Text>
-          <View style={styles.categoriesContainer}>
-            {categories.map((cat) => (
-              <TouchableOpacity
-                key={cat}
-                onPress={() => setSelectedCategory(cat)}
-                style={[styles.categoryChip, selectedCategory === cat && styles.activeChip]}
-              >
-                <Text
-                  style={{ color: selectedCategory === cat ? 'white' : 'black', fontWeight: '600' }}
-                >
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.sortSection}>
-          <TouchableOpacity onPress={() => setShowSort(true)} style={styles.dropdownButton}>
-            <Text style={styles.dropdownText}>Sort By: {sortBy} ⏷</Text>
-          </TouchableOpacity>
-        </View>
-
-        <FlatList
-          data={paginatedRecipes}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View
-              style={[
-                styles.cardContainer,
-                {
-                  width: isLargeDesktop
-                    ? width / 5 - 32
-                    : isDesktop
-                      ? width / 4 - 32
-                      : isTablet
-                        ? width / 3 - 32
-                        : isMobile && width > 480
-                          ? width / 2 - 32
-                          : width - 32,
-                },
-              ]}
-            >
-              <RecipeCard
-                recipe={item}
-                isSelected={selectedIds.has(item.id)}
-                onToggleSelect={() => toggleSelection(item.id)}
-                expanded={expandedCardId === item.id}
-                onExpand={() => handleCardExpand(item.id)}
-              />
-            </View>
-          )}
-          contentContainerStyle={[
-            styles.listContent,
-            (isTablet || isLargeScreen) && {
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'flex-start',
-            },
-          ]}
-          numColumns={Platform.OS === 'web' ? getNumColumns() : 1}
-          key={`${getNumColumns()}-column-layout`}
-          ListFooterComponent={() => (
-            <View style={styles.paginationContainer}>
-              {totalPages > 1 && (
-                <View style={styles.pagination}>
-                  <TouchableOpacity
-                    style={[styles.pageButton, currentPage === 1 && styles.disabledPageButton]}
-                    onPress={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-
-                  <View style={styles.pageInfo}>
-                    <Text style={styles.pageInfoText}>
-                      Page {currentPage} of {totalPages}
-                    </Text>
-                    <Text style={styles.resultsCount}>{sortedRecipes.length} recipes found</Text>
-                  </View>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === totalPages && styles.disabledPageButton,
-                    ]}
-                    onPress={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          )}
+    <Page
+      title="Your recipe collection"
+      description="Pick a few favorites, then build a plan. Everything you add is saved locally."
+    >
+      <YouTubePanel
+        onPreview={(recipe) => {
+          setEditing(null);
+          loadForm(recipe);
+        }}
+      />
+      <ExtractPanel
+        task="recipe"
+        onPreview={(recipe: Partial<RecipeRow>) => {
+          setEditing(null);
+          loadForm(recipe);
+        }}
+      />
+      <View style={ui.row}>
+        <Button
+          title="Add recipe"
+          onPress={() => {
+            setEditing(null);
+            loadForm({});
+          }}
         />
-
-        <Modal visible={showSort} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Sort By</Text>
-              {sortOptions.map((option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setSortBy(option);
-                    setShowSort(false);
-                  }}
-                >
-                  <Text style={option === sortBy ? styles.activeSort : {}}>{option}</Text>
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity onPress={() => setShowSort(false)} style={styles.modalCancel}>
-                <Text style={{ color: 'red' }}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-
-        {selectedIds.size > 0 && (
-          <TouchableOpacity style={styles.floater} onPress={() => navigation.navigate('Planner')}>
-            <Text style={{ color: 'white', fontWeight: 'bold' }}>
-              ✅ {selectedIds.size} Selected - Plan
-            </Text>
-          </TouchableOpacity>
-        )}
+        <Button
+          title="Import recipe"
+          secondary
+          onPress={() => {
+            setEditing(null);
+            setShowForm(true);
+          }}
+        />
       </View>
-    </SafeAreaView>
+      {showForm && (
+        <View style={ui.card}>
+          <Text style={ui.heading}>{editing ? 'Edit your recipe' : 'Add to your kitchen'}</Text>
+          <Field
+            label="Paste recipe text or JSON (optional)"
+            value={importText}
+            onChangeText={setImportText}
+            multiline
+            placeholder="Title, Ingredients, Instructions"
+          />
+          <Button
+            title="Preview import"
+            secondary
+            disabled={!importText.trim()}
+            onPress={async () =>
+              loadForm(await api<RecipeRow>('/import/recipe', json('POST', { text: importText })))
+            }
+          />
+          <Field label="Recipe title" value={title} onChangeText={setTitle} />
+          <Field label="Cuisine" value={cuisine} onChangeText={setCuisine} />
+          <Field
+            label="Ingredients (one per line)"
+            value={ingredients}
+            onChangeText={setIngredients}
+            multiline
+          />
+          <Field
+            label="Instructions"
+            value={instructions}
+            onChangeText={setInstructions}
+            multiline
+          />
+          <Field label="Prep time" value={prep} onChangeText={setPrep} />
+          <Field label="Cook time" value={cook} onChangeText={setCook} />
+          <View style={ui.row}>
+            <Button
+              title="Save recipe"
+              disabled={!title.trim() || !ingredients.trim() || !instructions.trim()}
+              onPress={async () => {
+                await mutate(
+                  editing ? '/recipes/' + editing : '/recipes',
+                  editing ? 'PUT' : 'POST',
+                  {
+                    ...provenance,
+                    title,
+                    cuisine,
+                    ingredients: ingredients
+                      .split('\n')
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                    instructions,
+                    prep_time: prep,
+                    cook_time: cook,
+                  },
+                );
+                setShowForm(false);
+                setImportText('');
+              }}
+            />
+            <Button title="Cancel editing" secondary onPress={() => setShowForm(false)} />
+          </View>
+        </View>
+      )}
+      <Field label="Search recipes or ingredients" value={query} onChangeText={setQuery} />
+      <View style={ui.row}>
+        <Text style={ui.subtitle}>{selected.length} selected</Text>
+        <Button
+          title={pantryFirst ? 'Sort by title' : 'Suggest from my pantry'}
+          secondary
+          onPress={() => setPantryFirst(!pantryFirst)}
+        />
+      </View>
+      <View style={ui.row}>
+        <Button
+          title="All cuisines"
+          secondary={!!cuisineFilter}
+          onPress={() => setCuisineFilter('')}
+        />
+        {[...new Set(recipes.map((recipe) => recipe.cuisine))].sort().map((cuisine) => (
+          <Button
+            key={cuisine}
+            title={cuisine}
+            secondary={cuisineFilter !== cuisine}
+            onPress={() => setCuisineFilter(cuisineFilter === cuisine ? '' : cuisine)}
+          />
+        ))}
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 18, alignItems: 'flex-start' }}>
+        {[...recipes]
+          .sort((a, b) =>
+            pantryFirst
+              ? (suggested.find((s) => s.recipe_id === b.id)?.coverage || 0) -
+                (suggested.find((s) => s.recipe_id === a.id)?.coverage || 0)
+              : a.title.localeCompare(b.title),
+          )
+          .filter(
+            (r) =>
+              (!cuisineFilter || r.cuisine === cuisineFilter) &&
+              (r.title + r.cuisine + r.ingredients.join(' '))
+                .toLowerCase()
+                .includes(query.toLowerCase()),
+          )
+          .map((recipe) => (
+            <View
+              key={recipe.id}
+              style={[ui.card, { width: width >= 1050 ? '48.6%' : '100%', minWidth: 0 }]}
+            >
+              <RecipePhoto title={recipe.title} cuisine={recipe.cuisine} image={recipe.image} />
+              <Text style={ui.heading}>{recipe.title}</Text>
+              <Text style={ui.subtitle}>
+                {suggested.find((s) => s.recipe_id === recipe.id)?.available.length || 0}{' '}
+                ingredients already in your pantry
+              </Text>
+              <Text style={ui.subtitle}>
+                {recipe.cuisine} - Prep {recipe.prep_time || 'not specified'} - Cook{' '}
+                {recipe.cook_time || 'not specified'}
+              </Text>
+              <Button
+                title={selected.includes(recipe.id) ? 'Remove from selection' : 'Select recipe'}
+                secondary={selected.includes(recipe.id)}
+                onPress={() =>
+                  setSelected((ids) =>
+                    ids.includes(recipe.id)
+                      ? ids.filter((id) => id !== recipe.id)
+                      : [...ids, recipe.id],
+                  )
+                }
+              />
+              <Button
+                title={expanded === recipe.id ? 'Close recipe details' : 'View recipe details'}
+                secondary
+                onPress={() => setExpanded(expanded === recipe.id ? null : recipe.id)}
+              />
+              {expanded === recipe.id && (
+                <>
+                  <Text style={ui.heading}>Ingredients · serves {recipe.servings || 4}</Text>
+                  <Text style={ui.text}>{recipe.ingredients.join('\n')}</Text>
+                  <Text style={ui.heading}>Make it</Text>
+                  <Text style={ui.text}>{recipe.instructions}</Text>
+                  {!!recipe.halal_notes && <Text style={ui.chip}>{recipe.halal_notes}</Text>}
+                  {!!recipe.source_notes && <Text style={ui.subtitle}>{recipe.source_notes}</Text>}
+                  {!!recipe.source_url && (
+                    <Button
+                      title={'Original recipe · ' + (recipe.source_name || 'publisher')}
+                      secondary
+                      onPress={() => Linking.openURL(recipe.source_url!)}
+                    />
+                  )}
+                </>
+              )}
+              <View style={ui.row}>
+                <Button
+                  title="Edit recipe"
+                  secondary
+                  onPress={() => {
+                    setEditing(recipe.id);
+                    loadForm(recipe);
+                  }}
+                />
+                {recipe.source === 'personal' && (
+                  <DeleteButton
+                    title="Delete personal recipe"
+                    onDelete={() => mutate('/recipes/' + recipe.id, 'DELETE')}
+                  />
+                )}
+              </View>
+            </View>
+          ))}
+      </View>
+    </Page>
   );
 }
-
-const styles = StyleSheet.create({
-  paginationContainer: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  pagination: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pageButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    marginHorizontal: 8,
-  },
-  disabledPageButton: {
-    backgroundColor: '#ccc',
-  },
-  pageButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  pageInfo: {
-    alignItems: 'center',
-  },
-  pageInfoText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  resultsCount: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#F9F9F9',
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  header: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
-  },
-  heading: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginVertical: 8,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 4,
-  },
-  categorySection: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  categoriesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  categoryChip: {
-    marginRight: 10,
-    marginBottom: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    backgroundColor: '#eee',
-    minHeight: 40,
-    justifyContent: 'center',
-  },
-  activeChip: {
-    backgroundColor: '#007AFF',
-  },
-  sortSection: {
-    padding: 16,
-    alignItems: 'flex-end',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
-  },
-  dropdownButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    backgroundColor: '#fff',
-  },
-  dropdownText: {
-    fontWeight: '500',
-  },
-  cardContainer: {
-    margin: 8,
-  },
-  listContent: {
-    paddingBottom: 100,
-    paddingTop: 16,
-    paddingHorizontal: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    marginHorizontal: 40,
-    borderRadius: 10,
-    padding: 20,
-  },
-  modalTitle: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  activeSort: {
-    color: '#007AFF',
-    fontWeight: 'bold',
-  },
-  modalItem: {
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  modalCancel: {
-    paddingVertical: 10,
-    marginTop: 8,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  floater: {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-    backgroundColor: '#007AFF',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-});

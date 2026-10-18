@@ -1,255 +1,241 @@
-import React, { useContext, useState, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  SafeAreaView,
-  ActivityIndicator,
-  StatusBar,
-  ScrollView,
-} from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { RecipesContext } from '../context/RecipesContext';
-import { PantryContext } from '../context/PantryContext';
-import { PlannerContext } from '../context/PlannerContext';
-import { PantryItem } from '../types';
-import { useResponsive } from '../hooks/useResponsive';
-import { useGroceryList } from '../hooks/useGroceryList';
-import styles from '../styles/groceryListScreenStyles';
+import { quantities } from '../lib/quantities';
+import { shareText, downloadText } from '../lib/export';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Text, View } from 'react-native';
+import { GroceryList, useHousehold } from '../context/HouseholdContext';
+import { api, json } from '../lib/api';
+import { Button, CheckItem, Page, ui } from '../components/ui';
+import { storage } from '../utils/storage';
+import { StorePanel } from '../components/StorePanel';
 
-export default function GroceryListScreen() {
-  const { selectedIds, setSelectedIds } = useContext(RecipesContext);
-  const { items: pantryItems } = useContext(PantryContext);
-  const { plans, activePlanId } = useContext(PlannerContext);
-  const responsive = useResponsive();
-  const responsiveStyles = styles.getResponsiveStyles(responsive.screenSize);
-
-  const [viewMode, setViewMode] = useState<'all' | 'byPlan'>('byPlan');
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(activePlanId);
-  const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
-
-  const getRecipeIdsFromPlan = (planId: string | null): string[] => {
-    if (!planId) return [];
-    const plan = plans.find((p) => p.id === planId);
-    return plan ? plan.recipeIds : [];
-  };
-
-  const recipeIdsFromPlan = getRecipeIdsFromPlan(selectedPlanId);
-
-  const recipeIds = useMemo(() => {
-    if (viewMode === 'all') {
-      return [...new Set(plans.flatMap((p) => p.recipeIds))]; // avoid duplicates
-    } else if (viewMode === 'byPlan' && selectedPlanId) {
-      const plan = plans.find((p) => p.id === selectedPlanId);
-      return plan?.recipeIds || [];
-    }
-    return [];
-  }, [viewMode, selectedPlanId, plans]);
-
-  const { groceryList, loading, error } = useGroceryList({
-    recipeIds,
-    pantryItems,
-  });
-
-  const ingredientsByCategory = groceryList?.categorized || {};
-  const neededIngredients = groceryList?.raw ? Object.keys(groceryList.raw) : [];
-
-  useEffect(() => {
-    if (activePlanId !== selectedPlanId) {
-      setSelectedPlanId(activePlanId);
-    }
-  }, [activePlanId]);
-
-  const toggleItemCompletion = (item: string) => {
-    setCompletedItems((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(item)) {
-        newSet.delete(item);
-      } else {
-        newSet.add(item);
-      }
-      return newSet;
-    });
-  };
-
-  const renderPlanSelector = () => (
-    <View style={responsiveStyles.planSelectorContainer}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <TouchableOpacity
-          style={[
-            responsiveStyles.planButton,
-            viewMode === 'all' && responsiveStyles.activePlanButton,
-          ]}
-          onPress={() => {
-            setViewMode('all');
-            setSelectedPlanId(null);
-            const allIds = plans.flatMap((p) => p.recipeIds);
-            setSelectedIds(new Set(allIds)); // ensure unique
-          }}
-        >
-          <Text
-            style={[
-              responsiveStyles.planButtonText,
-              viewMode === 'all' && responsiveStyles.activePlanButtonText,
-            ]}
-          >
-            All
-          </Text>
-        </TouchableOpacity>
-
-        {plans.map((plan) => (
-          <TouchableOpacity
-            key={plan.id}
-            style={[
-              responsiveStyles.planButton,
-              viewMode === 'byPlan' &&
-                selectedPlanId === plan.id &&
-                responsiveStyles.activePlanButton,
-            ]}
-            onPress={() => {
-              setViewMode('byPlan');
-              setSelectedPlanId(plan.id);
-              setSelectedIds(new Set(plan.recipeIds)); // update selectedIds with recipes of this plan
-            }}
-          >
-            <Text
-              style={[
-                responsiveStyles.planButtonText,
-                viewMode === 'byPlan' &&
-                  selectedPlanId === plan.id &&
-                  responsiveStyles.activePlanButtonText,
-              ]}
-            >
-              {plan.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
+interface Insight {
+  name: string;
+  lookup: { canonical: string; category: string; synonyms: string } | null;
+  recipes: { id: string; title: string; lines: string[] }[];
+  quantity_note: string;
+}
+export default function GroceryScreen() {
+  const { plans, pantry, selected, mutate } = useHousehold();
+  const [mode, setMode] = useState('active');
+  const [insight, setInsight] = useState<Insight | null>(null);
+  const active = plans.find((p) => p.isActive);
+  const ids = useMemo(
+    () =>
+      mode === 'selected'
+        ? selected
+        : mode === 'all'
+          ? [...new Set(plans.flatMap((p) => p.recipeIds))]
+          : active?.recipeIds || [],
+    [mode, selected, plans],
   );
-
-  const renderCategoryHeader = (category: string) => {
-    const count = ingredientsByCategory[category]?.length || 0;
-    const completedCount =
-      ingredientsByCategory[category]?.filter((item) => completedItems.has(item)).length || 0;
-
-    return (
-      <View style={responsiveStyles.categoryHeader}>
-        <Text style={responsiveStyles.categoryTitle}>{category}</Text>
-        <Text style={responsiveStyles.categoryCount}>
-          {completedCount}/{count}
-        </Text>
-      </View>
-    );
-  };
-
-  const renderItem = ({ item }: { item: string }) => {
-    const isCompleted = completedItems.has(item);
-
-    return (
-      <TouchableOpacity
-        style={responsiveStyles.groceryItem}
-        onPress={() => toggleItemCompletion(item)}
-      >
-        <View style={[responsiveStyles.checkbox, isCompleted && responsiveStyles.checkboxChecked]}>
-          {isCompleted && <Feather name="check" size={16} color="#fff" />}
-        </View>
-        <Text
-          style={[
-            responsiveStyles.groceryText,
-            isCompleted && responsiveStyles.groceryTextCompleted,
-          ]}
-        >
-          {item.charAt(0).toUpperCase() + item.slice(1)}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderSectionList = () => {
-    const categories = Object.keys(ingredientsByCategory).sort();
-
-    return (
-      <FlatList
-        data={categories}
-        keyExtractor={(category) => category}
-        renderItem={({ item: category }) => (
-          <View style={responsiveStyles.categoryContainer}>
-            {renderCategoryHeader(category)}
-            {ingredientsByCategory[category].map((ingredient, index) => (
-              <View key={`${ingredient}-${index}`}>{renderItem({ item: ingredient })}</View>
-            ))}
-          </View>
-        )}
-        ListEmptyComponent={
-          <View style={responsiveStyles.emptyContainer}>
-            <Feather name="shopping-bag" size={64} color="#BDBDBD" />
-            <Text style={responsiveStyles.emptyTitle}>Your shopping list is empty</Text>
-            <Text style={responsiveStyles.emptySubtitle}>
-              Select a plan or recipe to generate your grocery list
-            </Text>
-          </View>
+  const key = JSON.stringify([...ids].sort());
+  const [list, setList] = useState<GroceryList | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [checked, setChecked] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [intelligence, setIntelligence] = useState('auto');
+  const [revision, setRevision] = useState(0);
+  const [evidence, setEvidence] = useState<string | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+    setList(null);
+    api<GroceryList>('/grocery-list', {
+      ...json('POST', { recipe_ids: ids, intelligence }),
+      signal: controller.signal,
+    })
+      .then(async (data) => {
+        const saved = await storage.getItem('forkcast:checklist:' + key);
+        if (!controller.signal.aborted) {
+          setList(data);
+          setChecked(saved ? JSON.parse(saved).filter((name: string) => name in data.raw) : []);
         }
-      />
-    );
-  };
-
-  const containerStyle = [
-    responsiveStyles.container,
-    responsive.isDesktop && { maxWidth: 800, alignSelf: 'center' as const },
-  ];
-
+      })
+      .catch((e) => {
+        if (!controller.signal.aborted) setError(e.message);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [key, pantry, intelligence, revision]);
+  const text = list
+    ? [
+        'Forkcast shopping list',
+        ...Object.entries(list.categorized).flatMap(([category, names]) => [
+          '',
+          category,
+          ...names.map(
+            (n) =>
+              `${checked.includes(n) ? '[x]' : '[ ]'} ${n} - ${quantities(list.raw[n], category)}`,
+          ),
+        ]),
+      ].join('\n')
+    : '';
   return (
-    <SafeAreaView style={responsiveStyles.safeArea}>
-      <StatusBar barStyle="dark-content" />
-      <View style={responsiveStyles.header}>
-        <Text style={responsiveStyles.headerTitle}>Grocery List</Text>
-        <View style={responsiveStyles.headerActions}>
-          <TouchableOpacity style={responsiveStyles.shareButton}>
-            <Feather name="share" size={20} color="#3498db" />
-          </TouchableOpacity>
+    <Page
+      title="One sensible shopping list"
+      description="Choose your active plan, all plans, or the recipes currently selected in your collection."
+    >
+      <View style={ui.row}>
+        <Button
+          title="Improve with my model"
+          disabled={!ids.length}
+          onPress={() => {
+            setIntelligence('model');
+            setRevision((n) => n + 1);
+          }}
+        />
+        <Button
+          title="Use offline interpretation"
+          secondary
+          onPress={() => setIntelligence('local')}
+        />
+        {[
+          ['active', 'Active plan'],
+          ['all', 'All plans'],
+          ['selected', 'Selected recipes'],
+        ].map(([value, label]) => (
+          <Button
+            key={value}
+            title={label}
+            secondary={mode !== value}
+            onPress={() => setMode(value)}
+          />
+        ))}
+      </View>
+      {insight && (
+        <View style={ui.card}>
+          <Text style={ui.heading}>Ingredient: {insight.name}</Text>
+          <Text style={ui.text}>Category: {insight.lookup?.category || 'Other'}</Text>
+          <Text style={ui.text}>Known names: {insight.lookup?.synonyms || insight.name}</Text>
+          {insight.recipes.map((recipe) => (
+            <Text key={recipe.id} style={ui.text}>
+              {recipe.title}: {recipe.lines.join('; ')}
+            </Text>
+          ))}
+          <Text style={ui.subtitle}>{insight.quantity_note}</Text>
+          <Button title="Close ingredient insights" secondary onPress={() => setInsight(null)} />
         </View>
-      </View>
-
-      {renderPlanSelector()}
-
-      <View style={containerStyle}>
-        {loading ? (
-          <View style={responsiveStyles.loadingContainer}>
-            <ActivityIndicator size="large" color="#3498db" />
-            <Text style={responsiveStyles.loadingText}>Preparing your grocery list...</Text>
-          </View>
-        ) : (
-          <>
-            <View style={responsiveStyles.statsContainer}>
-              <View style={responsiveStyles.statItem}>
-                <Text style={responsiveStyles.statValue}>
-                  {completedItems.size}/{neededIngredients.length}
+      )}
+      {loading && <Text style={ui.subtitle}>Preparing your list...</Text>}
+      {error && (
+        <Text accessibilityRole="alert" style={ui.error}>
+          {error}
+        </Text>
+      )}
+      {list && (
+        <>
+          <Text style={ui.subtitle}>
+            Interpretation: {list.method}. Compatible stock quantities are deducted; blank pantry
+            quantities mean you have enough.
+          </Text>
+          {list.warnings?.map((warning) => (
+            <Text key={warning} style={ui.error}>
+              {warning}
+            </Text>
+          ))}
+          {!!list.pantry_deductions?.length && (
+            <View style={ui.card}>
+              <Text style={ui.heading}>Already in your pantry</Text>
+              {list.pantry_deductions.map((item, index) => (
+                <Text key={index} style={ui.subtitle}>
+                  {item.name} ·{' '}
+                  {item.quantity ? `${item.quantity} ${item.unit} deducted` : item.note}
                 </Text>
-                <Text style={responsiveStyles.statLabel}>Items collected</Text>
-              </View>
-              <View style={responsiveStyles.statItem}>
-                <Text style={responsiveStyles.statValue}>
-                  {Object.keys(ingredientsByCategory).length}
-                </Text>
-                <Text style={responsiveStyles.statLabel}>Categories</Text>
-              </View>
+              ))}
             </View>
-
-            {renderSectionList()}
-
-            {neededIngredients.length > 0 && (
-              <TouchableOpacity
-                style={responsiveStyles.clearButton}
-                onPress={() => setCompletedItems(new Set())}
-              >
-                <Text style={responsiveStyles.clearButtonText}>Clear selections</Text>
-              </TouchableOpacity>
-            )}
-          </>
-        )}
-      </View>
-    </SafeAreaView>
+          )}
+          <Text style={ui.subtitle}>
+            {checked.length}/{Object.keys(list.raw).length} collected - {ids.length} recipes
+          </Text>
+          {!Object.keys(list.raw).length && (
+            <Text style={ui.text}>
+              Nothing to buy. Choose recipes or a plan, or check whether your pantry covers
+              everything.
+            </Text>
+          )}
+          {Object.entries(list.categorized).map(([category, names]) => (
+            <View key={category} style={ui.card}>
+              <Text style={ui.heading}>{category}</Text>
+              {names.map((name) => (
+                <View key={name} style={{ gap: 6 }}>
+                  <CheckItem
+                    label={`${name} - ${quantities(list.raw[name], category)}`}
+                    checked={checked.includes(name)}
+                    onToggle={async () => {
+                      const next = checked.includes(name)
+                        ? checked.filter((n) => n !== name)
+                        : [...checked, name];
+                      await storage.setItem('forkcast:checklist:' + key, JSON.stringify(next));
+                      setChecked(next);
+                    }}
+                  />
+                  <Button
+                    title={`Recipe evidence for ${name}`}
+                    secondary
+                    onPress={() => setEvidence(evidence === name ? null : name)}
+                  />
+                  {evidence === name && (
+                    <View style={{ gap: 6 }}>
+                      {list.items
+                        ?.find((item) => item.name === name)
+                        ?.sources.map((source, index) => (
+                          <Text key={index} style={ui.subtitle}>
+                            {source.recipe_title}: {source.line}
+                          </Text>
+                        ))}
+                      {list.items
+                        ?.find((item) => item.name === name)
+                        ?.notes.map((note) => (
+                          <Text key={note} style={ui.subtitle}>
+                            {note}
+                          </Text>
+                        ))}
+                    </View>
+                  )}
+                  <Button
+                    title={`Insights for ${name}`}
+                    secondary
+                    onPress={async () =>
+                      setInsight(await api<Insight>('/ingredients/' + encodeURIComponent(name)))
+                    }
+                  />
+                </View>
+              ))}
+            </View>
+          ))}
+          {!!Object.keys(list.raw).length && (
+            <View style={ui.row}>
+              <Button
+                title="Share grocery list"
+                onPress={async () => {
+                  await shareText('Forkcast shopping list', text);
+                }}
+              />
+              <Button
+                title="Export grocery list"
+                secondary
+                onPress={() => downloadText('forkcast-groceries.txt', text)}
+              />
+              <Button
+                title="Save to history"
+                secondary
+                onPress={() =>
+                  mutate('/history', 'POST', {
+                    name: active?.name || 'Shopping list',
+                    recipe_ids: ids,
+                    checked,
+                    grocery_list: list,
+                  })
+                }
+              />
+            </View>
+          )}
+          <StorePanel recipeIds={ids} />
+        </>
+      )}
+    </Page>
   );
 }
